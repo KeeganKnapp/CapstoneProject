@@ -1,0 +1,4 @@
+/tools/android-sdk/
+/.vscode/.dotnet-tools.json
+/obj/
+/bin/
