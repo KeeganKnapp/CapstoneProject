@@ -2,6 +2,24 @@
 
 ## Dashboard
 
+Payment System
+```mermaid
+flowchart TD
+    A[Payment System] --> L[Login]
+    A --> Q{quickbooks API}
+    M --> C(Set hours for week)
+    C --> i(increase hours) --> C
+    C--> F(decrease hours) --> C
+    E --> D(Look at hours worked)
+    B --> G(increase rate) --> B
+    B --> H(decrease rate) -->B
+    M --> B(Set Rate)
+    D --> f(Show hours worked)
+
+    L --> M[Manager / Owner]
+    L --> E[Employee]
+```
+
 Manager Dashboard + Configuration
 ```mermaid
 flowchart TD
