@@ -21,6 +21,7 @@ flowchart TD
 ```
 
 Manager Dashboard + Configuration
+Use Case: Manager logs into app for the first time. They are greeted with a dashboard and from here have the option to pick which elements they would like to view on their dashboard. 
 ```mermaid
 flowchart TD
     A[Open App] -->|Log in| B(View Dashboard)
@@ -61,6 +62,7 @@ flowchart TD
 ```
 
 Request System
+Use Case: Employee logs into app. From their dashboard they elect to submit a request to their manager. Once submitted the manager can either grant or deny the request. The employee is notified of their decision.
 ```mermaid
 flowchart TD
     A["Employee View of App"] -- Log in --> B("Dashboard")
