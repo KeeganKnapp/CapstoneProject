@@ -21,6 +21,7 @@ flowchart TD
 Employee Dashboard
 #clockout only so far
 #other dashboard features to be added
+Use Case: Employee arrives on site. Employee opens the application in employee mode and clocks in using the clock in feature on their dashboard. The app automatically sends to the database to begin logging the hours. Upon being done for the day, the employee clocks out, which signals to stop logging hours and calculate total hours for the day to log for that day in the database under their name.
 ```mermaid
 flowchart TD
     A[Employee opens Dashboard] --> B{Logged In?}
