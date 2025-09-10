@@ -3,6 +3,7 @@
 ## Dashboard
 
 Payment System
+Use Cases: Manager can set rate of pay. Employee can see how many hours they have totaled so they know what to expect to recieve for their pay.
 ```mermaid
 flowchart TD
     A[Payment System] --> L[Login]
