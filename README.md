@@ -9,8 +9,10 @@ flowchart TD
     C --> D[Progress]
     C --> E[Jobsites]
     C --> F[Logged Hours]
+    C --> H[Requests]
     G(View Progress)
     D --> G
     E --> G
     F --> G
+    H --> G
   ```
