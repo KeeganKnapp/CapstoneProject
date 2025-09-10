@@ -44,13 +44,13 @@ flowchart TD
 Request System
 ```mermaid
 flowchart TD
-    A["Employee App"] -- Log in --> B("Dashboard")
+    A["Employee View of App"] -- Log in --> B("Dashboard")
     B --> C("Submit Request")
     C -- Submits Request to Manager --> O
     B --> F("View Notifications")
     O -- Employee notified of result --> F
 
 
-    E["Manager App"] -- Log in --> J("View Dashboard")
+    E["Manager View of App"] -- Log in --> J("View Dashboard")
     J -- Approves or Denies Requests --> O("Requests")
 ```
