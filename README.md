@@ -79,3 +79,17 @@ flowchart TD
     E["Manager View of App"] -- Log in --> J("View Dashboard")
     J -- Approves or Denies Requests --> O("Requests")
 ```
+
+Progress Dashboard
+Use Case: Manager or Employee arrives on progress dashboard. They can view a list of all active or past jobsites. They will choose a jobsite and then be viewing a list of all tasks associated with that jobsite. They can then choose a task to view more details about it. Tasks can be marked as complete or incomplete. The manager and employee can both add or remove tasks from the jobsite as needed.
+```mermaid
+flowchart TD
+    A["Production Progress"] --> B("Available Jobs are Listed")
+    B --> C{"View or Add/Edit a Specific Job"}
+    C -- Job One --> D["View Completed Tasks"]
+    C -- Job Two --> D
+    C -- Job Three --> D
+    D ~~~ E["Add or Edit Tasks"]
+    E ~~~ F["Add Notes to a Specific Task"]
+
+```
