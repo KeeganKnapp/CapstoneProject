@@ -19,6 +19,9 @@ flowchart TD
 
     L --> M[Manager / Owner]
     L --> E[Employee]
+
+    E --> R[Request Time]
+    R --> Z[Request hours on/off for day]
 ```
 
 Manager Dashboard + Configuration
