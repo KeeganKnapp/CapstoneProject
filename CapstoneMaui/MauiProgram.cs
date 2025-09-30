@@ -21,6 +21,7 @@ namespace CapstoneMaui
 			builder.Services.AddMauiBlazorWebView();
 			builder.Services.AddMudServices();
 
+			//add API singletons here with abstraction and concrete implementation
 			builder.Services.AddSingleton<IAuthService, AuthService>();
 
 #if DEBUG
