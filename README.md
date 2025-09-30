@@ -1,7 +1,7 @@
 Project overview
 
 root/
-├─ CapstoneMaui/                  # .NET MAUI app (Android/Windows/iOS)
+├─ CapstoneMaui/                  # .NET MAUI app (Android/Windows/iOS) \n
 │  ├─ App.xaml, MainPage.razor    # UI & navigation
 │  ├─ MauiProgram.cs              # DI container & app startup
 │  └─ Platforms/                  # platform specifics
