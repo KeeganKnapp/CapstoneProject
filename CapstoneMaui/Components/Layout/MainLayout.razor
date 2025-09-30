@@ -1,0 +1,49 @@
+﻿@inherits LayoutComponentBase
+@using MudBlazor
+
+    <MudThemeProvider @bind-IsDarkMode="@_isDarkMode" Theme="_theme"/>
+    <MudDialogProvider />
+    <MudSnackbarProvider/>
+    <MudPopoverProvider /> 
+
+    <MudLayout> 
+        <MudAppBar Color="Color.Primary" Elevation="0">
+            <MudText Typo="Typo.h6" Class="ml-2">CapstoneMaui</MudText>
+        </MudAppBar>
+        <MudMainContent>
+            @Body
+        </MudMainContent>
+    </MudLayout>
+
+@code {
+    private bool _isDarkMode = false;
+
+    private readonly MudTheme _theme = new()
+    {
+        PaletteLight = new PaletteLight
+        {
+            Primary           = "#1976D2",                 // don't use Colors.Blue.Default
+            Secondary         = "#303F9F",                 // don't use Colors.Indigo.Default
+            Background        = "#FFFFFF",                 // don't use Colors.White
+            Surface           = "#FFFFFF",
+            AppbarBackground  = "#1976D2",
+            DrawerBackground  = "#F5F5F5",      // note: Grey, not Gray
+            DrawerText        = "#212121",
+            TextPrimary       = "#212121",
+            TextSecondary     = "#757575"
+        },
+        PaletteDark = new PaletteDark
+        {
+            Primary           = "#1976D2",
+            Secondary         = "#303F9F",
+            Background        = "#121212",
+            Surface           = "#1E1E1E",
+            AppbarBackground  = "#1E1E1E",
+            DrawerBackground  = "#1A1A1A",
+            DrawerText        = "#B0BEC5",
+            TextPrimary       = "#FFFFFF",
+            TextSecondary     = "#ECEFF1"
+        }
+        // You can add Typography/Layout later; keep defaults while stabilizing
+    };
+}
