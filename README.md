@@ -4,8 +4,11 @@ root/
 ├─ CapstoneMaui/ &emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp; # .NET MAUI app (Android/Windows/iOS)  
 │ &emsp; ├─ App.xaml, MainPage.razor &emsp;&emsp;&emsp;&emsp;&emsp;&emsp; # UI & navigation  
 │ &emsp; ├─ MauiProgram.cs &emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&nbsp; # DI container & app startup  
-│ &emsp; └─ Platforms/ &emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&nbsp; # platform specifics  
-│  
+│ &emsp; ├─ Platforms/ &emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&nbsp; # platform specifics  
+│ &emsp; └─ Components  
+│ &emsp;&emsp; ├─ Layout &emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&nbsp; #contains main layout including overhead appbar  
+│ &emsp;&emsp; └─ Pages  &emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&nbsp; #contains each page  
+│
 ├─ Capstone.Core/ &emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&nbsp; # UI-agnostic logic  
 │ &emsp; ├─ Abstractions/ &emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&nbsp; # public interfaces (IAuthService, ITimeEntryService, ...)  
 │ &emsp; ├─ Clients/ &emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&nbsp; # API clients (HttpClient/Refit/fetch logic)  
