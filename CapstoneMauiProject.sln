@@ -7,6 +7,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CapstoneMaui", "CapstoneMau
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CapstoneMaui.Core", "CapstoneMaui.Core\CapstoneMaui.Core.csproj", "{38E3DD84-0978-47F9-AA4F-251BFD8466D6}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CapstoneAPI", "CapstoneAPI\CapstoneAPI.csproj", "{713B611B-96DC-4801-ABFC-F4465C03DC54}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -24,5 +26,9 @@ Global
 		{38E3DD84-0978-47F9-AA4F-251BFD8466D6}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{38E3DD84-0978-47F9-AA4F-251BFD8466D6}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{38E3DD84-0978-47F9-AA4F-251BFD8466D6}.Release|Any CPU.Build.0 = Release|Any CPU
+		{713B611B-96DC-4801-ABFC-F4465C03DC54}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{713B611B-96DC-4801-ABFC-F4465C03DC54}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{713B611B-96DC-4801-ABFC-F4465C03DC54}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{713B611B-96DC-4801-ABFC-F4465C03DC54}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal
