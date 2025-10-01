@@ -11,14 +11,23 @@ namespace CapstoneMaui.Core.Services.Auth
         {
             await Task.Delay(1000, cancellationToken);
 
-            if (email == "user@example.com" && password == "password123")
+            if (email == "test" && password == "test")
             {
-                _authToken = "some-auth-token";
+                //return employee token for demo purposes
+                _authToken = "employee-token";
                 _isLoggedIn = true;
                 return true;
             }
 
             return false;
+        }
+
+        //check if user is manager for navigation purposes
+        public async Task<bool> IsUserManagerAsync(CancellationToken cancellationToken = default)
+        {
+            await Task.Delay(500, cancellationToken);
+            //for demo purposes, if the auth token is "manager-token", return true
+            return _authToken == "manager-token";
         }
 
         public async Task LogoutAsync(CancellationToken cancellationToken = default)

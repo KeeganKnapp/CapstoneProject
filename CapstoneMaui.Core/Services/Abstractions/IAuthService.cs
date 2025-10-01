@@ -7,5 +7,7 @@ namespace CapstoneMaui.Core.Services.Abstractions
         Task<bool> IsUserLoggedInAsync(CancellationToken cancellationToken = default);
 
         Task<string> GetAuthTokenAsync(CancellationToken cancellationToken = default);
+
+        Task<bool> IsUserManagerAsync(CancellationToken cancellationToken = default); 
     }
 }

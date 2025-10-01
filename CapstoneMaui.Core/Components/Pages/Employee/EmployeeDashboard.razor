@@ -1,0 +1,42 @@
+@using MudBlazor
+@namespace CapstoneMaui.Core.Components.Pages
+@page "/employee-dashboard"
+
+<!-- <JobSiteSelection/> -->
+
+<!-- <ToDoList/> -->
+
+<!-- <JobSiteMap/> -->
+
+<div style="display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 80vh;">
+@if (clockedIn)
+{
+    <MudButton Variant="Variant.Filled" Color="Color.Secondary" OnClick="ClockOut">
+        Clock Out
+    </MudButton>
+}
+else {
+    <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="ClockIn">
+        Clock In
+    </MudButton>
+}
+<!-- <JobSiteMap/> -->
+
+
+</div>
+
+@code {
+    private bool clockedIn = false;
+
+    private int hoursWorked = 0;
+    private void ClockIn()
+    {
+        //basic clock in, implement check for actual clock in later
+        clockedIn = true;
+    }
+    private void ClockOut()
+    {
+        //basic clock out, implement check for actual clock out later
+        clockedIn = false;
+    }
+}

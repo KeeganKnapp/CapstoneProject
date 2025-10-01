@@ -1,0 +1,29 @@
+﻿@using MudBlazor
+@using CapstoneMaui.Core.Services.Auth
+@using CapstoneMaui.Core.Services.Abstractions
+@inject NavigationManager Nav
+@inject IAuthService AuthService
+
+@page "/"
+
+@code {
+    protected override async Task OnInitializedAsync()
+    {
+        if (await AuthService.IsUserLoggedInAsync())
+        {
+            if(await AuthService.IsUserManagerAsync())
+            {
+                Nav.NavigateTo("/admin-dashboard");
+            }
+            else
+            {
+                Nav.NavigateTo("/employee-dashboard");
+            }
+        }
+        else
+        {
+            Nav.NavigateTo("/login");
+        }
+    }
+}
+
