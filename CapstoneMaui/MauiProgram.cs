@@ -24,13 +24,16 @@ namespace CapstoneMaui
 			//add API singletons here with abstraction and concrete implementation
 			builder.Services.AddSingleton<IAuthService, AuthService>();
 
-#if DEBUG
+	#if ANDROID && DEBUG
 		Android.Webkit.WebView.SetWebContentsDebuggingEnabled(true);
-		builder.Services.AddBlazorWebViewDeveloperTools();
-		builder.Logging.AddDebug();
-#endif
+	#endif
 
-			return builder.Build();
+	#if DEBUG
+		builder.Services.AddBlazorWebViewDeveloperTools();
+        builder.Logging.AddDebug();
+	#endif
+
+            return builder.Build();
 		}
 	}
 
