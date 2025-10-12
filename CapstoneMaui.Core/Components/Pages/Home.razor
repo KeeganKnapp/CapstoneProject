@@ -11,7 +11,14 @@
     {
         if (await AuthService.IsUserLoggedInAsync())
         {
-            Nav.NavigateTo("/dashboard");
+            if(await AuthService.IsUserManagerAsync())
+            {
+                Nav.NavigateTo("/admin-dashboard");
+            }
+            else
+            {
+                Nav.NavigateTo("/employee-dashboard");
+            }
         }
         else
         {

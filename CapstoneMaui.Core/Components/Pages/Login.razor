@@ -1,4 +1,4 @@
-@using MudBlazor
+﻿@using MudBlazor
 @using CapstoneMaui.Core.Services.Auth
 @using CapstoneMaui.Core.Services.Abstractions
 @inject IAuthService AuthService
@@ -24,7 +24,11 @@
     {
         loggedIn = await AuthService.LoginAsync(_email, _password);
         if(loggedIn) {
-            Nav.NavigateTo("/dashboard");
+            if (await AuthService.IsUserManagerAsync()) {
+                Nav.NavigateTo("/manager-dashboard");
+            } else {
+                Nav.NavigateTo("/employee-dashboard");
+            }
         }
     }
 }
