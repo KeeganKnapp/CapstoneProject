@@ -94,3 +94,11 @@ CREATE TABLE userRecipient (
   FOREIGN KEY (recipientId) REFERENCES employee(employeeId) ON DELETE CASCADE
 );
 
+CREATE TABLE IF NOT EXIST timeEntry (
+  timeEntryId serial PRIMARY KEY,
+  employeeId int NOT NULL REFERENCES employee(employeeId) ON DELETE CASCADE,
+  startTime timestamptz NOT NULL DEFAULT now(),
+  endTime timestamptz NULL, 
+  CONSTRAINT end_after_start CHECK (endTime IS NULL OR endTime > startTime)
+);
+CREATE INDEX IF NOT EXISTS idx_timeentry_employee_open  ON timeEntry (emplyeeId) WHERE endTime IS NULL;
