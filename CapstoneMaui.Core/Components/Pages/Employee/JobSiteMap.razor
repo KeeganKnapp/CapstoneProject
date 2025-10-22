@@ -30,7 +30,7 @@
         // Logic to focus on the job site on the map
         // This would typically involve calling a JS function to update the map view
         if(siteId == Guid.Empty) return;
-        await JS.InvokeVoidAsync("capstoneMap.focusOnLocation", siteId.ToString());
+        await JS.InvokeVoidAsync("capstoneMap.focusOnLocation", siteId);
     }
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
