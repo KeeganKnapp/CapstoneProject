@@ -39,11 +39,14 @@ namespace CapstoneMaui
 
 #if DEBUG
 		Android.Webkit.WebView.SetWebContentsDebuggingEnabled(true);
-		builder.Services.AddBlazorWebViewDeveloperTools();
-		builder.Logging.AddDebug();
-#endif
+	#endif
 
-			return builder.Build();
+	#if DEBUG
+		builder.Services.AddBlazorWebViewDeveloperTools();
+        builder.Logging.AddDebug();
+	#endif
+
+            return builder.Build();
 		}
 	}
 
