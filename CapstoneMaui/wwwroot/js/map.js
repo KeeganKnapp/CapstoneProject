@@ -35,7 +35,7 @@ console.log("[map.js] loaded");
         const marker = new google.maps.Marker({
             position: pos,
             map,
-            title: site.name ?? ("Site " + (site.id ?? "")),
+            title: site.name ?? (site.id ?? ""),
             optimized: false
         });
 
@@ -105,9 +105,20 @@ console.log("[map.js] loaded");
         // create map if not exists
         if (!map) {
             map = new google.maps.Map(el, {
+                
                 center: { lat: 41.0814, lng: -81.5190 },
                 zoom: 12,
                 mapTypeId: "roadmap",
+
+                disableDefaultUI: true,
+                zoomControl: false,
+                mapTypeControl: false,
+                streetViewControl: false,
+                fullscreenControl: false,
+
+                draggable: false,
+                gestureHandling: 'none',
+                disableDoubleClickZoom: true,
             });
             console.log("[map.js] map created");
         } else {
