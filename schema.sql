@@ -94,9 +94,9 @@ CREATE TABLE userRecipient (
   FOREIGN KEY (recipientId) REFERENCES employee(employeeId) ON DELETE CASCADE
 );
 
-CREATE TABLE IF NOT EXIST timeEntry (
-  timeEntryId serial PRIMARY KEY,
-  employeeId int NOT NULL REFERENCES employee(employeeId) ON DELETE CASCADE,
+CREATE TABLE IF NOT EXISTS time_entries (
+  time_entry_id serial PRIMARY KEY,
+  employee_id int NOT NULL REFERENCES employee(employeeId) ON DELETE CASCADE,
   startTime timestamptz NOT NULL DEFAULT now(),
   endTime timestamptz NULL, 
   CONSTRAINT end_after_start CHECK (endTime IS NULL OR endTime > startTime)

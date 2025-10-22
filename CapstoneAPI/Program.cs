@@ -1,20 +1,20 @@
-using Microsoft.AspNetCore.Builder;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
-using Microsoft.EntityFrameworkCore;
 using CapstoneAPI.Data;
+using Microsoft.EntityFrameworkCore;
+using Npgsql.EntityFrameworkCore.PostgreSQL;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// registering CapstoneDbContext with Postgres
-builder.Services.AddDbContext<CapstoneDbContext>(opt => opt.UseNpgsql(builder.Configuration.GetConnectionString("Postgres")));
 
-// add controllers for routing
+
+// Controllers + Swagger
 builder.Services.AddControllers();
+builder.Services.AddEndpointsApiExplorer();
 
 var app = builder.Build();
 
-// map controller endpoints E.g. /api/timeentries
-app.MapControllers();
 
+
+app.UseHttpsRedirection();
+
+app.MapControllers();
 app.Run();
