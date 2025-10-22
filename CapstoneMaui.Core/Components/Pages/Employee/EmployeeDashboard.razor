@@ -1,7 +1,10 @@
+@using CapstoneMaui.Core.Services
 @using MudBlazor
 @using MudBlazor.Components
 @using CapstoneMaui.Core.Models
+@inject AbstractLoggerService Logger
 @namespace CapstoneMaui.Core.Components.Pages.Employee
+
 @page "/employee-dashboard"
 
 
@@ -11,7 +14,7 @@
 <MudStack AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween" Spacing="3" Style="max-height: 100vh;">
 
 
-<MudSelect T="string" @bind-Value="selectedSite" Label="Select Job Site" Variant="Variant.Outlined">
+<MudSelect T="Guid" @bind-Value="selectedSite" Label="Select Job Site" Variant="Variant.Outlined">
     <MudSelectItem Value="@sites[0].Id">Downtown Construction Site</MudSelectItem>
     <MudSelectItem Value="@sites[1].Id">Uptown Renovation Project</MudSelectItem>
     <MudSelectItem Value="@sites[2].Id">Suburban Housing Development</MudSelectItem>
@@ -48,7 +51,7 @@ else {
 @code {
     private bool clockedIn = false;
 
-    private string selectedSite = string.Empty;
+    private Guid selectedSite = Guid.Empty;
     public List<SiteDto> sites = new()
     {
         new SiteDto(Guid.NewGuid(), "Downtown Construction Site", 47.6062, -122.3321, 100),
