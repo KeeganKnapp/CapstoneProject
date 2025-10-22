@@ -1,6 +1,5 @@
 using CapstoneMaui.Core.Services;
 
-
 namespace CapstoneMaui.Platforms.Android.Services
 {
 
@@ -20,7 +19,7 @@ namespace CapstoneMaui.Platforms.Android.Services
             };
             var senderName = sender.ToString().Split('.').Last();
             message = $"[{senderName}] {emoji} {message}";	
-
+#if ANDROID
             switch (level.ToLower())
             {
                 case "error":
@@ -44,7 +43,7 @@ namespace CapstoneMaui.Platforms.Android.Services
             OnLog(message);
         }
 
-
+#endif
     }
 
 }

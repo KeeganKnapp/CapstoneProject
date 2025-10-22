@@ -31,7 +31,7 @@ public class UnitTest1 : TestContext
 
         using var ctx = new TestContext();
         ctx.Services.AddSingleton(authServiceMock.Object);
-        ctx.Services.AddMudServices(); // <-- This registers all MudBlazor services
+        ctx.Services.AddMudServices();
 
         var navMan = ctx.Services.GetRequiredService<NavigationManager>();
         ctx.JSInterop.SetupVoid("mudElementRef.addOnBlurEvent", _ => true);
@@ -46,7 +46,6 @@ public class UnitTest1 : TestContext
     [Fact]
     public void Login_NavigatesToManagerDashboard_WhenManager()
     {
-        // Arrange
         var authServiceMock = new Mock<IAuthService>();
         authServiceMock
             .Setup(x => x.LoginAsync(It.IsAny<string>(), It.IsAny<string>(), default))
@@ -63,7 +62,7 @@ public class UnitTest1 : TestContext
 
         using var ctx = new TestContext();
         ctx.Services.AddSingleton(authServiceMock.Object);
-        ctx.Services.AddMudServices(); // <-- This registers all MudBlazor services
+        ctx.Services.AddMudServices();
 
         var navMan = ctx.Services.GetRequiredService<NavigationManager>();
         ctx.JSInterop.SetupVoid("mudElementRef.addOnBlurEvent", _ => true);
@@ -74,4 +73,5 @@ public class UnitTest1 : TestContext
 
         Assert.Contains("/manager-dashboard", navMan.Uri);
     }
+
 }

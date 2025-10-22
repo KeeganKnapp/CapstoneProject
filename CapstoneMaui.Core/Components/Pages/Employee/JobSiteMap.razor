@@ -1,1 +1,69 @@
-﻿@using MudBlazor
+﻿@using Microsoft.JSInterop
+@using CapstoneMaui.Core.Models
+@using MudBlazor
+@inject IJSRuntime JS
+@namespace CapstoneMaui.Core.Components.Pages.Employee
+
+<!-- Filler, replace with actual map later -->
+<MudCard Class="m-0" Elevation="0" Style="width:100vw; height:100vh;">
+    <MudCardContent Style="padding:0;">
+        <div id="@_id" style="height:100%; width:100%;"></div>
+    </MudCardContent>
+</MudCard>
+
+
+@code {
+    [Parameter] public string currentSiteId { get; set; } = "-1";
+    [Parameter] public string Height { get; set; } = "420px";
+    [Parameter] public IEnumerable<SiteDto>? Sites { get; set; }
+    [Parameter] public EventCallback<SiteDto> OnChanged { get; set; }
+
+    bool initialized = false;
+    private string previousSiteId = "-1";
+    string _id = $"map_{Guid.NewGuid():N}";
+    DotNetObjectReference<JobSiteMap>? _ref;
+
+    private async Task FocusOnJobSite(string siteId)
+    {
+        // Logic to focus on the job site on the map
+        // This would typically involve calling a JS function to update the map view
+        if(string.IsNullOrEmpty(siteId) || siteId == "-1") return;
+        await JS.InvokeVoidAsync("capstoneMap.focusOnLocation", siteId);
+    }
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!firstRender) return;
+        _ref = DotNetObjectReference.Create(this);
+        await JS.InvokeVoidAsync("capstoneMap.init", $"#{_id}", _ref, Sites ?? Array.Empty<SiteDto>());
+
+        if(!string.IsNullOrEmpty(currentSiteId))
+        {
+            await FocusOnJobSite(currentSiteId);
+        }
+    }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (initialized && previousSiteId != currentSiteId)
+        {
+            await FocusOnJobSite(currentSiteId);
+            previousSiteId = currentSiteId;
+        }
+        else if (!initialized)
+        {
+            await FocusOnJobSite(currentSiteId);
+            previousSiteId = currentSiteId;
+            initialized = true;
+        }
+    }
+
+    [JSInvokable] public Task OnSiteChanged(SiteDto site) => OnChanged.InvokeAsync(site);
+
+    public async ValueTask DisposeAsync()
+    {
+        if (_ref is not null) _ref.Dispose();
+        if(_initialized)
+            await JS.InvokeVoidAsync("capstoneMap.dispose");
+    }
+
+}
