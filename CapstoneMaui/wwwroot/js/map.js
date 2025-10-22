@@ -35,8 +35,9 @@ console.log("[map.js] loaded");
         const marker = new google.maps.Marker({
             position: pos,
             map,
-            title: site.name ?? (site.id ?? ""),
-            optimized: false
+            title: site.name ?? 'Site',
+            optimized: false,
+            id: site.id ?? null,
         });
 
         // styling: choose color by type or fallback
@@ -161,10 +162,35 @@ console.log("[map.js] loaded");
     }
 
     function focusOnLocation(siteId) {
-        const marker = markers.find(m => m.title === siteId || (m.site && m.site.id === siteId));
-        if (marker) {
-            map.panTo(marker.getPosition());
-            map.setZoom(14);
+        try {
+            if (!siteId || !map) return;
+            const sid = String(siteId);
+
+            // debug list of marker ids
+            console.log("[map.js] markers count:", markers.length);
+
+            // robust search: look for explicit _capstoneId, fallback to id property
+            let marker = null;
+            for (const m of markers) {
+                const idVal = (m && (m._capstoneId ?? m.id ?? (m.get && typeof m.get === 'function' ? m.get('id') : undefined)));
+                console.log("[map.js] checking marker id:", idVal);
+                if (String(idVal) === sid) { marker = m; break; }
+            }
+
+            console.log("[map.js] focusOnLocation", siteId, marker);
+            if (marker) {
+                const pos = marker.getPosition ? marker.getPosition() : null;
+                if (pos) {
+                    map.panTo(pos);
+                    map.setZoom(16);
+                } else {
+                    console.warn("[map.js] marker has no position");
+                }
+            } else {
+                console.warn("[map.js] marker not found for id", sid);
+            }
+        } catch (err) {
+            console.error("[map.js] focusOnLocation error", err);
         }
     }
 
