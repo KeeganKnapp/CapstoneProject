@@ -3,15 +3,23 @@
 
 using Microsoft.EntityFrameworkCore;
 using CapstoneAPI.Models;
+using System.Dynamic;
 
-namespace CapstoneAPI.Models;
-
-
+namespace CapstoneAPI.Data
+{
     public class CapstoneDbContext : DbContext
     {
         public CapstoneDbContext(DbContextOptions<CapstoneDbContext> options) : base(options) { }
 
-        // DbSet = queryable representation of a table
-        public DbSet<CapstoneAPI.Models.TimeEntry> TimeEntries => Set<CapstoneAPI.Models.TimeEntry>();
+        public DbSet<TimeEntry> TimeEntries => Set<TimeEntry>();
 
+        protected override void OnModelCreating(ModelBuilder modelBuilder)
+        {
+            modelBuilder.Entitity<TimeEntry>(entity =>
+            {
+                entity.ToTable("TimeEntry");
+                entity.HasKey(entity => entity.Id);
+            });
+        }
     }
+}
