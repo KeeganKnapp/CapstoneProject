@@ -1,18 +1,25 @@
 using CapstoneMaui.Core.Services;
-using global::Android.Util;
-
-
-using Log = global::Android.Util.Log;
-using Toast = global::Android.Widget.Toast;
-using Application = global::Android.App.Application;
 
 namespace CapstoneMaui.Platforms.Android.Services
 {
 
-    public class AndroidLoggerService : ILoggerService
+    public class AndroidLoggerService : AbstractLoggerService
     {
-        public void Log(string message, string level = "info")
+        public override void Log(object? sender, string message, string level = "info")
         {
+		    //add emojis to final string for level
+            string emoji = level switch
+            {
+                "error" => "❌",
+                "warning" => "⚠️",
+                "info" => "ℹ️",
+                "debug" => "🐞",
+                "trace" => "🔍",
+                _ => "ℹ️"
+            };
+            var senderName = sender.ToString().Split('.').Last();
+            message = $"[{senderName}] {emoji} {message}";	
+#if ANDROID
             switch (level.ToLower())
             {
                 case "error":
@@ -32,7 +39,11 @@ namespace CapstoneMaui.Platforms.Android.Services
                     global::Android.Util.Log.Info("AndroidLoggerService", message);
                     break;
             }
+            LogToSystem(message);
+            OnLog(message);
         }
+
+#endif
     }
 
 }

@@ -9,6 +9,7 @@
 @code {
     protected override async Task OnInitializedAsync()
     {
+        /*
         if (await AuthService.IsUserLoggedInAsync())
         {
             if(await AuthService.IsUserManagerAsync())
@@ -19,11 +20,18 @@
             {
                 Nav.NavigateTo("/employee-dashboard");
             }
+            
+
         }
         else
         {
             Nav.NavigateTo("/login");
         }
+        */
+
+
+        //auto nav to employee dashboard for now
+        Nav.NavigateTo("/employee-dashboard");
     }
 }
 
