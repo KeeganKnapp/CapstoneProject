@@ -42,7 +42,6 @@ namespace CapstoneAPI.Controllers
         {
             if (req is null) return BadRequest("Request body is required.");
 
-            // 1) Close a specific entry if a TimeEntryId is provided
             if (req.TimeEntryId.HasValue && req.TimeEntryId.Value > 0)
             {
                 var entryById = await _db.TimeEntries
@@ -56,7 +55,6 @@ namespace CapstoneAPI.Controllers
                 return Ok(entryById);
             }
 
-            // 2) Otherwise, close the most recent open entry for an employee
             if (!req.EmployeeId.HasValue || req.EmployeeId.Value <= 0)
                 return BadRequest("Provide TimeEntryId or a positive EmployeeId.");
 

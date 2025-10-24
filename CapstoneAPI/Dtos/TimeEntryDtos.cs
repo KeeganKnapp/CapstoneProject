@@ -1,6 +1,6 @@
 namespace CapstoneAPI.Dtos
 {
-    // For POST /time-entries/clock-in
+    // for POST /time-entries/clock-in
     public sealed class ClockInRequest
     {
         public int EmployeeId { get; set; }              // required (>0)
