@@ -94,3 +94,10 @@ CREATE TABLE userRecipient (
   FOREIGN KEY (recipientId) REFERENCES employee(employeeId) ON DELETE CASCADE
 );
 
+CREATE TABLE IF NOT EXISTS "TimeEntry" (
+  "TimeEntryId" BIGSERIAL PRIMARY KEY,
+  "EmployeeId" INT NOT NULL,
+  "AssignmentId" INT NULL,
+  "StartTime" TIMESTAMPTZ NOT NULL DEFAULT now(),
+  "EndTime" TIMESTAMPTZ NULL
+);
