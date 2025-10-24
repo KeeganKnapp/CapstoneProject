@@ -3,7 +3,7 @@
 
 using Microsoft.EntityFrameworkCore;
 using CapstoneAPI.Models;
-using System.Dynamic;
+using System.Security.Cryptography.X509Certificates;
 
 namespace CapstoneAPI.Data
 {
@@ -15,10 +15,15 @@ namespace CapstoneAPI.Data
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
-            modelBuilder.Entitity<TimeEntry>(entity =>
+            modelBuilder.Entity<TimeEntry>(e =>
             {
-                entity.ToTable("TimeEntry");
-                entity.HasKey(entity => entity.Id);
+                e.ToTable("TimeEntry");
+                e.HasKey(x => x.TimeEntryId);
+                e.Property(x => x.TimeEntryId).HasColumnName("TimeEntryId");
+                e.Property(x => x.EmployeeId).HasColumnName("EmployeeId");
+                e.Property(x => x.AssignmentId).HasColumnName("AssignmentId");
+                e.Property(x => x.StartTime).HasColumnName("StartTime");
+                e.Property(x => x.EndTime).HasColumnName("EndTime");
             });
         }
     }

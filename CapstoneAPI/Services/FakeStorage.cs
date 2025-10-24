@@ -7,6 +7,7 @@
 */
 
 using CapstoneAPI.Dtos;
+using CapstoneAPI.Models;
 
 namespace CapstoneAPI.Services;
 
@@ -14,7 +15,7 @@ namespace CapstoneAPI.Services;
 public static class FakeStorage
 {
     // storing all clock in/out entries during runtime
-    public static readonly List<TimeEntryDto> timeEntries = new();
+    public static readonly List<TimeEntry> timeEntries = new();
 
     // hardcoded jobsite list of employees assigned
     public static readonly Dictionary<int, List<AssignmentDto>> assignmentsByJobsite = new()

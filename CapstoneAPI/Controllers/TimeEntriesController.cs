@@ -1,13 +1,8 @@
-using CapstoneAPI.Data;             
-using CapstoneAPI.Models;            
+using CapstoneAPI.Data;
+using CapstoneAPI.Models;
+using CapstoneAPI.Dtos;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using System;
-using System.Linq;
-using System.Net;
-using System.Threading;
-using System.Threading.Tasks;
-
 
 namespace CapstoneAPI.Controllers
 {
@@ -18,46 +13,64 @@ namespace CapstoneAPI.Controllers
         private readonly CapstoneDbContext _db;
         public TimeEntriesController(CapstoneDbContext db) => _db = db;
 
-
         // POST /time-entries/clock-in
-
         [HttpPost("clock-in")]
         public async Task<ActionResult<TimeEntry>> ClockIn([FromBody] ClockInRequest req, CancellationToken ct)
         {
+            if (req is null) return BadRequest("Request body is required.");
+            if (req.EmployeeId <= 0) return BadRequest("EmployeeId must be positive.");
+
+            var start = req.StartTime ?? DateTimeOffset.UtcNow;
+
             var entry = new TimeEntry
             {
-                EmployeeId = req.EmployeeId,
+                EmployeeId   = req.EmployeeId,
                 AssignmentId = req.AssignmentId,
-                StartTime = req.StartTime,
-                EndTime = req.EndTime
+                StartTime    = start,
+                EndTime      = null
             };
 
-            _db.Set<TimeEntry>().Add(entry);
+            _db.TimeEntries.Add(entry);
             await _db.SaveChangesAsync(ct);
-            return StatusCode(Microsoft.AspNetCore.Http.StatusCodes.Status201Created, entry);
+
+            return Created(string.Empty, entry);
         }
 
+        // POST /time-entries/clock-out
         [HttpPost("clock-out")]
-        public async System.Threading.Tasks.Task<ActionResult<TimeEntry>> ClockOut([FromBody] ClockOutRequest req, System.Threading.CancellationToken ct)
+        public async Task<ActionResult<TimeEntry>> ClockOut([FromBody] ClockOutRequest req, CancellationToken ct)
         {
-            var entry = await _db.Set<TimeEntry>()
-                .Where(t => t.EmployeeId && t.EndTimeUtc == null)
-                .OrderByDescending(t => t.StartTimeUtc)
+            if (req is null) return BadRequest("Request body is required.");
+
+            // 1) Close a specific entry if a TimeEntryId is provided
+            if (req.TimeEntryId.HasValue && req.TimeEntryId.Value > 0)
+            {
+                var entryById = await _db.TimeEntries
+                    .FirstOrDefaultAsync(t => t.TimeEntryId == req.TimeEntryId.Value, ct);
+
+                if (entryById is null)
+                    return NotFound(new { error = "Time entry not found." });
+
+                entryById.EndTime = req.EndTime ?? DateTimeOffset.UtcNow;
+                await _db.SaveChangesAsync(ct);
+                return Ok(entryById);
+            }
+
+            // 2) Otherwise, close the most recent open entry for an employee
+            if (!req.EmployeeId.HasValue || req.EmployeeId.Value <= 0)
+                return BadRequest("Provide TimeEntryId or a positive EmployeeId.");
+
+            var openEntry = await _db.TimeEntries
+                .Where(t => t.EmployeeId == req.EmployeeId.Value && t.EndTime == null)
+                .OrderByDescending(t => t.StartTime)
                 .FirstOrDefaultAsync(ct);
 
-
-            if (entry is null)
+            if (openEntry is null)
                 return NotFound(new { error = "No open time entry found for this employee." });
 
-            entry.EndTimeUtc = System.DateTime.UtcNow;
+            openEntry.EndTime = req.EndTime ?? DateTimeOffset.UtcNow;
             await _db.SaveChangesAsync(ct);
-
-            return DayOfWeek(entry);
+            return Ok(openEntry);
         }
-
-        
-        public record ClockInRequest(int EmployeeId, int? AssignmentId);
-        public record ClockOutRequest(int EmployeeId);
-        
     }
 }
