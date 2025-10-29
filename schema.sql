@@ -20,14 +20,14 @@ CREATE TABLE IF NOT EXISTS "Users" (
   "UserId" uuid PRIMARY KEY DEFAULT gen_random_uuid(),  -- internal id
   "Email" citext NOT NULL UNIQUE,                       -- case insensitive login name
   "PasswordHash" text NOT NULL,                         -- bcrypt
-  "DisplayName" text
-  "IsActive"     boolean  NOT NULL DEFAULT TRUE,        -- kill switch
+  "DisplayName" text,
+  "IsActive"     boolean NOT NULL DEFAULT TRUE,        -- kill switch
   "CreatedAt"    timestamptz NOT NULL DEFAULT now(),
   "UpdatedAt"    timestamptz NOT NULL DEFAULT now()
-)
+);
 
 CREATE TABLE IF NOT EXISTS "RefreshTokens" (
-  "RefreshTokenID"  uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  "RefreshTokenId"  uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   "UserId"           uuid NOT NULL REFERENCES "Users"("UserId") ON DELETE CASCADE,
   "Token"             text NOT NULL UNIQUE,          -- random opaque string (not a JWT)
   "CreatedAt"        timestamptz NOT NULL DEFAULT now(),
