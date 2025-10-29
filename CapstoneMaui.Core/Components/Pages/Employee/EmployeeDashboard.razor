@@ -1,18 +1,15 @@
-@using CapstoneMaui.Core.Services
+@using CapstoneMaui.Core.Services.Abstractions
+@using CapstoneMaui.Core.Services.Utilities
 @using MudBlazor
 @using MudBlazor.Components
 @using CapstoneMaui.Core.Models
 @inject AbstractLoggerService Logger
+@inject LocationManager LocationManager
 @namespace CapstoneMaui.Core.Components.Pages.Employee
 
 @page "/employee-dashboard"
 
-
-
-
-
-<MudStack AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween" Spacing="3" Style="max-height: 100vh;">
-
+<MudStack AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween" Spacing="3" Style="height: 100%;">   
 
 <MudSelect T="Guid" @bind-Value="selectedSite" Label="Select Job Site" Variant="Variant.Outlined">
     <MudSelectItem Value="@sites[0].Id">Downtown Construction Site</MudSelectItem>
@@ -22,9 +19,9 @@
 
 <ToDo/>
 
-
-<JobSiteMap currentSiteId="@selectedSite" Height="55vh" Sites="@sites" OnChanged="@((site) => SaveSite(this, site))" />
-
+<div style="height:200px; max-width:1100px;">
+<JobSiteMap currentSiteId="@selectedSite" Sites="@sites" OnChanged="@((site) => SaveSite(this, site))" />
+</div>
 
 <MudText Typo="Typo.body1">Hours Worked: @hoursWorked</MudText>
 
@@ -39,17 +36,20 @@ else {
         Clock In
     </MudButton>
 }
-<MudStack Row=true Justify="Justify.SpaceBetween">
+<MudStack Row="true" Justify="Justify.SpaceBetween">
     <MudIconButton Icon="@Icons.Material.Filled.Wallet" Color="Color.Info" Size="Size.Large" />
     <MudButton Variant="Variant.Filled">Request</MudButton>
     <MudIconButton Icon="@Icons.Material.Filled.Notifications" Color="Color.Warning" Size="Size.Large" />
 </MudStack>
-   
-</MudStack  >
+
+</MudStack>
 
 
 @code {
     private bool clockedIn = false;
+
+    private double currentLatitude = 47.6062;
+    private double currentLongitude = -122.3321;
 
     private Guid selectedSite = Guid.Empty;
     public List<SiteDto> sites = new()
@@ -65,11 +65,29 @@ else {
     }
 
     private int hoursWorked = 0;
-    private void ClockIn()
+    private async Task ClockIn()
     {
+        var site = sites.First(s => s.Id == selectedSite);
+        Logger.Log(this,$"Attempting to clock in at location: {currentLatitude}, {currentLongitude}");
         //basic clock in, implement check for actual clock in later
-        clockedIn = true;
+        //check current location against job site
+        if(selectedSite == Guid.Empty)
+        {
+            //no site selected
+            Logger.Log(this, "No job site selected", "error");
+            return;
+        }
+        if (await LocationManager.IsWithinRadiusAsync(site.Lat, site.Lng, site.RadiusMeters))
+        {
+            clockedIn = true;
+            Logger.Log(this, "Clocked in successfully", "info");
+        }
+        else
+        {
+            Logger.Log(this, "Not within radius of job site", "error");
+        }
     }
+
     private void ClockOut()
     {
         //basic clock out, implement check for actual clock out later

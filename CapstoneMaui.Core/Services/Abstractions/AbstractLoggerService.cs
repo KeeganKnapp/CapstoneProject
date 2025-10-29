@@ -2,7 +2,8 @@ using System;
 using Microsoft.Extensions.Logging;
 
 
-namespace CapstoneMaui.Core.Services;
+namespace CapstoneMaui.Core.Services.Abstractions
+{
 
 public abstract class AbstractLoggerService
 {
@@ -21,4 +22,5 @@ public abstract class AbstractLoggerService
 	{
 		OnLogMessage?.Invoke(this, message);
 	}
+}
 }

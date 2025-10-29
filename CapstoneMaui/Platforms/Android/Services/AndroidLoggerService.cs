@@ -1,4 +1,4 @@
-using CapstoneMaui.Core.Services;
+using CapstoneMaui.Core.Services.Abstractions;
 
 namespace CapstoneMaui.Platforms.Android.Services
 {
