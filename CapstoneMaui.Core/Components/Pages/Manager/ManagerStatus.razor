@@ -32,7 +32,7 @@
 	
 </style>
 
-
+<ManagerTopBar/>
 <MudStack AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween" Spacing="3" Style="max-height: 100vh;">
 	<MudSelect T="Guid" @bind-Value="selectedSite" Label="Select Job Site" Variant="Variant.Outlined">
 		<MudSelectItem Value="@sites[0].Id">Downtown Construction Site</MudSelectItem>
@@ -81,13 +81,9 @@
 				Remove
 			</MudButton>
 	</MudStack>
-
-	<MudStack Row=true Justify="Justify.SpaceBetween">
-		<MudIconButton Icon="@Icons.Material.Filled.Wallet" Color="Color.Info" Size="Size.Large" />
-		<MudButton Variant="Variant.Filled">Request</MudButton>
-		<MudIconButton Icon="@Icons.Material.Filled.Notifications" Color="Color.Warning" Size="Size.Large" />
-	</MudStack>
 </MudStack>
+
+<ManagerBottomBar/>
 
 
 

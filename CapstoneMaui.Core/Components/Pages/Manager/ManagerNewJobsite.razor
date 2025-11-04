@@ -8,6 +8,7 @@
 
 @page "/manager-newjobsite"
 
+<ManagerTopBar/>
 
 <MudStack AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween" Spacing="3" Style="max-height: 100vh;">
 
@@ -18,7 +19,7 @@
         <MudSelectItem Value="@sites[2].Id">Suburban Housing Development</MudSelectItem>
     </MudSelect>
 
-     <JobSiteMap currentSiteId="@selectedSite" Height="15%" Sites="@sites" OnChanged="@((site) => SaveSite(this, site))" />
+     <JobSiteMap currentSiteId="@selectedSite" Height="25vh" Sites="@sites" OnChanged="@((site) => SaveSite(this, site))" />
 
 
     <MudStack Row=true Justify="Justify.SpaceAround" Spacing="2">
@@ -33,7 +34,7 @@
         </MudButton>
     </MudStack>
 
-    <MudPaper Width="100%" style="height:400px;overflow: auto;">
+    <MudPaper Width="100%" style="height:200px;overflow: auto;">
         <MudPaper Elevation="0" Outlined="true" Height="1000px">
             <table style="width:100%">
                     @foreach (var name in _namePlaceholder)
@@ -46,19 +47,9 @@
             </table>
         </MudPaper>
     </MudPaper>
-
-    <MudStack Row=true Justify="Justify.SpaceBetween">
-        <MudIconButton Icon="@Icons.Material.Filled.Wallet" Color="Color.Info" Size="Size.Large" />
-        <MudButton Variant="Variant.Filled">Request</MudButton>
-        <MudIconButton Icon="@Icons.Material.Filled.Notifications" Color="Color.Warning" Size="Size.Large" />
-    </MudStack>
 </MudStack>
 
-
-<footer>
-
-    
-</footer>
+<ManagerBottomBar/>
 
 @code {
     private string _value3;
