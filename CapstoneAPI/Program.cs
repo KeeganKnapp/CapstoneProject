@@ -60,7 +60,7 @@ if (string.IsNullOrWhiteSpace(secret))
     throw new InvalidOperationException("Missing JWT secret. Set Jwt:Secret (preferred) or Jwt:Key in appsettings.json.");
 }
 
-var signingKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secret));
+var signingKey = new SymmetricSecurityKey(Convert.FromBase64String(secret));
 
 builder.Services.AddAuthentication(options =>
     {
