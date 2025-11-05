@@ -13,6 +13,31 @@ DROP TYPE role;
 DROP TYPE requestType;
 DROP TYPE messageType;
 
+CREATE EXTENSION IF NOT EXISTS pgcrypto;
+CREATE EXTENSION IF NOT EXISTS citext;
+
+CREATE TABLE IF NOT EXISTS "Users" (
+  "UserId" uuid PRIMARY KEY DEFAULT gen_random_uuid(),  -- internal id
+  "Email" citext NOT NULL UNIQUE,                       -- case insensitive login name
+  "PasswordHash" text NOT NULL,                         -- bcrypt
+  "DisplayName" text,
+  "IsActive"     boolean NOT NULL DEFAULT TRUE,        -- kill switch
+  "CreatedAt"    timestamptz NOT NULL DEFAULT now(),
+  "UpdatedAt"    timestamptz NOT NULL DEFAULT now()
+);
+
+CREATE TABLE IF NOT EXISTS "RefreshTokens" (
+  "RefreshTokenId"  uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  "UserId"           uuid NOT NULL REFERENCES "Users"("UserId") ON DELETE CASCADE,
+  "Token"             text NOT NULL UNIQUE,          -- random opaque string (not a JWT)
+  "CreatedAt"        timestamptz NOT NULL DEFAULT now(),
+  "ExpiresAt"        timestamptz NOT NULL,
+  "RevokedAt"       timestamptz,
+  "ReplacedByToken" text                           -- rotation chain tracking (optional)
+);
+
+CREATE INDEX IF NOT EXISTS "idx_refresh_tokens_user_id" ON "RefreshTokens"("UserId");
+
 -- Switched this to an ENUM in case we ever expand this to something like owner, manager, employee etc.
 -- If we change this you drop an ENUM via the command below, otherwise it will fail
 -- DROP TYPE enumNameHere;
