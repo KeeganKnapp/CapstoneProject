@@ -2,13 +2,12 @@
 @using MudBlazor
 @using MudBlazor.Components
 @using CapstoneMaui.Core.Models
+@namespace CapstoneMaui.Core.Components.Pages
 @inject AbstractLoggerService Logger
 @inject NavigationManager Nav
-@namespace CapstoneMaui.Core.Components.Pages.Employee
 
-@page "/manager-newjobsite"
 
-<ManagerTopBar/>
+
 
 <MudStack AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween" Spacing="3" Style="max-height: 100vh;">
 
@@ -48,8 +47,6 @@
         </MudPaper>
     </MudPaper>
 </MudStack>
-
-<ManagerBottomBar/>
 
 @code {
     private string _value3;

@@ -2,9 +2,10 @@
 @namespace CapstoneMaui.Core.Components.Pages
 @inject NavigationManager Nav
 
+@page "/manager"
 
-<!-- Testing -->
-<!--
+
+
 <style>
 	.topBar {
 	width: 100%;
@@ -13,6 +14,7 @@
 
 <div class="topBar"> 
 	<MudSelect @bind-Value="action" Label="Select Action" Variant="Variant.Outlined" Placeholder="Page">
+		<MudSelectItem Value=0>Dashboard</MudSelectItem>
 		<MudSelectItem Value=1>Status</MudSelectItem>
 		<MudSelectItem Value=2>Schedule</MudSelectItem>
 		<MudSelectItem Value=3>Progress</MudSelectItem>
@@ -21,29 +23,33 @@
 	</MudSelect>
 </div>
 
-@switch(action) {
+@switch (action)
+{
+	case 0:
+		<ManagerDashboard/>
+		break;
 	case 1:
-		Nav.NavigateTo("/manager-status");
+		<ManagerStatus/>
 		break;
 	case 2:
-		Nav.NavigateTo("/manager-schedule");
+		<ManagerSchedule/>
 		break;
 	case 3:
-		Nav.NavigateTo("/manager-progress");
+		<ManagerProgress/>
 		break;
 	case 4:
-		Nav.NavigateTo("/manager-newjobsite");
+		<ManagerNewJobsite/>
 		break;
 	case 5:
-		Nav.NavigateTo("/manager-account");
+		<ManagerManageAccount/>
 		break;
 	default:
 		break;
 }
 
+<ManagerBottomBar/>
+
 
 @code {
 	private int action;
 }
-
--->

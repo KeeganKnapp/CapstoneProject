@@ -2,7 +2,6 @@
 @namespace CapstoneMaui.Core.Components.Pages
 @inject NavigationManager Nav
 
-@page "/manager-account"
 
 <style>
 	.users {
@@ -35,8 +34,6 @@
 	}
 
 </style>
-
-<ManagerTopBar/>
 
 <MudSelect @bind-Value="action" Label="Select Action" Variant="Variant.Outlined" Placeholder="Action">
 	<MudSelectItem Value=1>Create</MudSelectItem>
@@ -103,19 +100,12 @@
 		break;
 }
 
-
-
-
-
-
-<ManagerBottomBar/>
-
 @code {
 	private string _value;
 	private string _value2;
 	private string _value3;
 
-	private int action;
+	private int action = 1;
 
 	private string _email;
 	private string _name;
