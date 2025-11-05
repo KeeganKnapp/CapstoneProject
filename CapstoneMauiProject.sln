@@ -11,6 +11,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{14CC5F83
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Unit", "tests\Unit\Unit.csproj", "{F247AD04-1AAB-4C10-80AC-DC4C825700E8}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CapstoneAPI", "CapstoneAPI\CapstoneAPI.csproj", "{79263C45-3C28-4D62-A9DC-C02E2651C4F8}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -29,6 +31,10 @@ Global
 		{F247AD04-1AAB-4C10-80AC-DC4C825700E8}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{F247AD04-1AAB-4C10-80AC-DC4C825700E8}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{F247AD04-1AAB-4C10-80AC-DC4C825700E8}.Release|Any CPU.Build.0 = Release|Any CPU
+		{79263C45-3C28-4D62-A9DC-C02E2651C4F8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{79263C45-3C28-4D62-A9DC-C02E2651C4F8}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{79263C45-3C28-4D62-A9DC-C02E2651C4F8}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{79263C45-3C28-4D62-A9DC-C02E2651C4F8}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

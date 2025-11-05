@@ -3,7 +3,7 @@ using MudBlazor;
 using MudBlazor.Services;
 using CapstoneMaui.Core.Services.Abstractions;
 using CapstoneMaui.Core.Services.Auth;
-using CapstoneMaui.Core.Services.Utilities;
+using CapstoneMaui.Services;
 namespace CapstoneMaui
 {
 
@@ -21,11 +21,10 @@ namespace CapstoneMaui
 
 			builder.Services.AddMauiBlazorWebView();
 			builder.Services.AddMudServices();
-			builder.Services.AddSingleton<LocationManager>();
 
 			//add API singletons here with abstraction and concrete implementation
 			builder.Services.AddSingleton<IAuthService, AuthService>();
-
+			builder.Services.AddSingleton<LocationManager>();
 #if iOS
 			builder.Services.AddSingleton
 			<CAbstractLoggerService, Platforms.iOS.Services.iOSLoggerService>();

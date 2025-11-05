@@ -3,7 +3,7 @@ using Microsoft.Maui.Devices.Sensors;
 using Microsoft.Maui.ApplicationModel;
 using CapstoneMaui.Core.Services.Abstractions;
 
-namespace CapstoneMaui.Core.Services.Utilities;
+namespace CapstoneMaui.Services;
 
 public class LocationManager
 {

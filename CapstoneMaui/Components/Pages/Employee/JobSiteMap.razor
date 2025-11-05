@@ -4,7 +4,7 @@
 @using MudBlazor
 @inject IJSRuntime JS
 @inject AbstractLoggerService Logger
-@namespace CapstoneMaui.Core.Components.Pages.Employee
+@namespace CapstoneMaui.Components.Pages.Employee
 
 <!-- Filler, replace with actual map later -->
 <div id="@_id" style="height:100%; width:90vw;"></div> @* map canvas gets 100% of card *@
@@ -58,8 +58,14 @@
         }
     }
 
-    [JSInvokable] public Task OnSiteChanged(SiteDto site) => OnChanged.InvokeAsync(site);
-
+   [JSInvokable] 
+   public async Task OnSiteChanged(SiteDto site) 
+   {
+       if (OnChanged.HasDelegate)
+       {
+           await OnChanged.InvokeAsync(site);
+       }
+   }
     public async ValueTask DisposeAsync()
     {
         Logger.Log(this,$"Disposing JobSiteMap");

@@ -1,10 +1,9 @@
 @using CapstoneMaui.Core.Services.Abstractions
-@using CapstoneMaui.Core.Services.Utilities
 @using MudBlazor
 @using MudBlazor.Components
 @using CapstoneMaui.Core.Models
 @inject AbstractLoggerService Logger
-@inject LocationManager LocationManager
+@inject AbstractLocationManager LocationManager
 @namespace CapstoneMaui.Core.Components.Pages.Employee
 
 @page "/employee-dashboard"
@@ -19,9 +18,11 @@
 
 <ToDo/>
 
-<div style="height:200px; max-width:1100px;">
-<JobSiteMap currentSiteId="@selectedSite" Sites="@sites" OnChanged="@((site) => SaveSite(this, site))" />
-</div>
+<MudCard Elevation="2" Style="height: 50vh; width: 90vw;">
+    <MudCardContent Style="height: 100%;">
+<JobSiteMap currentSiteId="@selectedSite" Sites="@sites" OnChanged="@HandleSiteChanged" />
+    </MudCardContent>
+</MudCard>
 
 <MudText Typo="Typo.body1">Hours Worked: @hoursWorked</MudText>
 
@@ -59,10 +60,17 @@ else {
         new SiteDto(Guid.NewGuid(), "Suburban Housing Development", 47.5301, -122.0326, 200)
     };
 
-    public void SaveSite(object? sender, SiteDto site)
-    {
-        //handle site change
-    }
+   private void HandleSiteChanged(SiteDto site)
+   {
+       //handle site change
+       SaveSite(this, site);
+   }
+
+   public void SaveSite(object? sender, SiteDto site)
+   {
+       //handle site change
+       Logger.Log(this, $"Site changed to: {site.Name}");
+  }
 
     private int hoursWorked = 0;
     private async Task ClockIn()
