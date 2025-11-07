@@ -1,0 +1,87 @@
+﻿@using MudBlazor
+@namespace CapstoneMaui.Core.Components.Pages
+@using Flurl;
+@using Flurl.Http;
+@using System;
+@inject NavigationManager Nav
+
+@page "/employee-request"
+
+<style>
+	.users {
+	display: flex;
+	justify-content: space-between;
+	flex-wrap: wrap;
+	}
+	.border {
+	border-style: solid;
+	border-width: 1px;
+	}
+	.textStandard {
+	font-size: 20px; 
+	font-weight:bold;
+	}
+	.headingText {
+	display: flex;
+	justify-content: space-between;
+	margin-left: 5px;
+	margin-right: 5px;
+	}
+	.marginStandard {
+	margin-left: 20px;
+	margin-right: 20px;
+	}
+
+</style>
+
+<div style="position: relative; left: 5px; margin-top: 5px;">
+	<MudButton Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.ArrowBackIos" Color="Color.Secondary" OnClick=Back>
+		Back
+	</MudButton>
+</div>
+
+<MudStack style = "margin-top: 5px;">
+<MudDatePicker Label="Start" @bind-Date="_dateOne"/>
+<MudDatePicker Label="End" @bind-Date="_dateTwo"/>
+<MudTextField Label="Reason" Variant="Variant.Outlined" AutoGrow Style="width: 100%;" @bind-Value="reason" />
+
+<MudButton Variant="Variant.Filled" Color="Color.Secondary" OnClick=request>
+	request
+</MudButton>
+
+</MudStack>
+
+@code {
+	private string _value;
+	private string _value2;
+	private string _value3;
+
+	DateTime? _dateOne;
+	DateTime? _dateTwo;
+	string reason;
+
+	private DateRange _dateRange { get; set; }
+
+
+	// placeholder
+	private void Back()
+	{
+		Nav.NavigateTo("/employee-dashboard");
+	}
+
+	public async Task request()
+	{
+
+		var response = await "http://10.0.2.2:5162/api/RequestOff"
+			.WithOAuthBearerToken("eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxYTBiNTMyNi03NGI2LTRmMjMtYWE3NS05ZTkxOWZkY2ZhYzgiLCJlbWFpbCI6IlRva2VuVGVzdCIsImRpc3BsYXlOYW1lIjoiVG9rZW5UZXN0IiwibmJmIjoxNzYyNDg0NzUwLCJleHAiOjE3NjI0ODU2NTAsImlzcyI6IkNhcHN0b25lQVBJIiwiYXVkIjoiQ2Fwc3RvbmVDbGllbnQifQ.sp8besVWSR5c97sCZ-Qrx-nEdLzO3C2_DPi7yIY-uIQ")
+			.PostJsonAsync(new
+			{
+				startDate = _dateOne?.ToString("yyyy-MM-dd"),
+				endDate = _dateTwo?.ToString("yyyy-MM-dd"),
+				note = reason
+			});
+		Console.Write(response);
+		var result = await response.GetJsonAsync<dynamic>();
+	}
+
+}
