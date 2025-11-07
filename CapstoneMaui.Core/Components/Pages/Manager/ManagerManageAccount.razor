@@ -1,4 +1,6 @@
 ﻿@using MudBlazor
+@using Flurl;
+@using Flurl.Http;
 @namespace CapstoneMaui.Core.Components.Pages
 @inject NavigationManager Nav
 
@@ -41,62 +43,63 @@
 	<MudSelectItem Value=3>Delete</MudSelectItem>
 </MudSelect>
 
-@switch(action) {
+@switch (action)
+{
 	case 1:
-		<div style="display: flex; flex-direction: column; align-items: center; justify-content: center;">
-			<div style="display: flex; flex-direction: column; align-items: center; gap: 8px;">
-				<MudTextField Label="Email" Variant="Variant.Outlined" Style="width: 250px;" @bind-Value="_email" />
-				<MudTextField Label="First Name" Variant="Variant.Outlined" Style="width: 250px;" @bind-Value="_name" />
-				<MudTextField Label="Password" Variant="Variant.Outlined" InputType="InputType.Password" Style="width: 250px;" @bind-Value="_password" />
-				<MudButton Variant="Variant.Filled" Color="Color.Primary" Style="width: 250px;">Create Account</MudButton>
-			</div>
-		</div>
+				<div style="display: flex; flex-direction: column; align-items: center; justify-content: center;">
+					<div style="display: flex; flex-direction: column; align-items: center; gap: 8px;">
+						<MudTextField Label="Email" Variant="Variant.Outlined" Style="width: 250px;" @bind-Value="_email" />
+						<MudTextField Label="First Name" Variant="Variant.Outlined" Style="width: 250px;" @bind-Value="_name" />
+						<MudTextField Label="Password" Variant="Variant.Outlined" InputType="InputType.Password" Style="width: 250px;" @bind-Value="_password" />
+						<MudButton Variant="Variant.Filled" Color="Color.Primary" Style="width: 250px;" OnClick="register">Create Account</MudButton>
+					</div>
+				</div>
 		break;
 	case 2:
 
-		<div style="display: flex; flex-direction: column; align-items: center; justify-content: center;">
-			<div style="display: flex; flex-direction: column; align-items: center; gap: 8px;">
-				<MudSelect	@bind-value="_value3" FitContent=true Variant="Variant.Outlined"> 
+				<div style="display: flex; flex-direction: column; align-items: center; justify-content: center;">
+					<div style="display: flex; flex-direction: column; align-items: center; gap: 8px;">
+						<MudSelect	@bind-value="_value3" FitContent=true Variant="Variant.Outlined"> 
 					@foreach (var employee in _namePlaceholder)
 					{
-						<MudSelectItem Value="employee">@employee</MudSelectItem>
+									<MudSelectItem Value="employee">@employee</MudSelectItem>
 					}
-				</MudSelect>
-				<MudTextField Label="Email" Variant="Variant.Outlined" Style="width: 250px;" @bind-Value="_email" />
-				<MudTextField Label="First Name" Variant="Variant.Outlined" Style="width: 250px;" @bind-Value="_name" />
-				<MudTextField Label="Password" Variant="Variant.Outlined" InputType="InputType.Password" Style="width: 250px;" @bind-Value="_password" />
-				<MudButton Variant="Variant.Filled" Color="Color.Primary" Style="width: 250px;">Modify</MudButton>
-			</div>
-		</div>
+						</MudSelect>
+						<MudTextField Label="Email" Variant="Variant.Outlined" Style="width: 250px;" @bind-Value="_email" />
+						<MudTextField Label="First Name" Variant="Variant.Outlined" Style="width: 250px;" @bind-Value="_name" />
+						<MudTextField Label="Password" Variant="Variant.Outlined" InputType="InputType.Password" Style="width: 250px;" @bind-Value="_password" />
+						<MudButton Variant="Variant.Filled" Color="Color.Primary" Style="width: 250px;">Modify</MudButton>
+					</div>
+				</div>
 
 
 		break;
 	case 3:
-		<div style="display: flex; flex-direction: column; align-items: center; justify-content: center;">
-			<div style="display: flex; flex-direction: column; align-items: center; gap: 8px;">
-				<MudSelect	@bind-value="_value3" FitContent=true Variant="Variant.Outlined"> 
+				<div style="display: flex; flex-direction: column; align-items: center; justify-content: center;">
+					<div style="display: flex; flex-direction: column; align-items: center; gap: 8px;">
+						<MudSelect	@bind-value="_value3" FitContent=true Variant="Variant.Outlined"> 
 					@foreach (var employee in _namePlaceholder)
 					{
-						<MudSelectItem Value="employee">@employee</MudSelectItem>
+									<MudSelectItem Value="employee">@employee</MudSelectItem>
 					}
-				</MudSelect>
+						</MudSelect>
 
-				<MudButton OnClick="@ToggleOpen" Variant="Variant.Filled" Color="Color.Primary" Style="width: 80%;">Delete Account</MudButton>
+						<MudButton OnClick="@ToggleOpen" Variant="Variant.Filled" Color="Color.Primary" Style="width: 80%;">Delete Account</MudButton>
 
-				<MudPopover Open="@_open" Class="px-4 pt-4" AnchorOrigin="Origin.CenterCenter">
-					<div class="d-flex flex-column">
-						<MudText>Are you sure?</MudText>
-						<MudText Style="color: red;">This action is irreversible.</MudText>
+						<MudPopover Open="@_open" Class="px-4 pt-4" AnchorOrigin="Origin.CenterCenter">
+							<div class="d-flex flex-column">
+								<MudText>Are you sure?</MudText>
+								<MudText Style="color: red;">This action is irreversible.</MudText>
 								<div style="display: flex; flex-direction: row; justify-content: space-around;">
 									<MudButton OnClick="@ToggleOpen">Cancel</MudButton>
 									<MudButton OnClick="@ToggleOpen" Color="Color.Error">Confirm</MudButton>
 								</div>
+							</div>
+						</MudPopover>
 					</div>
-				</MudPopover>
-			</div>
-		</div>
+				</div>
 		break;
-	default :
+	default:
 		break;
 }
 
@@ -123,10 +126,19 @@
 
 	private void ToggleOpen() => _open = !_open;
 
-	// placeholder
-	private void Back()
+	// actual non placeholder code
+
+	public async Task register()
 	{
-		Nav.NavigateTo("/employee-dashboard");
+		var response = await "http://10.0.2.2:5162/auth/register"
+			.PostJsonAsync(new
+			{
+				email = _email,
+				password = _password,
+				displayName = _name
+			});
+
+		var result = await response.GetJsonAsync<dynamic>();
 	}
 
 }
