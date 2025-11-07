@@ -1,23 +1,15 @@
+DROP TABLE IF EXISTS "TodoItem";
+DROP TYPE  IF EXISTS todo_status;
 
--- postgresSQL does not have a 'use' command to select the database, you have to select the database when connecting
--- CREATE DATABASE capstone;
-
-DROP TABLE IF EXISTS userRecipient;
-DROP TABLE IF EXISTS notification;
-DROP TABLE IF EXISTS userRequest;
-DROP TABLE IF EXISTS request;
-DROP TABLE IF EXISTS userAssignment;
-DROP TABLE IF EXISTS assignment;
-DROP TABLE IF EXISTS employee;
-DROP TYPE role;
-DROP TYPE requestType;
-DROP TYPE messageType;
-
+DROP TABLE IF EXISTS "UserAssignment";
 DROP TABLE IF EXISTS "TimeEntry";
+DROP TABLE IF EXISTS "RequestOff";
+DROP TABLE IF EXISTS "RefreshTokens";
+DROP TABLE IF EXISTS "Assignment";
+DROP TABLE IF EXISTS "Users";
 
 
 -- extensions
-CREATE EXTENSION IF NOT EXISTS pgcrypto;
 CREATE EXTENSION IF NOT EXISTS citext;
 
 
@@ -26,7 +18,7 @@ CREATE EXTENSION IF NOT EXISTS citext;
 --
 
 CREATE TABLE IF NOT EXISTS "Users" (
-  "UserId" uuid PRIMARY KEY DEFAULT gen_random_uuid(),  -- internal id
+  "UserId" SERIAL PRIMARY KEY,  -- internal id
   "Email" citext NOT NULL UNIQUE,                       -- case insensitive login name
   "PasswordHash" text NOT NULL,                         -- bcrypt
   "DisplayName" text,
@@ -40,8 +32,8 @@ CREATE TABLE IF NOT EXISTS "Users" (
 --
 
 CREATE TABLE IF NOT EXISTS "RefreshTokens" (
-  "RefreshTokenId"  uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  "UserId"           uuid NOT NULL REFERENCES "Users"("UserId") ON DELETE CASCADE,
+  "RefreshTokenId"  BIGSERIAL PRIMARY KEY,
+  "UserId"           INT NOT NULL REFERENCES "Users"("UserId") ON DELETE CASCADE,
   "Token"             text NOT NULL UNIQUE,          -- random opaque string (not a JWT)
   "CreatedAt"        timestamptz NOT NULL DEFAULT now(),
   "ExpiresAt"        timestamptz NOT NULL,
@@ -51,37 +43,6 @@ CREATE TABLE IF NOT EXISTS "RefreshTokens" (
 
 -- index lookup
 CREATE INDEX IF NOT EXISTS "idx_refresh_tokens_user_id" ON "RefreshTokens"("UserId");
-
---
--- tracks user clock ins and outs
---
-
-CREATE TABLE IF NOT EXISTS "TimeEntry" (
-  "TimeEntryId" BIGSERIAL PRIMARY KEY,
-  "UserId" uuid NOT NULL,
-  "AssignmentId" INT NULL,
-  "StartTime" TIMESTAMPTZ NOT NULL DEFAULT now(),
-  "EndTime" TIMESTAMPTZ NULL,
-
-  CONSTRAINT fk_timeentry_user FOREIGN KEY ("UserId") REFERENCES "Users"("UserId") ON DELETE CASCADE,
-  CONSTRAINT chk_timeentry_times CHECK ("EndTime" IS NULL OR "EndTime" >= "StartTime"),
-  CONSTRAINT fk_timeentry_assignment FOREIGN KEY ("AssignmentId") REFERENCES "Assignment"("AssignmentId")
-);
-
-DROP TABLE IF EXISTS "RequestOff";
-
-CREATE TABLE IF NOT EXISTS "RequestOff" (
-  "RequestOffId" BIGSERIAL PRIMARY KEY,
-  "UserId"       UUID NOT NULL,
-  "StartDate"    DATE NOT NULL,
-  "EndDate"      DATE NOT NULL,
-  "Note"         VARCHAR,
-  "CreatedAt"    TIMESTAMPTZ NOT NULL DEFAULT now(),
-  "UpdatedAt"    TIMESTAMPTZ NOT NULL DEFAULT now(),
-
-  CONSTRAINT fk_requestoff_user FOREIGN KEY ("UserId") REFERENCES "Users"("UserId") ON DELETE CASCADE,
-  CONSTRAINT chk_requestoff_dates CHECK ("StartDate" <= "EndDate")
-);
 
 --
 -- represents jobsites that employees are assigned to
@@ -97,12 +58,47 @@ CREATE TABLE IF NOT EXISTS "Assignment" ( -- to do
 );
 
 --
+-- tracks user clock ins and outs
+--
+
+CREATE TABLE IF NOT EXISTS "TimeEntry" (
+  "TimeEntryId" BIGSERIAL PRIMARY KEY,
+  "UserId" INT NOT NULL,
+  "AssignmentId" INT NULL,
+  "StartTime" TIMESTAMPTZ NOT NULL DEFAULT now(),
+  "EndTime" TIMESTAMPTZ NULL,
+
+  CONSTRAINT fk_timeentry_user FOREIGN KEY ("UserId") REFERENCES "Users"("UserId") ON DELETE CASCADE,
+  CONSTRAINT chk_timeentry_times CHECK ("EndTime" IS NULL OR "EndTime" >= "StartTime"),
+  CONSTRAINT fk_timeentry_assignment FOREIGN KEY ("AssignmentId") REFERENCES "Assignment"("AssignmentId") ON DELETE SET NULL
+);
+
+CREATE UNIQUE INDEX IF NOT EXISTS uq_timeentry_open_per_user ON "TimeEntry"("UserId") WHERE "EndTime" IS NULL;
+
+
+
+DROP TABLE IF EXISTS "RequestOff";
+
+CREATE TABLE IF NOT EXISTS "RequestOff" (
+  "RequestOffId" BIGSERIAL PRIMARY KEY,
+  "UserId"       INT NOT NULL,
+  "StartDate"    DATE NOT NULL,
+  "EndDate"      DATE NOT NULL,
+  "Note"         VARCHAR,
+  "CreatedAt"    TIMESTAMPTZ NOT NULL DEFAULT now(),
+  "UpdatedAt"    TIMESTAMPTZ NOT NULL DEFAULT now(),
+
+  CONSTRAINT fk_requestoff_user FOREIGN KEY ("UserId") REFERENCES "Users"("UserId") ON DELETE CASCADE,
+  CONSTRAINT chk_requestoff_dates CHECK ("StartDate" <= "EndDate")
+);
+
+--
 -- links which users are assigned to which jobsites
 --
 
 CREATE TABLE IF NOT EXISTS "UserAssignment" (
   "AssignmentId" INT NOT NULL, -- foreign key to Assignment
-  "UserId" UUID NOT NULL, -- foreign key to Users
+  "UserId" INT NOT NULL, -- foreign key to Users
 
   PRIMARY KEY ("AssignmentId", "UserId"), -- each pair is unique
 
@@ -119,12 +115,14 @@ CREATE INDEX IF NOT EXISTS idx_userassignment_assignment ON "UserAssignment"("As
 --
 
 -- status enum for workflow stages
-CREATE TYPE IF NOT EXISTS todo_status AS ENUM ('todo', 'in_progress', 'done');
+DROP TYPE IF EXISTS todo_status;
+CREATE TYPE todo_status AS ENUM ('todo', 'in_progress', 'done');
 
 CREATE TABLE IF NOT EXISTS "ToDoItem" (
   "ToDoId" BIGSERIAL PRIMARY KEY, -- unique task Id
-  "UserId" UUID NOT NULL, -- user responsible for the task (idk maybe)
-  "AssignmentId" INT NULL -- linking to a jobsite (assignment)
+  "UserId" INT NOT NULL, -- user responsible for the task (idk maybe)
+  "AssignmentId" INT NULL, -- linking to a jobsite (assignment)
+  "TimeEntryId" BIGINT NULL,
   "Title" VARCHAR NOT NULL, -- task name
   "Details" TEXT,
   "Status" todo_status NOT NULL DEFAULT 'todo', -- current stage = todo, in_progress, done
@@ -139,23 +137,23 @@ CREATE TABLE IF NOT EXISTS "ToDoItem" (
   CONSTRAINT fk_todo_assignment FOREIGN KEY ("AssignmentId") REFERENCES "Assignment"("AssignmentId") ON DELETE SET NULL,
 
   -- link to a specific time entry for tasks tied to a session, if entry is deleted unlink but keep todo
-  CONSTRAINT fk_todo_timeentry FOREIGN KEY ("TimeEntryId") REFERENCES "TimeEntyry"("TimeEntryId") ON DELETE SET NULL -- didnt put much thought into this, might not even want it
+  CONSTRAINT fk_todo_timeentry FOREIGN KEY ("TimeEntryId") REFERENCES "TimeEntry"("TimeEntryId") ON DELETE SET NULL, -- didnt put much thought into this, might not even want it
 
   -- preventing blank titles
   CONSTRAINT chk_todo_title_not_blank CHECK (length(trim("Title")) > 0)
 );
 
 -- lookup tasks by user
-CREATE INDEX IF NOT EXISTS idx_todo_user        ON "TodoItem"("UserId");
+CREATE INDEX IF NOT EXISTS idx_todo_user        ON "ToDoItem"("UserId");
 
 -- lookup by assignment/jobsite
-CREATE INDEX IF NOT EXISTS idx_todo_assignment  ON "TodoItem"("AssignmentId");
+CREATE INDEX IF NOT EXISTS idx_todo_assignment  ON "ToDoItem"("AssignmentId");
 
 -- lookup by linked time entry
-CREATE INDEX IF NOT EXISTS idx_todo_timeentry   ON "TodoItem"("TimeEntryId");
+CREATE INDEX IF NOT EXISTS idx_todo_timeentry   ON "ToDoItem"("TimeEntryId");
 
 -- filter by status
-CREATE INDEX IF NOT EXISTS idx_todo_status      ON "TodoItem"("Status");
+CREATE INDEX IF NOT EXISTS idx_todo_status      ON "ToDoItem"("Status");
 
 -- sort/filter by due date
-CREATE INDEX IF NOT EXISTS idx_todo_due         ON "TodoItem"("DueAt");
+CREATE INDEX IF NOT EXISTS idx_todo_due         ON "ToDoItem"("DueAt");
