@@ -38,17 +38,47 @@ public class LocationManager
         return distance <= radiusMeters;
     }
 
-    public Task<(double Latitude, double Longitude)> GetCurrentLocationAsync(CancellationToken cancellationToken = default) {
+    public async Task<(double Latitude, double Longitude)> GetCurrentLocationAsync(CancellationToken cancellationToken = default)
+    {
         _logger.Log(this, "Attempting to retrieve current location", "info");
-        var status = Geolocation.Default.GetLocationAsync(new GeolocationRequest(GeolocationAccuracy.Medium, TimeSpan.FromSeconds(10)), cancellationToken);
-        if (status.Result != null) {
-            return Task.FromResult((status.Result.Latitude, status.Result.Longitude));
+
+        try
+        {
+            var location = await Geolocation.Default.GetLocationAsync(
+                new GeolocationRequest(GeolocationAccuracy.Medium, TimeSpan.FromSeconds(10)),
+                cancellationToken);
+
+            if (location != null)
+            {
+                _logger.Log(this, $"Location retrieved: ({location.Latitude}, {location.Longitude})", "info");
+                return (location.Latitude, location.Longitude);
+            }
+            else
+            {
+                _logger.Log(this, "Unable to retrieve current location", "error");
+                throw new Exception("Unable to retrieve current location");
+            }
         }
-        else {
-            _logger.Log(this, "Unable to retrieve current location", "error");
-            throw new Exception("Unable to retrieve current location");
+        catch (FeatureNotSupportedException ex)
+        {
+            _logger.Log(this, $"Geolocation not supported: {ex.Message}", "error");
+            throw new Exception("Geolocation is not supported on this device");
+        }
+        catch (FeatureNotEnabledException ex)
+        {
+            _logger.Log(this, $"Geolocation not enabled: {ex.Message}", "error");
+            throw new Exception("Geolocation is not enabled");
+        }
+        catch (PermissionException ex)
+        {
+            _logger.Log(this, $"Permission denied: {ex.Message}", "error");
+            throw new UnauthorizedAccessException("Location permission denied");
+        }
+        catch (Exception ex)
+        {
+            _logger.Log(this, $"Location retrieval failed: {ex.Message}", "error");
+            throw;
         }
     }
-
-
 }
+

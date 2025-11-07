@@ -21,6 +21,11 @@ namespace CapstoneMaui
 
 			builder.Services.AddMauiBlazorWebView();
 			builder.Services.AddMudServices();
+			builder.Services.AddHttpClient("CapstoneAPI", client =>
+			{
+				client.BaseAddress = new Uri("http://10.0.2.2:5162/"); // Android emulator -> host's localhost
+			});
+			builder.Services.AddScoped(sp => sp.GetRequiredService<IHttpClientFactory>().CreateClient("CapstoneAPI"));
 
 			//add API singletons here with abstraction and concrete implementation
 			builder.Services.AddSingleton<IAuthService, AuthService>();

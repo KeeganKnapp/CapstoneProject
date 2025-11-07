@@ -11,7 +11,7 @@
     <MudDialogProvider />
     <MudSnackbarProvider/>
     <MudPopoverProvider /> 
-    <MudLayout Style="min-height: 100vh; overflow: hidden;">
+    <MudLayout>
             @if (_isDebug) {
             <MudExpansionPanels>
                 <MudExpansionPanel Text="Debug Logs" Color="Color.Primary">
@@ -29,12 +29,11 @@
             <MudText Typo="Typo.h6" Class="ml-2">CapstoneMaui</MudText>
         </MudAppBar>
             }   
-       <CascadingValue Value="this"> 
-        <MudMainContent Style="margin: 16px;">
 
-            <div class="app-body">
+
+       <CascadingValue Value="this"> 
+        <MudMainContent Style="overflow: hidden; margin: 16px; display: flex; flex-direction: column; height: 100%">
                 @Body
-            </div>
         </MudMainContent>
         </CascadingValue>
     </MudLayout>

@@ -64,7 +64,7 @@
 
 <MudStack AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween" Spacing="3" Style="max-height: 100vh;">
 
-<MudSelect	@bind-value="_value3" FitContent=true Variant="Variant.Outlined"> 
+<MudSelect T="string" @bind-value="_value3" FitContent=true Variant="Variant.Outlined"> 
 	@foreach (var employee in _namePlaceholder)
 	{
 		<MudSelectItem Value="employee">@employee</MudSelectItem>

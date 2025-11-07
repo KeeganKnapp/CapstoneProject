@@ -7,7 +7,7 @@
 @namespace CapstoneMaui.Components.Pages.Employee
 
 <!-- Filler, replace with actual map later -->
-<div id="@_id" style="height:100%; width:90vw;"></div> @* map canvas gets 100% of card *@
+<div id="@_id" style="height:100%; width:100%;"></div> @* map canvas gets 100% of card *@
 
 
 @code {
@@ -37,7 +37,6 @@
 
         if(currentSiteId != Guid.Empty)
         {
-            
             await FocusOnJobSite(currentSiteId);
         }
     }

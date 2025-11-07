@@ -1,8 +1,12 @@
-﻿@using MudBlazor
+﻿@using Android.Util
+@using MudBlazor
 @using CapstoneMaui.Core.Services.Auth
 @using CapstoneMaui.Core.Services.Abstractions
-@inject IAuthService AuthService
+@using CapstoneMaui.Core.Models
+@using System.Net.Http.Json
+@inject HttpClient http
 @inject NavigationManager Nav
+@inject AbstractLoggerService Logger
 
 @page "/login"
 
@@ -18,17 +22,49 @@
     private string _email;
     private string _password;
 
+    private bool busy;
     private bool loggedIn;
 
     private async Task HandleValidSubmit()
     {
-        loggedIn = await AuthService.LoginAsync(_email, _password);
-        if(loggedIn) {
-            if (await AuthService.IsUserManagerAsync()) {
-                Nav.NavigateTo("/manager-dashboard");
-            } else {
-                Nav.NavigateTo("/employee-dashboard");
+        if(busy) return;
+        busy = true;
+        try
+        {
+            var lq = new LoginRequest
+            {
+                Email = _email,
+                Password = _password
+            };
+            using var res = await http.PostAsJsonAsync("auth/login", lq);
+            if(!res.IsSuccessStatusCode)
+            {
+                var body = await res.Content.ReadAsStringAsync();
+                Logger.Log(this, "Login failed: " + body, "error");
+                return;
             }
+
+            var auth = await res.Content.ReadFromJsonAsync<AuthResponse>();
+            if(auth == null)
+            {
+                Logger.Log(this, "Login failed: no auth response", "error");
+                return;
+            }
+
+            if (!string.IsNullOrEmpty(auth.AccessToken))
+                await SecureStorage.Default.SetAsync("auth_token", auth.AccessToken);
+            if (!string.IsNullOrEmpty(auth.RefreshToken))
+                await SecureStorage.Default.SetAsync("refresh_token", auth.RefreshToken);
+
+            Nav.NavigateTo("/employee-dashboard");
+        }
+        catch(Exception ex)
+        {
+            Logger.Log(this, "Login failed: " + ex.Message, "error");
+        }
+        finally
+        {
+            busy = false;
         }
     }
 }
