@@ -3,7 +3,8 @@
 @using MudBlazor.Components
 @using CapstoneMaui.Core.Models
 @inject AbstractLoggerService Logger
-@namespace CapstoneMaui.Core.Components.Pages.Employee
+@namespace CapstoneMaui.Core.Components.Pages
+@inject NavigationManager Nav
 
 @page "/employee-dashboard"
 
@@ -13,6 +14,9 @@
 
 <MudStack AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween" Spacing="3" Style="max-height: 100vh;">
 
+<MudButton Variant="Variant.Filled" Color="Color.Secondary" OnClick="Manager">
+    Manager Test
+</MudButton>
 
 <MudSelect T="Guid" @bind-Value="selectedSite" Label="Select Job Site" Variant="Variant.Outlined">
     <MudSelectItem Value="@sites[0].Id">Downtown Construction Site</MudSelectItem>
@@ -74,5 +78,9 @@ else {
     {
         //basic clock out, implement check for actual clock out later
         clockedIn = false;
+    }
+    private void Manager()
+    {
+        Nav.NavigateTo("/manager");
     }
 }
