@@ -15,13 +15,13 @@ namespace CapstoneAPI.Controllers
         private readonly CapstoneDbContext _db;
         public RequestOffController(CapstoneDbContext db) => _db = db;
 
-        private Guid GetUserId()
+        private int GetUserId()
         {
             // try common claim types in order
             var id = User.FindFirstValue("UserId") ?? User.FindFirstValue(ClaimTypes.NameIdentifier) ?? User.FindFirstValue("sub");
 
             if (id is null) throw new UnauthorizedAccessException("UserId claim missing.");
-            return Guid.Parse(id);
+            return int.Parse(id);
         }
 
         // POST /api/requestoff
@@ -81,7 +81,7 @@ namespace CapstoneAPI.Controllers
         [HttpGet]
         [Authorize(Roles = "management")] // adapt to your role name / policy
         public async Task<ActionResult<IEnumerable<RequestOffDto>>> List(
-            [FromQuery] Guid? userId,
+            [FromQuery] int? userId,
             [FromQuery] DateOnly? from,
             [FromQuery] DateOnly? to)
         {
