@@ -81,24 +81,6 @@ CREATE TABLE userAssignment (
   FOREIGN KEY (employeeId) REFERENCES employee(employeeId) ON DELETE CASCADE
 );
 
-CREATE TYPE requestType AS ENUM ('extention', 'timeOff');
-CREATE TABLE request (
-	requestId serial NOT NULL,
-	reqType requestType NOT NULL,
-	requestTimeStart date,
-	requestTimeEnd date,
-	requestNote varchar,
-  PRIMARY KEY(requestId)
-);
-
-CREATE TABLE userRequest (
-  requestId int NOT NULL,
-  employeeId int NOT NULL,
-  PRIMARY KEY(requestId, employeeId),
-  FOREIGN KEY (requestId) REFERENCES request(requestId) ON DELETE CASCADE,
-  FOREIGN KEY (employeeId) REFERENCES employee(employeeId) ON DELETE CASCADE
-);
-
 -- These are just examples, feel free to add more
 -- Make sure to drop the enum first via query above
 CREATE TYPE messageType AS ENUM ('extention', 'timeOff', 'report', 'problem');
@@ -125,4 +107,18 @@ CREATE TABLE IF NOT EXISTS "TimeEntry" (
   "AssignmentId" INT NULL,
   "StartTime" TIMESTAMPTZ NOT NULL DEFAULT now(),
   "EndTime" TIMESTAMPTZ NULL
+);
+
+DROP TABLE IF EXISTS "RequestOff";
+
+CREATE TABLE IF NOT EXISTS "RequestOff" (
+  "RequestOffId" BIGSERIAL PRIMARY KEY,
+  "UserId"       UUID NOT NULL,
+  "StartDate"    DATE NOT NULL,
+  "EndDate"      DATE NOT NULL,
+  "Note"         VARCHAR,
+  "CreatedAt"    TIMESTAMPTZ NOT NULL DEFAULT now(),
+  "UpdatedAt"    TIMESTAMPTZ NOT NULL DEFAULT now(),
+  CONSTRAINT fk_requestoff_user FOREIGN KEY ("UserId") REFERENCES "Users"("UserId") ON DELETE CASCADE,
+  CONSTRAINT chk_requestoff_dates CHECK ("StartDate" <= "EndDate")
 );

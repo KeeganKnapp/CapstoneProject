@@ -9,7 +9,8 @@ and the relationships between tables
 
 
 using Microsoft.EntityFrameworkCore;    // ef core library
-using CapstoneAPI.Models;               // links entity classes
+using CapstoneAPI.Models;
+using System.Dynamic;               // links entity classes
 
 
 namespace CapstoneAPI.Data
@@ -23,6 +24,7 @@ namespace CapstoneAPI.Data
         public DbSet<TimeEntry> TimeEntries => Set<TimeEntry>();
         public DbSet<User> Users => Set<User>();
         public DbSet<RefreshToken> RefreshTokens => Set<RefreshToken>();
+        public DbSet<RequestOff> RequestOffs => Set<RequestOff>();
 
         // postgres lowercases unquoted identifiers by default so this 
         // gets the exact tables names, column names, keys, and relationships
@@ -82,6 +84,20 @@ namespace CapstoneAPI.Data
                 .WithMany(u => u.RefreshTokens)
                 .HasForeignKey(rt => rt.UserId)
                 .OnDelete(DeleteBehavior.Cascade);
+            });
+
+            modelBuilder.Entity<RequestOff>(e =>
+            {
+                e.ToTable("RequestOff");
+                e.HasKey(x => x.RequestOffId);
+
+                e.Property(x => x.RequestOffId).HasColumnName("RequestOffId");
+                e.Property(x => x.UserId).HasColumnName("UserId");
+                e.Property(x => x.StartDate).HasColumnName("StartDate");
+                e.Property(x => x.EndDate).HasColumnName("EndDate");
+                e.Property(x => x.Note).HasColumnName("Note");
+                e.Property(x => x.CreatedAt).HasColumnName("CreatedAt");
+                e.Property(x => x.UpdatedAt).HasColumnName("UpdatedAt");
             });
         }
     }
