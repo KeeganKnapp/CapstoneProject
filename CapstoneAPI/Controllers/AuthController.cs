@@ -93,8 +93,13 @@ namespace CapstoneAPI.Controllers
         [HttpPost("logout-all")]
         public async Task<IActionResult> LogoutAll(CancellationToken ct)
         {
-            var sub = User.FindFirstValue("sub") ?? User.FindFirstValue(ClaimTypes.NameIdentifier);
-            if (!Guid.TryParse(sub, out var userId)) return Unauthorized(new { error = "Invalid token subject." });
+            var raw =
+                User.FindFirstValue(ClaimTypes.NameIdentifier) ??
+                User.FindFirstValue("UserId") ??
+                User.FindFirstValue("sub");
+
+            if (string.IsNullOrWhiteSpace(raw) || !int.TryParse(raw, out var userId))
+                return Unauthorized(new { error = "Invalid or missing user id claim." });
 
             await _auth.LogoutAllAsync(userId, ct);
             return NoContent();

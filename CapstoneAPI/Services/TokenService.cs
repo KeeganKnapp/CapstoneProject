@@ -20,7 +20,7 @@ namespace CapstoneAPI.Services
         public TokenService(IOptions<JwtOptions> options)
         {
             _opts = options.Value; // holds Jwt config
-            _keyBytes = Encoding.UTF8.GetBytes(_opts.Secret); // convert the secret string into bytes so it can be used as a symmetric encryption key
+            _keyBytes = Convert.FromBase64String(_opts.Secret); // convert the secret string into bytes so it can be used as a symmetric encryption key
         }
 
         // generates a Jwt for a given user
