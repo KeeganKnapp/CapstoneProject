@@ -15,7 +15,6 @@ namespace CapstoneAPI.Controllers
         private readonly CapstoneDbContext _db;
         public RequestOffController(CapstoneDbContext db) => _db = db;
 
-        // adjust this to whatever your JWT emits. Many setups put the user id in "sub".
         private Guid GetUserId()
         {
             // try common claim types in order

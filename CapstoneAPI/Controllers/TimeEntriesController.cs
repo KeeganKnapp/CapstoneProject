@@ -18,13 +18,13 @@ namespace CapstoneAPI.Controllers
         public async Task<ActionResult<TimeEntry>> ClockIn([FromBody] ClockInRequest req, CancellationToken ct)
         {
             if (req is null) return BadRequest("Request body is required.");
-            if (req.EmployeeId <= 0) return BadRequest("EmployeeId must be positive.");
+            if (req.UserId <= 0) return BadRequest("UserId must be positive.");
 
             var start = req.StartTime ?? DateTimeOffset.UtcNow;
 
             var entry = new TimeEntry
             {
-                EmployeeId   = req.EmployeeId,
+                UserId   = req.UserId,
                 AssignmentId = req.AssignmentId,
                 StartTime    = start,
                 EndTime      = null
@@ -56,17 +56,17 @@ namespace CapstoneAPI.Controllers
                 return Ok(entryById);
             }
 
-            // 2) Otherwise, close the most recent open entry for an employee
-            if (!req.EmployeeId.HasValue || req.EmployeeId.Value <= 0)
-                return BadRequest("Provide TimeEntryId or a positive EmployeeId.");
+            // 2) Otherwise, close the most recent open entry for a user
+            if (!req.UserId.HasValue || req.UserId.Value <= 0)
+                return BadRequest("Provide TimeEntryId or a positive UserId.");
 
             var openEntry = await _db.TimeEntries
-                .Where(t => t.EmployeeId == req.EmployeeId.Value && t.EndTime == null)
+                .Where(t => t.UserId == req.UserId.Value && t.EndTime == null)
                 .OrderByDescending(t => t.StartTime)
                 .FirstOrDefaultAsync(ct);
 
             if (openEntry is null)
-                return NotFound(new { error = "No open time entry found for this employee." });
+                return NotFound(new { error = "No open time entry found for this user." });
 
             openEntry.EndTime = req.EndTime ?? DateTimeOffset.UtcNow;
             await _db.SaveChangesAsync(ct);
