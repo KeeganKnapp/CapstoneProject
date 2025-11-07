@@ -52,18 +52,11 @@
 </MudStack>
 
 @code {
-	private string _value;
-	private string _value2;
-	private string _value3;
 
 	DateTime? _dateOne;
 	DateTime? _dateTwo;
-	string reason;
+	string? reason;
 
-	private DateRange _dateRange { get; set; }
-
-
-	// placeholder
 	private void Back()
 	{
 		Nav.NavigateTo("/employee-dashboard");
