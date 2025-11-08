@@ -1,4 +1,9 @@
 ﻿@using MudBlazor
+@using Flurl;
+@using Flurl.Http;
+@using Newtonsoft.Json; 
+@using Newtonsoft.Json.Linq;
+@using System.Text.Json.Nodes
 @namespace CapstoneMaui.Core.Components.Pages
 @inject NavigationManager Nav
 
@@ -6,27 +11,27 @@
 
 <style>
 	.users {
-	  display: flex;
-	  justify-content: space-between;
-	  flex-wrap: wrap;
+	display: flex;
+	justify-content: space-between;
+	flex-wrap: wrap;
 	}
 	.border {
-		border-style: solid;
-		border-width: 1px;
+	border-style: solid;
+	border-width: 1px;
 	}
 	.textStandard {
-		font-size: 20px; 
-		font-weight:bold;
+	font-size: 20px; 
+	font-weight:bold;
 	}
 	.headingText {
-		display: flex;
-		justify-content: space-between;
-		margin-left: 5px;
-		margin-right: 5px;
+	display: flex;
+	justify-content: space-between;
+	margin-left: 5px;
+	margin-right: 5px;
 	}
 	.marginStandard {
-		margin-left: 20px;
-		margin-right: 20px;
+	margin-left: 20px;
+	margin-right: 20px;
 	}
 
 </style>
@@ -41,52 +46,56 @@
 <MudDivider DividerType="DividerType.Middle"/>
 
 <div class="ma-0" style="height:600px;overflow: auto; ">
-	<MudPaper Elevation="0"Outlined="false" Height="1000px">
-		@foreach (var name in _namePlaceholder)
+	<MudPaper id = "placeholderElement" Elevation="0"Outlined="false" Height="1000px">
+		@if (dataLoaded)
 		{
-			<div style="margin-bottom: 10px;" class="users border">
-				<!--Holds the users name-->
-				<div class="usersElement textStandard marginStandard">
-					@name
-				</div>
-				<!--Holds the request type-->
-				<div class="usersElement textStandard marginStandard">
-					Example
-				</div>
-				<!--Holds the (optional) text the user supplies, default to "no reason provided" if no text to save messing with formatting again?-->
-				<div class="usersElement">
-					<p class="border">Example Reason</p>
-					<MudDateRangePicker @bind-DateRange="@_dateRange" Margin="Margin.Dense" PlaceholderStart="Start Date" PlaceholderEnd="End Date" Label="Range"/>
-				</div>
-				<!--Approve button-->
-				<div class="usersElement marginStandard">
-					<MudButton Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.Check" Color="Color.Secondary" Style="float:right;"></MudButton>
-				</div>
-				<!--Deny button-->
-				<div class="usersElement marginStandard">
-					<MudButton Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.DoNotDisturb" Color="Color.Secondary" Style="float:right;"></MudButton>
-				</div>
-			</div>
+			foreach (var g in requestData){
+				<div style="margin-bottom: 10px;" class="users border">
 
-				
+
+					<MudStack AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween" Spacing="1" Style="width: 100%">
+						<!--Holds the users name-->
+						<div class="usersElement textStandard marginStandard">
+							@g["requestOffId"]
+						</div>
+						<div class="usersElement" style="width: 100%">
+							<MudTextField @bind-Value="@g["note"]" Label="Reason" ReadOnly="true" AutoGrow  Variant="Variant.Text" style="width: 100%"/>		
+						</div>
+						<div class="usersElement">
+							<p>@g["startDate"] to @g["endDate"]</p>
+						</div>
+					</MudStack>
+
+					<!--Approve button-->
+					<div class="usersElement marginStandard">
+						<MudButton Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.Check" Color="Color.Secondary" Style="float:right;"></MudButton>
+					</div>
+					<!--Deny button-->
+					<div class="usersElement marginStandard">
+											<MudButton Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.DoNotDisturb" Color="Color.Secondary" Style="float:right;" ></MudButton>
+					</div>
+				</div>
+
+
+
+			}
 		}
 	</MudPaper>
 </div>
+<MudButton Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.Check" Color="Color.Secondary" OnClick="getRequest">Load</MudButton>
 
 <ManagerBottomBar/>
 
 @code {
-	private string _value;
-	private string _value2;
-	private string _value3;
+	private string _value = "yo";
 
 	private DateRange _dateRange { get; set; }
 
+	JsonArray? requestData = null;
 
-	private readonly string[] _pageSelect = { "Jobsite", "Schedule", "Status", "Progress", "Request", "Notification" };
-	private readonly string[] _jobSelect = { "Job1", "Job2" };
+	int test5;
 
-	private readonly string[] _namePlaceholder = { "Jeff", "Bob", "Alice", "Susan" };
+	bool dataLoaded = false;
 
 	// placeholder
 	private void Back()
@@ -94,4 +103,24 @@
 		Nav.NavigateTo("/manager");
 	}
 
+
+	// get all outgoing requests
+	public async Task getRequest()
+	{
+
+		var response = await "http://10.0.2.2:5162/api/RequestOff/all"
+			.WithOAuthBearerToken("eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxYTBiNTMyNi03NGI2LTRmMjMtYWE3NS05ZTkxOWZkY2ZhYzgiLCJlbWFpbCI6IlRva2VuVGVzdCIsImRpc3BsYXlOYW1lIjoiVG9rZW5UZXN0IiwibmJmIjoxNzYyNTYzNjg3LCJleHAiOjE3NjI2NTM2ODcsImlzcyI6IkNhcHN0b25lQVBJIiwiYXVkIjoiQ2Fwc3RvbmVDbGllbnQifQ.T5tvCch1V8bixT-LCA0KtK_jzJzgcFy3VFop2tJSXGU")
+			.GetAsync();
+
+		requestData = await response.GetJsonAsync<JsonArray>();
+		dataLoaded = true;
+
+	}
+
+	// delete specified request
+	public async Task deleteRequest(int id){
+
+	}
+
+	
 }
