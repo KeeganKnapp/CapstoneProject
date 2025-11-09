@@ -3,7 +3,9 @@
 @using Flurl.Http;
 @using Newtonsoft.Json; 
 @using Newtonsoft.Json.Linq;
-@using System.Text.Json.Nodes
+@using System.Text.Json.Nodes;
+
+
 @namespace CapstoneMaui.Core.Components.Pages
 @inject NavigationManager Nav
 
@@ -50,7 +52,7 @@
 		@if (dataLoaded)
 		{
 			foreach (var g in requestData){
-				<div style="margin-bottom: 10px;" class="users border">
+					<div style="margin-bottom: 10px;" class="users border" id = "@g["requestOffId"]">
 
 
 					<MudStack AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween" Spacing="1" Style="width: 100%">
@@ -72,7 +74,7 @@
 					</div>
 					<!--Deny button-->
 					<div class="usersElement marginStandard">
-											<MudButton Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.DoNotDisturb" Color="Color.Secondary" Style="float:right;" ></MudButton>
+						<MudButton Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.DoNotDisturb" Color="Color.Secondary" Style="float:right;" OnClick="@(()=> deleteRequest((int)g["requestOffId"]))"></MudButton>
 					</div>
 				</div>
 
@@ -84,16 +86,19 @@
 </div>
 <MudButton Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.Check" Color="Color.Secondary" OnClick="getRequest">Load</MudButton>
 
+<!-- I got tired of C# -->
+<button onclick="deleteEntry()">Remove</button>
+<script>
+	function deleteEntry(int id) {
+	  const element = document.getElementById(id.toString());
+	  element.remove();
+	}
+</script>
+
 <ManagerBottomBar/>
 
 @code {
-	private string _value = "yo";
-
-	private DateRange _dateRange { get; set; }
-
 	JsonArray? requestData = null;
-
-	int test5;
 
 	bool dataLoaded = false;
 
@@ -103,13 +108,13 @@
 		Nav.NavigateTo("/manager");
 	}
 
-
+	// for testing
+	string token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxYTBiNTMyNi03NGI2LTRmMjMtYWE3NS05ZTkxOWZkY2ZhYzgiLCJlbWFpbCI6IlRva2VuVGVzdCIsImRpc3BsYXlOYW1lIjoiVG9rZW5UZXN0IiwibmJmIjoxNzYyNTYzNjg3LCJleHAiOjE3NjI2NTM2ODcsImlzcyI6IkNhcHN0b25lQVBJIiwiYXVkIjoiQ2Fwc3RvbmVDbGllbnQifQ.T5tvCch1V8bixT-LCA0KtK_jzJzgcFy3VFop2tJSXGU";
 	// get all outgoing requests
-	public async Task getRequest()
-	{
+	public async Task getRequest(){
 
 		var response = await "http://10.0.2.2:5162/api/RequestOff/all"
-			.WithOAuthBearerToken("eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxYTBiNTMyNi03NGI2LTRmMjMtYWE3NS05ZTkxOWZkY2ZhYzgiLCJlbWFpbCI6IlRva2VuVGVzdCIsImRpc3BsYXlOYW1lIjoiVG9rZW5UZXN0IiwibmJmIjoxNzYyNTYzNjg3LCJleHAiOjE3NjI2NTM2ODcsImlzcyI6IkNhcHN0b25lQVBJIiwiYXVkIjoiQ2Fwc3RvbmVDbGllbnQifQ.T5tvCch1V8bixT-LCA0KtK_jzJzgcFy3VFop2tJSXGU")
+			.WithOAuthBearerToken(token)
 			.GetAsync();
 
 		requestData = await response.GetJsonAsync<JsonArray>();
@@ -120,6 +125,11 @@
 	// delete specified request
 	public async Task deleteRequest(int id){
 
+		var response = await ("http://10.0.2.2:5162/api/RequestOff/" + id.ToString())
+		.WithOAuthBearerToken(token)
+		.DeleteAsync();
+
+		var result = await response.GetJsonAsync<dynamic>();
 	}
 
 	
