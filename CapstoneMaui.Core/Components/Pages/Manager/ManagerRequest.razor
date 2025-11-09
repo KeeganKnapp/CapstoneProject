@@ -81,21 +81,12 @@
 
 
 			}
-		}else {
-			getRequest();
 		}
 	</MudPaper>
 </div>
 <MudButton Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.Check" Color="Color.Secondary" OnClick="getRequest">Load</MudButton>
 
-<!-- I got tired of C# -->
-<button onclick="deleteEntry()">Remove</button>
-<script>
-	function deleteEntry(int id) {
-	const element = document.getElementById(id.toString());
-	element.remove();
-	}
-</script>
+
 
 <ManagerBottomBar/>
 
@@ -107,7 +98,7 @@
 	// placeholder
 	private void Back()
 	{
-		Nav.NavigateTo("/manager");
+		Nav.NavigateTo("/manager-dashboard");
 	}
 
 	// for testing
