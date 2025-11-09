@@ -3,8 +3,7 @@
 @inject NavigationManager Nav
 
 
-<!-- Testing -->
-<!--
+
 <style>
 	.topBar {
 	width: 100%;
@@ -13,6 +12,7 @@
 
 <div class="topBar"> 
 	<MudSelect @bind-Value="action" Label="Select Action" Variant="Variant.Outlined" Placeholder="Page">
+		<MudSelectItem Value=0>Dashboard</MudSelectItem>
 		<MudSelectItem Value=1>Status</MudSelectItem>
 		<MudSelectItem Value=2>Schedule</MudSelectItem>
 		<MudSelectItem Value=3>Progress</MudSelectItem>
@@ -22,6 +22,9 @@
 </div>
 
 @switch(action) {
+	case 0:
+		Nav.NavigateTo("/manager-dashboard");
+		break;
 	case 1:
 		Nav.NavigateTo("/manager-status");
 		break;
@@ -43,7 +46,6 @@
 
 
 @code {
-	private int action;
+	[Parameter] public int action { get; set; } = 1;
 }
 
--->

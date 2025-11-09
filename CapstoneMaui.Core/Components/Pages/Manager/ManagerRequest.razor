@@ -52,7 +52,7 @@
 		@if (dataLoaded)
 		{
 			foreach (var g in requestData){
-					<div style="margin-bottom: 10px;" class="users border" id = "@g["requestOffId"]">
+				<div style="margin-bottom: 10px;" class="users border" id = "@g["requestOffId"]">
 
 
 					<MudStack AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween" Spacing="1" Style="width: 100%">
@@ -81,6 +81,8 @@
 
 
 			}
+		}else {
+			getRequest();
 		}
 	</MudPaper>
 </div>
@@ -90,8 +92,8 @@
 <button onclick="deleteEntry()">Remove</button>
 <script>
 	function deleteEntry(int id) {
-	  const element = document.getElementById(id.toString());
-	  element.remove();
+	const element = document.getElementById(id.toString());
+	element.remove();
 	}
 </script>
 
@@ -109,7 +111,7 @@
 	}
 
 	// for testing
-	string token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxYTBiNTMyNi03NGI2LTRmMjMtYWE3NS05ZTkxOWZkY2ZhYzgiLCJlbWFpbCI6IlRva2VuVGVzdCIsImRpc3BsYXlOYW1lIjoiVG9rZW5UZXN0IiwibmJmIjoxNzYyNTYzNjg3LCJleHAiOjE3NjI2NTM2ODcsImlzcyI6IkNhcHN0b25lQVBJIiwiYXVkIjoiQ2Fwc3RvbmVDbGllbnQifQ.T5tvCch1V8bixT-LCA0KtK_jzJzgcFy3VFop2tJSXGU";
+	string token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxYTBiNTMyNi03NGI2LTRmMjMtYWE3NS05ZTkxOWZkY2ZhYzgiLCJlbWFpbCI6IlRva2VuVGVzdCIsImRpc3BsYXlOYW1lIjoiVG9rZW5UZXN0IiwibmJmIjoxNzYyNzI1NTkzLCJleHAiOjE3NzE3MjU1OTMsImlzcyI6IkNhcHN0b25lQVBJIiwiYXVkIjoiQ2Fwc3RvbmVDbGllbnQifQ.ka4KnLkKknw4dNK62vTk6eaxE2onO26xyte3dhHKtC4";
 	// get all outgoing requests
 	public async Task getRequest(){
 
@@ -130,7 +132,8 @@
 		.DeleteAsync();
 
 		var result = await response.GetJsonAsync<dynamic>();
+
+		await getRequest();
 	}
 
-	
 }
