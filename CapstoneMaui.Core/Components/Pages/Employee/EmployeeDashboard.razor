@@ -45,7 +45,7 @@ else {
 }
 <MudStack Row=true Justify="Justify.SpaceBetween">
     <MudIconButton Icon="@Icons.Material.Filled.Wallet" Color="Color.Info" Size="Size.Large" />
-    <MudButton Variant="Variant.Filled">Request</MudButton>
+    <MudButton Variant="Variant.Filled" OnClick="EmployeeRequest">Request</MudButton>
     <MudIconButton Icon="@Icons.Material.Filled.Notifications" Color="Color.Warning" Size="Size.Large" />
 </MudStack>
    
@@ -81,6 +81,10 @@ else {
     }
     private void Manager()
     {
-        Nav.NavigateTo("/manager");
+        Nav.NavigateTo("/manager-dashboard");
+    }
+    private void EmployeeRequest()
+    {
+        Nav.NavigateTo("/employee-request");
     }
 }

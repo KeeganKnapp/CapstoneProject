@@ -32,6 +32,8 @@
 	
 </style>
 
+<ManagerTopBar action="1"/>
+
 <MudStack AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween" Spacing="3" Style="max-height: 100vh;">
 	<MudSelect T="Guid" @bind-Value="selectedSite" Label="Select Job Site" Variant="Variant.Outlined">
 		<MudSelectItem Value="@sites[0].Id">Downtown Construction Site</MudSelectItem>
@@ -82,7 +84,7 @@
 	</MudStack>
 </MudStack>
 
-
+<ManagerBottomBar/>
 
 
 

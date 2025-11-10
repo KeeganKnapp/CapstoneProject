@@ -6,6 +6,10 @@
 @inject AbstractLoggerService Logger
 @inject NavigationManager Nav
 
+@page "/manager-schedule"
+
+
+<ManagerTopBar action="2"/>
 
 	<MudSelect T="Guid" @bind-Value="selectedSite" Label="Select Job Site" Variant="Variant.Outlined">
 		<MudSelectItem Value="@sites[0].Id">Downtown Construction Site</MudSelectItem>
@@ -29,7 +33,7 @@
 			
 	</MudPaper>
 </div>
-
+<ManagerBottomBar/>
 
 
 @code {
