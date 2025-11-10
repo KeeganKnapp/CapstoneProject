@@ -88,8 +88,23 @@ namespace CapstoneAPI.Controllers
             var q = _db.RequestOffs.AsQueryable();
 
             if (userId.HasValue) q = q.Where(x => x.UserId == userId.Value);
-            if (from.HasValue)   q = q.Where(x => x.EndDate >= from.Value);
-            if (to.HasValue)     q = q.Where(x => x.StartDate <= to.Value);
+            if (from.HasValue) q = q.Where(x => x.EndDate >= from.Value);
+            if (to.HasValue) q = q.Where(x => x.StartDate <= to.Value);
+
+            var items = await q
+                .OrderByDescending(x => x.StartDate)
+                .Select(x => new RequestOffDto(x.RequestOffId, x.UserId, x.StartDate, x.EndDate, x.Note))
+                .ToListAsync();
+
+            return Ok(items);
+        }
+
+        // GET /api/requestoff/all   (management list & filters)
+        [HttpGet("all")]
+        [Authorize] // adapt to your role name / policy
+        public async Task<ActionResult<IEnumerable<RequestOffDto>>> ListAll()
+        {
+            var q = _db.RequestOffs.AsQueryable();
 
             var items = await q
                 .OrderByDescending(x => x.StartDate)

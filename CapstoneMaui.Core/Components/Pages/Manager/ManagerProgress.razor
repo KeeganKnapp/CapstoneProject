@@ -2,6 +2,7 @@
 @namespace CapstoneMaui.Core.Components.Pages
 @inject NavigationManager Nav
 
+@page "/manager-progress"
 
 <style>
 	.users {
@@ -33,11 +34,14 @@
 		border-color: black;
 	}
 </style>
+<ManagerTopBar action="3"/>
 
 <div class="headingText textStandard">
 	<div>Employee</div>
 	<div>Job Site</div>
 </div>
+
+
 
 <MudDivider DividerType="DividerType.Middle"/>
 
@@ -88,7 +92,7 @@
 	<div><input type="text" placeholder="Enter to do..." class="inputStyle"/></div>
 	<div><MudButton>Add</MudButton></div>
 </div>
-
+<ManagerBottomBar/>
 
 @code {
 	private string _value;

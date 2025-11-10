@@ -4,6 +4,7 @@
 @namespace CapstoneMaui.Core.Components.Pages
 @inject NavigationManager Nav
 
+@page "/manager-account"
 
 <style>
 	.users {
@@ -37,6 +38,8 @@
 
 </style>
 
+<ManagerTopBar action="5"/>
+
 <MudSelect @bind-Value="action" Label="Select Action" Variant="Variant.Outlined" Placeholder="Action">
 	<MudSelectItem Value=1>Create</MudSelectItem>
 	<MudSelectItem Value=2>Modify</MudSelectItem>
@@ -59,7 +62,7 @@
 
 				<div style="display: flex; flex-direction: column; align-items: center; justify-content: center;">
 					<div style="display: flex; flex-direction: column; align-items: center; gap: 8px;">
-						<MudSelect	@bind-value="_value3" FitContent=true Variant="Variant.Outlined"> 
+						<MudSelect	@bind-value="_value" FitContent=true Variant="Variant.Outlined"> 
 					@foreach (var employee in _namePlaceholder)
 					{
 									<MudSelectItem Value="employee">@employee</MudSelectItem>
@@ -77,7 +80,7 @@
 	case 3:
 				<div style="display: flex; flex-direction: column; align-items: center; justify-content: center;">
 					<div style="display: flex; flex-direction: column; align-items: center; gap: 8px;">
-						<MudSelect	@bind-value="_value3" FitContent=true Variant="Variant.Outlined"> 
+						<MudSelect	@bind-value="_value" FitContent=true Variant="Variant.Outlined"> 
 					@foreach (var employee in _namePlaceholder)
 					{
 									<MudSelectItem Value="employee">@employee</MudSelectItem>
@@ -103,24 +106,18 @@
 		break;
 }
 
+<ManagerBottomBar/>
+
 @code {
-	private string _value;
-	private string _value2;
-	private string _value3;
+	private string? _value;
 
 	private int action = 1;
 
-	private string _email;
-	private string _name;
-	private string _password;
+	private string? _email;
+	private string? _name;
+	private string? _password;
 
-	private DateRange _dateRange { get; set; }
-
-	private readonly string[] _pageSelect = { "Jobsite", "Schedule", "Status", "Progress", "Request", "Notification" };
-	private readonly string[] _jobSelect = { "Job1", "Job2" };
-	private readonly string[] _actions = { "Create", "Modify" };
 	private readonly string[] _namePlaceholder = { "Jeff", "Bob", "Alice", "Susan" };
-
 
 	private bool _open;
 
@@ -140,5 +137,5 @@
 
 		var result = await response.GetJsonAsync<dynamic>();
 	}
-
 }
+
