@@ -10,7 +10,7 @@ namespace CapstoneAPI.DTOs
 
     public record RequestOffDto(
         long RequestOffId,
-        Guid UserId,
+        int UserId,
         DateOnly StartDate,
         DateOnly EndDate,
         string? Note

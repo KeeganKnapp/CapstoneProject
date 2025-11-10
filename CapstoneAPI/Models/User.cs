@@ -10,7 +10,7 @@ namespace CapstoneAPI.Models
 {
     public class User
     {
-        public Guid UserId { get; set; }                 // "UserId"
+        public int UserId { get; set; }                 // "UserId"
         public string Email { get; set; } = null!;       // "Email" (citext/text)
         public string PasswordHash { get; set; } = null!;// "PasswordHash"
         public string? DisplayName { get; set; }         // "DisplayName"

@@ -38,7 +38,7 @@ namespace CapstoneAPI.Data
                 e.ToTable("TimeEntry");
                 e.HasKey(x => x.TimeEntryId);
                 e.Property(x => x.TimeEntryId).HasColumnName("TimeEntryId");
-                e.Property(x => x.EmployeeId).HasColumnName("EmployeeId");
+                e.Property(x => x.UserId).HasColumnName("UserId");
                 e.Property(x => x.AssignmentId).HasColumnName("AssignmentId");
                 e.Property(x => x.StartTime).HasColumnName("StartTime");
                 e.Property(x => x.EndTime).HasColumnName("EndTime");
