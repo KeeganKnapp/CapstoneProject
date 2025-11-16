@@ -24,4 +24,12 @@ namespace CapstoneAPI.Dtos
         public int? UserId { get; set; }             // optional: close latest open by employee
         public DateTimeOffset? EndTime { get; set; }     // optional (defaults to UtcNow)
     }
+
+    public record TimeEntryDto(
+        long TimeEntryId,
+        int UserId,
+        int? AssignmentId,
+        DateTimeOffset StartTime,
+        DateTimeOffset? EndTime
+    );
 }

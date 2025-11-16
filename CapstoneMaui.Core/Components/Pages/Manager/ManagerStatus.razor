@@ -2,6 +2,9 @@
 @using MudBlazor
 @using MudBlazor.Components
 @using CapstoneMaui.Core.Models
+@using Flurl;
+@using Flurl.Http;
+@using System.Text.Json.Nodes;
 @namespace CapstoneMaui.Core.Components.Pages
 @inject NavigationManager Nav
 
@@ -47,46 +50,62 @@
 <div class="headingText textStandard">
 	<div>Employee</div>
 	<div>Status</div>
-	<div>Hours</div>
 </div>
 
 <MudPaper Width="100%" style="height:400px;overflow: auto; margin-bottom: 10px;" >
 	<MudPaper Elevation="0" Outlined="false" Height="1000px">
-		@foreach (var name in _namePlaceholder)
+		@if (dataLoaded)
 		{
-		<div class="headingText textStandard border" style="margin-bottom: 10px;">
-			<div class = "users">@name</div>
-			<div class = "users">Clocked in</div>
-			<div class = "users">6</div>
-		</div>
+			foreach (var g in requestData)
+			{
+					<div style="margin-bottom: 10px;" class="users border" id = "@g["TimeEntryId"]">
+							<MudStack Justify="Justify.SpaceBetween" Style="width: 100%">
+								<!--Holds the users name-->
+								<div class="usersElement textStandard marginStandard">
+									user : @g["UserId"]
+								</div>
+								<div class="usersElement">		
+										@if (g["EndTime"] == null){
+											<p>Clocked Out</p>
+										}else{
+											<p>Clocked In</p>
+										}
+								</div>
+							</MudStack>
+					</div>		
+			}
 		}
 	</MudPaper>
 </MudPaper>
 
+
+<!--
 <MudStack AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween" Spacing="3" Style="max-height: 100vh;">
 
-<MudSelect	@bind-value="_value3" FitContent=true Variant="Variant.Outlined"> 
-	@foreach (var employee in _namePlaceholder)
-	{
-		<MudSelectItem Value="employee">@employee</MudSelectItem>
-	}
-</MudSelect>
 
 
-<MudStack Row=true Justify="Justify.SpaceAround" Spacing="2">
-			<MudButton Variant="Variant.Filled" Color="Color.Secondary" Style="float:left; margin-left: 20%">
-				Assign
-			</MudButton>
+	<MudSelect	@bind-value="_value3" FitContent=true Variant="Variant.Outlined"> 
+		@foreach (var employee in _namePlaceholder)
+		{
+			<MudSelectItem Value="employee">@employee</MudSelectItem>
+		}
+	</MudSelect>
 
-			<MudButton Variant="Variant.Filled" Color="Color.Secondary" Style="float:right; margin-right: 20%">
-				Remove
-			</MudButton>
+
+	<MudStack Row=true Justify="Justify.SpaceAround" Spacing="2">
+				<MudButton Variant="Variant.Filled" Color="Color.Secondary" Style="float:left; margin-left: 20%">
+					Assign
+				</MudButton>
+
+				<MudButton Variant="Variant.Filled" Color="Color.Secondary" Style="float:right; margin-right: 20%">
+					Remove
+				</MudButton>
+		</MudStack>
 	</MudStack>
-</MudStack>
-
+-->
 <ManagerBottomBar/>
 
-
+<MudButton Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.Check" Color="Color.Secondary" OnClick="getRequest">Load</MudButton>
 
 
 @code {
@@ -99,15 +118,28 @@
 		new SiteDto(Guid.NewGuid(), "Uptown Renovation Project", 47.6205, -122.3493, 150),
 		new SiteDto(Guid.NewGuid(), "Suburban Housing Development", 47.5301, -122.0326, 200)
 	};
-	private string _value;
-	private string _value2;
 	private string _value3;
-
-	private readonly string[] _pageSelect = { "Jobsite", "Schedule", "Status", "Progress", "Request", "Notification" };
-	private readonly string[] _jobSelect = { "Job1", "Job2" };
 
 	private readonly string[] _namePlaceholder = { "Jeff", "Bob", "Alice", "Susan" };
 
+	JsonArray? requestData = null;
+
+	bool dataLoaded = false;
+
+	// for testing
+	string token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI0IiwiZW1haWwiOiJzdHJpbmciLCJkaXNwbGF5TmFtZSI6InN0cmluZyIsIm5iZiI6MTc2MzMyMzQzNSwiZXhwIjoxODUzMzIzNDM1LCJpc3MiOiJDYXBzdG9uZUFQSSIsImF1ZCI6IkNhcHN0b25lQ2xpZW50In0.ECKfnoUx3kPVx_Lm_XNrHhc5NQRRdt2rRhxYPDvEPbY";
+	// get all outgoing requests
+	public async Task getRequest()
+	{
+
+		var response = await "http://10.0.2.2:5162/time-entries/history"
+			.WithOAuthBearerToken(token)
+			.GetAsync();
+
+		requestData = await response.GetJsonAsync<JsonArray>();
+		dataLoaded = true;
+
+	}
 	// placeholder
 	private void Back()
 	{

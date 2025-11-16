@@ -1,11 +1,10 @@
-DROP TABLE IF EXISTS "TodoItem";
-DROP TYPE  IF EXISTS todo_status;
-
 DROP TABLE IF EXISTS "UserAssignment";
+DROP TABLE IF EXISTS "TodoItem";
 DROP TABLE IF EXISTS "TimeEntry";
 DROP TABLE IF EXISTS "RequestOff";
 DROP TABLE IF EXISTS "RefreshTokens";
 DROP TABLE IF EXISTS "Assignment";
+DROP TYPE  IF EXISTS todo_status;
 DROP TABLE IF EXISTS "Users";
 
 
