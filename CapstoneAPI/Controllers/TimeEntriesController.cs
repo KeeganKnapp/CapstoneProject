@@ -1,6 +1,7 @@
 using CapstoneAPI.Data;
 using CapstoneAPI.Models;
 using CapstoneAPI.Dtos;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -70,6 +71,39 @@ namespace CapstoneAPI.Controllers
             openEntry.EndTime = req.EndTime ?? DateTimeOffset.UtcNow;
             await _db.SaveChangesAsync(ct);
             return Ok(openEntry);
+        }
+
+        // GET /time-entries/history
+        [HttpGet("history")]
+        [Authorize]
+        public async Task<ActionResult<TimeEntry>> History()
+        {
+           var q = _db.TimeEntries.AsQueryable();
+
+            var items = await q
+                .OrderByDescending(x => x.StartTime)
+                .Select(x => new TimeEntryDto(x.TimeEntryId, x.UserId, x.AssignmentId, x.StartTime, x.EndTime))
+                .ToListAsync();
+        
+            return Ok(items);
+        }
+
+        // GET /time-entries/active
+        [HttpGet("active")]
+        [Authorize]
+        public async Task<ActionResult<TimeEntry>> Active()
+        {
+           var q = _db.TimeEntries.AsQueryable();
+
+            // If EndTime == null assume employee is clocked in
+            q = q.Where(x => x.EndTime == null);
+
+            var items = await q
+                .OrderByDescending(x => x.StartTime)
+                .Select(x => new TimeEntryDto(x.TimeEntryId, x.UserId, x.AssignmentId, x.StartTime, x.EndTime))
+                .ToListAsync();
+        
+            return Ok(items);
         }
     }
 }

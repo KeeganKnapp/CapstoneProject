@@ -22,6 +22,7 @@ namespace CapstoneAPI.Data
 
         // each DbSet<T> represents a database table
         public DbSet<TimeEntry> TimeEntries => Set<TimeEntry>();
+        public DbSet<ScheduleEntry> ScheduleEntry => Set<ScheduleEntry>();
         public DbSet<User> Users => Set<User>();
         public DbSet<RefreshToken> RefreshTokens => Set<RefreshToken>();
         public DbSet<RequestOff> RequestOffs => Set<RequestOff>();
@@ -38,6 +39,19 @@ namespace CapstoneAPI.Data
                 e.ToTable("TimeEntry");
                 e.HasKey(x => x.TimeEntryId);
                 e.Property(x => x.TimeEntryId).HasColumnName("TimeEntryId");
+                e.Property(x => x.UserId).HasColumnName("UserId");
+                e.Property(x => x.AssignmentId).HasColumnName("AssignmentId");
+                e.Property(x => x.StartTime).HasColumnName("StartTime");
+                e.Property(x => x.EndTime).HasColumnName("EndTime");
+            });
+
+            // binds the ScheduleEntry class to the "ScheduleEntry" table, maps
+            // each property to the exact column names in SQL
+            modelBuilder.Entity<ScheduleEntry>(e =>
+            {
+                e.ToTable("ScheduleEntry");
+                e.HasKey(x => x.ScheduleEntryId);
+                e.Property(x => x.ScheduleEntryId).HasColumnName("ScheduleEntryId");
                 e.Property(x => x.UserId).HasColumnName("UserId");
                 e.Property(x => x.AssignmentId).HasColumnName("AssignmentId");
                 e.Property(x => x.StartTime).HasColumnName("StartTime");
