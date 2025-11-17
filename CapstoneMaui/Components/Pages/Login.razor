@@ -1,12 +1,17 @@
 ﻿@using Android.Util
+@using CapstoneMaui.Services
 @using MudBlazor
 @using CapstoneMaui.Core.Services.Auth
 @using CapstoneMaui.Core.Services.Abstractions
 @using CapstoneMaui.Core.Models
+@using CapstoneMaui.Core.Dtos
 @using System.Net.Http.Json
+
 @inject HttpClient http
 @inject NavigationManager Nav
 @inject AbstractLoggerService Logger
+
+@inject NavigationTracker NavigationTracker
 
 @page "/login"
 
@@ -56,6 +61,7 @@
             if (!string.IsNullOrEmpty(auth.RefreshToken))
                 await SecureStorage.Default.SetAsync("refresh_token", auth.RefreshToken);
 
+            NavigationTracker.Push("/login");
             Nav.NavigateTo("/employee-dashboard");
         }
         catch(Exception ex)

@@ -1,5 +1,5 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
-<Sdk Name="Microsoft.NET.Sdk.Razor"/>
+<Sdk Name="Microsoft.NET.Sdk.Razor" />
     <PropertyGroup>
  <TargetFrameworks>net8.0-android</TargetFrameworks>
         <TargetFrameworks Condition="$([MSBuild]::IsOSPlatform('windows'))">$(TargetFrameworks);net8.0-windows10.0.19041.0</TargetFrameworks>

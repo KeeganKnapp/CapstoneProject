@@ -6,7 +6,7 @@ Defines the User entity, one record per registered account in the database
 
 */
 
-namespace CapstoneAPI.Models
+namespace CapstoneMaui.Core.Models
 {
     public class User
     {

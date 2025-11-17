@@ -17,7 +17,7 @@ namespace CapstoneAPI.Services
         Task<AuthResponse> LoginAsync(LoginRequest req, CancellationToken ct);       // handles user login, takes LoginRequest and returns AuthResponse with new access and refresh tokens
         Task<AuthResponse> RefreshAsync(string refreshToken, CancellationToken ct);  // handles access token renewal, takes a string refresh token, verifies it, rotates it, and returns new tokens
         Task LogoutAsync(string refreshToken, CancellationToken ct); // revoke a single refresh token
-        Task LogoutAllAsync(Guid userId, CancellationToken ct);      // revoke all refresh tokens for a user
+        Task LogoutAllAsync(int userId, CancellationToken ct);      // revoke all refresh tokens for a user
     }
 }
 

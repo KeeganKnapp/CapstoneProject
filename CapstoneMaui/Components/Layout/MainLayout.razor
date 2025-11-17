@@ -1,10 +1,12 @@
 ﻿@using MudBlazor
 @using System.Linq
-@using CapstoneMaui.Core.Components.Pages
 @using System.Runtime.CompilerServices
 @using CapstoneMaui.Core.Services.Abstractions
+@using CapstoneMaui.Services
 @inherits LayoutComponentBase
 @inject AbstractLoggerService LoggerService  
+@inject NavigationManager Nav
+@inject NavigationTracker NavigationTracker
 @namespace CapstoneMaui.Components.Layout
 
     <MudThemeProvider @bind-IsDarkMode="@_isDarkMode" Theme="_theme"/>
@@ -26,21 +28,21 @@
             }
             else {
         <MudAppBar Color="Color.Primary" Elevation="0">
+            <MudIconButton Color="Color.Secondary" OnClick="GoBack" Icon="@Icons.Material.Filled.ArrowBack"/>
             <MudText Typo="Typo.h6" Class="ml-2">CapstoneMaui</MudText>
         </MudAppBar>
             }   
 
 
-       <CascadingValue Value="this"> 
         <MudMainContent Style="overflow: hidden; margin: 16px; display: flex; flex-direction: column; height: 100%">
                 @Body
         </MudMainContent>
-        </CascadingValue>
     </MudLayout>
 
 @code {
     private bool _isDarkMode = false;
-    private bool _isDebug = true;
+    private bool _isDebug = false;
+    private string backButtonLabel = "Back";
     private List<string> _logMessages = new List<string>();
     private readonly MudTheme _theme = new()
     {
@@ -74,10 +76,19 @@
         // You can add Typography/Layout later; keep defaults while stabilizing
     };
 
+
     protected override async Task OnInitializedAsync() {
         LoggerService.OnLogMessage += OnLog;
         LoggerService.Log(this, "MainLayout initialized", "info");
         await base.OnInitializedAsync();
+    }
+
+    private void GoBack() {
+        if(NavigationTracker.Count == 0) {
+            Nav.NavigateTo("/");
+            return;
+        }
+        Nav.NavigateTo(NavigationTracker.Pop());
     }
 
     private void OnLog(object? sender, string message) {

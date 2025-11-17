@@ -7,7 +7,7 @@ succeeds either after registration, login, or refresh
 
 */
 
-namespace CapstoneMaui.Core.Models
+namespace CapstoneMaui.Core.Dtos
 {
     public class AuthResponse
     {

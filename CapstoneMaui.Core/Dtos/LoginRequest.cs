@@ -7,7 +7,7 @@ when a user tries to log in, used my /auth/login endpoint
 
 */
 
-namespace CapstoneMaui.Core.Models
+namespace CapstoneMaui.Core.Dtos
 {
     public class LoginRequest
     {

@@ -5,6 +5,9 @@
 @using CapstoneMaui.Core.Models
 @inject AbstractLoggerService Logger
 @inject LocationManager LocationManager
+@inject NavigationManager Nav
+@inject NavigationTracker NavigationTracker
+
 @namespace CapstoneMaui.Components.Pages.Employee
 
 @page "/employee-dashboard"
@@ -52,9 +55,9 @@ else {
     }
 }
 <MudStack Row="true" Justify="Justify.SpaceBetween">
-    <MudIconButton Icon="@Icons.Material.Filled.Wallet" Color="Color.Info" Size="Size.Large" />
-    <MudButton Variant="Variant.Filled">Request</MudButton>
-    <MudIconButton Icon="@Icons.Material.Filled.Notifications" Color="Color.Warning" Size="Size.Large" />
+    <MudIconButton Icon="@Icons.Material.Filled.Wallet" Color="Color.Info" Size="Size.Large" OnClick="EmployeePayroll"/>
+    <MudButton Variant="Variant.Filled" OnClick="EmployeeRequest">Request</MudButton>
+    <MudIconButton Icon="@Icons.Material.Filled.Notifications" Color="Color.Warning" Size="Size.Large" OnClick="EmployeeNotifications" />
 </MudStack>
 
 </MudStack>
@@ -62,9 +65,7 @@ else {
 
 @code {
     private bool clockedIn = false;
-
     private bool isClockingIn = false;
-
     private double currentLatitude = 47.6062;
     private double currentLongitude = -122.3321;
 
@@ -75,6 +76,24 @@ else {
         new SiteDto(Guid.NewGuid(), "Uptown Renovation Project", 47.6205, -122.3493, 150),
         new SiteDto(Guid.NewGuid(), "Suburban Housing Development", 47.5301, -122.0326, 200)
     };
+
+    private void EmployeeRequest()
+    {
+        NavigationTracker.Push(Nav.Uri);
+        Nav.NavigateTo("/employee-request");
+    }
+
+    private void EmployeeNotifications()
+    {
+        NavigationTracker.Push(Nav.Uri);
+        Nav.NavigateTo("/employee-notifications");
+    }
+
+    private void EmployeePayroll()
+    {
+        NavigationTracker.Push(Nav.Uri);
+        Nav.NavigateTo("/employee-payroll");
+    }
 
    private void HandleSiteChanged(SiteDto site)
    {

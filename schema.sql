@@ -1,23 +1,24 @@
+DROP TABLE IF EXISTS "TodoItem";
+DROP TYPE  IF EXISTS todo_status;
 
--- postgresSQL does not have a 'use' command to select the database, you have to select the database when connecting
--- CREATE DATABASE capstone;
+DROP TABLE IF EXISTS "UserAssignment";
+DROP TABLE IF EXISTS "TimeEntry";
+DROP TABLE IF EXISTS "RequestOff";
+DROP TABLE IF EXISTS "RefreshTokens";
+DROP TABLE IF EXISTS "Assignment";
+DROP TABLE IF EXISTS "Users";
 
-DROP TABLE IF EXISTS userRecipient;
-DROP TABLE IF EXISTS notification;
-DROP TABLE IF EXISTS userRequest;
-DROP TABLE IF EXISTS request;
-DROP TABLE IF EXISTS userAssignment;
-DROP TABLE IF EXISTS assignment;
-DROP TABLE IF EXISTS employee;
-DROP TYPE role;
-DROP TYPE requestType;
-DROP TYPE messageType;
 
-CREATE EXTENSION IF NOT EXISTS pgcrypto;
+-- extensions
 CREATE EXTENSION IF NOT EXISTS citext;
 
+
+--
+-- stores app user accounts
+--
+
 CREATE TABLE IF NOT EXISTS "Users" (
-  "UserId" uuid PRIMARY KEY DEFAULT gen_random_uuid(),  -- internal id
+  "UserId" SERIAL PRIMARY KEY,  -- internal id
   "Email" citext NOT NULL UNIQUE,                       -- case insensitive login name
   "PasswordHash" text NOT NULL,                         -- bcrypt
   "DisplayName" text,
@@ -26,9 +27,13 @@ CREATE TABLE IF NOT EXISTS "Users" (
   "UpdatedAt"    timestamptz NOT NULL DEFAULT now()
 );
 
+--
+-- used for session management (JWT refresh support)
+--
+
 CREATE TABLE IF NOT EXISTS "RefreshTokens" (
-  "RefreshTokenId"  uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  "UserId"           uuid NOT NULL REFERENCES "Users"("UserId") ON DELETE CASCADE,
+  "RefreshTokenId"  BIGSERIAL PRIMARY KEY,
+  "UserId"           INT NOT NULL REFERENCES "Users"("UserId") ON DELETE CASCADE,
   "Token"             text NOT NULL UNIQUE,          -- random opaque string (not a JWT)
   "CreatedAt"        timestamptz NOT NULL DEFAULT now(),
   "ExpiresAt"        timestamptz NOT NULL,
@@ -36,93 +41,119 @@ CREATE TABLE IF NOT EXISTS "RefreshTokens" (
   "ReplacedByToken" text                           -- rotation chain tracking (optional)
 );
 
+-- index lookup
 CREATE INDEX IF NOT EXISTS "idx_refresh_tokens_user_id" ON "RefreshTokens"("UserId");
 
--- Switched this to an ENUM in case we ever expand this to something like owner, manager, employee etc.
--- If we change this you drop an ENUM via the command below, otherwise it will fail
--- DROP TYPE enumNameHere;
-CREATE TYPE role AS ENUM ('management', 'employee');
-CREATE TABLE employee (
-  employeeId serial NOT NULL,
-  username varchar NOT NULL UNIQUE,
-  password varchar NOT NULL,
-  firstName varchar NOT NULL,
-  -- Controls user's role
-  management role NOT NULL,
-  PRIMARY KEY(employeeId)
+--
+-- represents jobsites that employees are assigned to
+--
+
+CREATE TABLE IF NOT EXISTS "Assignment" ( -- to do
+  "AssignmentId" SERIAL PRIMARY KEY, -- unique id per jobsite
+  "TotalHours" INT NOT NULL DEFAULT 0, -- stored hours at that jobsite
+  "CreatedAt" TIMESTAMPTZ NOT NULL DEFAULT now(), -- creation of a jobsite
+  "UpdatedAt" TIMESTAMPTZ NOT NULL DEFAULT now(), -- last modified, dk if this is even neccessary but its here
+
+  CONSTRAINT chk_assignment_hours_nonneg CHECK ("TotalHours" >= 0) -- making sure no negative hours
 );
 
--- examples so I don't need to keep writing this out
-
--- additionally, serial still increments even on a failed insert (e.g. first insert succeeds, second fails, third succeeds. Despite there only being 2 entries the entries are 1 and 3. 2 has been skipped.)
--- you can ignore serial when inserting. Serial additionally is just an integer, it has the same limit.
--- insert into employee (username,password,firstName,management) values ('test','test','test','employee');
-
--- or you can use DEFAULT
--- insert into employee (employeeID, username,password,firstName,management) values (DEFAULT, 'test2','test2','test2','management');
-
-CREATE TABLE assignment (
-  assignmentId serial NOT NULL,
-  -- I've chosen point to store the location of the job site as it should suit our needs
-  -- If we need something more advanced the extention PostGIS specializes in storing and working with geospatial data
-  site point NOT NULL,
-  -- Used to calculate an employee's hours
-  totalHours int NOT NULL,
-  -- Whether the job is archived/finished or not
-  archived bool NOT NULL,
-  PRIMARY KEY(assignmentId)
-);
-
-CREATE TABLE userAssignment (
-  assignmentId int NOT NULL,
-  employeeId int NOT NULL,
-  PRIMARY KEY(assignmentId, employeeId),
-  FOREIGN KEY (assignmentId) REFERENCES assignment(assignmentId) ON DELETE CASCADE,
-  FOREIGN KEY (employeeId) REFERENCES employee(employeeId) ON DELETE CASCADE
-);
-
-CREATE TYPE requestType AS ENUM ('extention', 'timeOff');
-CREATE TABLE request (
-	requestId serial NOT NULL,
-	reqType requestType NOT NULL,
-	requestTimeStart date,
-	requestTimeEnd date,
-	requestNote varchar,
-  PRIMARY KEY(requestId)
-);
-
-CREATE TABLE userRequest (
-  requestId int NOT NULL,
-  employeeId int NOT NULL,
-  PRIMARY KEY(requestId, employeeId),
-  FOREIGN KEY (requestId) REFERENCES request(requestId) ON DELETE CASCADE,
-  FOREIGN KEY (employeeId) REFERENCES employee(employeeId) ON DELETE CASCADE
-);
-
--- These are just examples, feel free to add more
--- Make sure to drop the enum first via query above
-CREATE TYPE messageType AS ENUM ('extention', 'timeOff', 'report', 'problem');
-CREATE TABLE notification (
-  notificationId serial NOT NULL,
-  senderId int NOT NULL,
-  notifType messageType NOT NULL,
-  notifContents varchar NOT NULL,
-  PRIMARY KEY(notificationId),
-  FOREIGN KEY (senderId) REFERENCES employee(employeeId) ON DELETE CASCADE
-);
-
-CREATE TABLE userRecipient (
-  notificationId int NOT NULL,
-  recipientId int NOT NULL,
-  PRIMARY KEY(notificationId,recipientId),
-  FOREIGN KEY (notificationId) REFERENCES notification(notificationId) ON DELETE CASCADE,
-  FOREIGN KEY (recipientId) REFERENCES employee(employeeId) ON DELETE CASCADE
-);
+--
+-- tracks user clock ins and outs
+--
 
 CREATE TABLE IF NOT EXISTS "TimeEntry" (
   "TimeEntryId" BIGSERIAL PRIMARY KEY,
-  "EmployeeId" INT NOT NULL,
+  "UserId" INT NOT NULL,
   "AssignmentId" INT NULL,
   "StartTime" TIMESTAMPTZ NOT NULL DEFAULT now(),
-  "EndTime" TIMESTAMPTZ NULL
+  "EndTime" TIMESTAMPTZ NULL,
+
+  CONSTRAINT fk_timeentry_user FOREIGN KEY ("UserId") REFERENCES "Users"("UserId") ON DELETE CASCADE,
+  CONSTRAINT chk_timeentry_times CHECK ("EndTime" IS NULL OR "EndTime" >= "StartTime"),
+  CONSTRAINT fk_timeentry_assignment FOREIGN KEY ("AssignmentId") REFERENCES "Assignment"("AssignmentId") ON DELETE SET NULL
 );
+
+CREATE UNIQUE INDEX IF NOT EXISTS uq_timeentry_open_per_user ON "TimeEntry"("UserId") WHERE "EndTime" IS NULL;
+
+
+
+DROP TABLE IF EXISTS "RequestOff";
+
+CREATE TABLE IF NOT EXISTS "RequestOff" (
+  "RequestOffId" BIGSERIAL PRIMARY KEY,
+  "UserId"       INT NOT NULL,
+  "StartDate"    DATE NOT NULL,
+  "EndDate"      DATE NOT NULL,
+  "Note"         VARCHAR,
+  "CreatedAt"    TIMESTAMPTZ NOT NULL DEFAULT now(),
+  "UpdatedAt"    TIMESTAMPTZ NOT NULL DEFAULT now(),
+
+  CONSTRAINT fk_requestoff_user FOREIGN KEY ("UserId") REFERENCES "Users"("UserId") ON DELETE CASCADE,
+  CONSTRAINT chk_requestoff_dates CHECK ("StartDate" <= "EndDate")
+);
+
+--
+-- links which users are assigned to which jobsites
+--
+
+CREATE TABLE IF NOT EXISTS "UserAssignment" (
+  "AssignmentId" INT NOT NULL, -- foreign key to Assignment
+  "UserId" INT NOT NULL, -- foreign key to Users
+
+  PRIMARY KEY ("AssignmentId", "UserId"), -- each pair is unique
+
+  CONSTRAINT fk_userassignment_assignment FOREIGN KEY ("AssignmentId") REFERENCES "Assignment"("AssignmentId") ON DELETE CASCADE, -- deletes remove join rows if jobsite or user removed
+  CONSTRAINT fk_userassignment_user FOREIGN KEY ("UserId") REFERENCES "Users"("UserId") ON DELETE CASCADE -- 
+);
+
+-- fast lookup indexes by user or assignment
+CREATE INDEX IF NOT EXISTS idx_userassignment_user       ON "UserAssignment"("UserId");
+CREATE INDEX IF NOT EXISTS idx_userassignment_assignment ON "UserAssignment"("AssignmentId");
+
+--
+-- tracks individual tasks for users, linked to Assignment
+--
+
+-- status enum for workflow stages
+DROP TYPE IF EXISTS todo_status;
+CREATE TYPE todo_status AS ENUM ('todo', 'in_progress', 'done');
+
+CREATE TABLE IF NOT EXISTS "ToDoItem" (
+  "ToDoId" BIGSERIAL PRIMARY KEY, -- unique task Id
+  "UserId" INT NOT NULL, -- user responsible for the task (idk maybe)
+  "AssignmentId" INT NULL, -- linking to a jobsite (assignment)
+  "TimeEntryId" BIGINT NULL,
+  "Title" VARCHAR NOT NULL, -- task name
+  "Details" TEXT,
+  "Status" todo_status NOT NULL DEFAULT 'todo', -- current stage = todo, in_progress, done
+  "DueAt" TIMESTAMPTZ NULL,
+  "CreatedAt" TIMESTAMPTZ NOT NULL DEFAULT now(),
+  "UpdatedAt" TIMESTAMPTZ NOT NULL DEFAULT now(),
+
+  -- linking to user assigned to this task
+  CONSTRAINT fk_todo_user FOREIGN KEY ("UserId") REFERENCES "Users"("UserId") ON DELETE CASCADE,
+
+  -- linking to jobsite, if deleted keep todo but unlink
+  CONSTRAINT fk_todo_assignment FOREIGN KEY ("AssignmentId") REFERENCES "Assignment"("AssignmentId") ON DELETE SET NULL,
+
+  -- link to a specific time entry for tasks tied to a session, if entry is deleted unlink but keep todo
+  CONSTRAINT fk_todo_timeentry FOREIGN KEY ("TimeEntryId") REFERENCES "TimeEntry"("TimeEntryId") ON DELETE SET NULL, -- didnt put much thought into this, might not even want it
+
+  -- preventing blank titles
+  CONSTRAINT chk_todo_title_not_blank CHECK (length(trim("Title")) > 0)
+);
+
+-- lookup tasks by user
+CREATE INDEX IF NOT EXISTS idx_todo_user        ON "ToDoItem"("UserId");
+
+-- lookup by assignment/jobsite
+CREATE INDEX IF NOT EXISTS idx_todo_assignment  ON "ToDoItem"("AssignmentId");
+
+-- lookup by linked time entry
+CREATE INDEX IF NOT EXISTS idx_todo_timeentry   ON "ToDoItem"("TimeEntryId");
+
+-- filter by status
+CREATE INDEX IF NOT EXISTS idx_todo_status      ON "ToDoItem"("Status");
+
+-- sort/filter by due date
+CREATE INDEX IF NOT EXISTS idx_todo_due         ON "ToDoItem"("DueAt");

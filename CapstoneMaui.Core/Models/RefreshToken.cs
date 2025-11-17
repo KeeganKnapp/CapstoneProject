@@ -7,12 +7,12 @@ in "RefreshTokens"
 
 */
 
-namespace CapstoneAPI.Models
+namespace CapstoneMaui.Core.Models
 {
     public class RefreshToken
     {
-        public int RefreshTokenId { get; set; }         // "RefreshTokenId"
-        public int UserId { get; set; }                 // "UserId" (FK to Users.UserId)
+        public Guid RefreshTokenId { get; set; }         // "RefreshTokenId"
+        public Guid UserId { get; set; }                 // "UserId" (FK to Users.UserId)
         public string Token { get; set; } = null!;       // "Token"
         public DateTimeOffset CreatedAt { get; set; }    // "CreatedAt"
         public DateTimeOffset ExpiresAt { get; set; }    // "ExpiresAt"

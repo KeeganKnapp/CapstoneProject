@@ -30,6 +30,7 @@ namespace CapstoneMaui
 			//add API singletons here with abstraction and concrete implementation
 			builder.Services.AddSingleton<IAuthService, AuthService>();
 			builder.Services.AddSingleton<LocationManager>();
+			builder.Services.AddSingleton<NavigationTracker>();
 #if iOS
 			builder.Services.AddSingleton
 			<CAbstractLoggerService, Platforms.iOS.Services.iOSLoggerService>();

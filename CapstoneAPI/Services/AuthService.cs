@@ -48,7 +48,6 @@ namespace CapstoneAPI.Services
             // creates a new user
             var user = new User
             {
-                UserId = Guid.NewGuid(),
                 Email = emailRaw,
                 DisplayName = string.IsNullOrWhiteSpace(req.DisplayName) ? null : req.DisplayName!.Trim(),
                 PasswordHash = PasswordHasher.Hash(req.Password),  // PBKDF2
@@ -77,7 +76,6 @@ namespace CapstoneAPI.Services
 
             _db.RefreshTokens.Add(new RefreshToken
             {
-                RefreshTokenId = Guid.NewGuid(),
                 UserId = user.UserId,
                 Token = refresh,
                 CreatedAt = DateTimeOffset.UtcNow,
@@ -125,7 +123,6 @@ namespace CapstoneAPI.Services
             // stores new refresh tokens in the db
             _db.RefreshTokens.Add(new RefreshToken
             {
-                RefreshTokenId = Guid.NewGuid(),
                 UserId = user.UserId,
                 Token = refresh,
                 CreatedAt = DateTimeOffset.UtcNow,
@@ -174,7 +171,6 @@ namespace CapstoneAPI.Services
             // save new refresh token as a new db row
             _db.RefreshTokens.Add(new RefreshToken
             {
-                RefreshTokenId = Guid.NewGuid(),
                 UserId = user.UserId,
                 Token = newRefresh,
                 CreatedAt = DateTimeOffset.UtcNow,
@@ -210,7 +206,7 @@ namespace CapstoneAPI.Services
         }
 
         // revokes all refresh tokens for a user, loggin them out of all devices
-        public async Task LogoutAllAsync(Guid userId, CancellationToken ct)
+        public async Task LogoutAllAsync(int userId, CancellationToken ct)
         {
             // select all active (non-revoked) refresh tokens for this user
             var active = _db.RefreshTokens.Where(t => t.UserId == userId && t.RevokedAt == null);
