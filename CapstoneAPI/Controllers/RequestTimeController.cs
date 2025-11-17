@@ -79,7 +79,7 @@ namespace CapstoneAPI.Controllers
 
         // GET /api/requestoff   (management list & filters)
         [HttpGet]
-        [Authorize(Roles = "management")] // adapt to your role name / policy
+        [Authorize(Roles = "Manager")]
         public async Task<ActionResult<IEnumerable<RequestOffDto>>> List(
             [FromQuery] int? userId,
             [FromQuery] DateOnly? from,

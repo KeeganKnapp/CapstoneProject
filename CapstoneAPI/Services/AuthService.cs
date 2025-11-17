@@ -92,7 +92,8 @@ namespace CapstoneAPI.Services
                 RefreshToken = refresh,
                 RefreshTokenExpiresAt = refreshExp,
                 Email = user.Email,
-                DisplayName = user.DisplayName
+                DisplayName = user.DisplayName,
+                Role = user.Role
             };
         }
 
@@ -138,7 +139,8 @@ namespace CapstoneAPI.Services
                 RefreshToken = refresh,
                 RefreshTokenExpiresAt = refreshExp,
                 Email = user.Email,
-                DisplayName = user.DisplayName
+                DisplayName = user.DisplayName,
+                Role = user.Role
             };
         }
 
@@ -189,7 +191,8 @@ namespace CapstoneAPI.Services
                 RefreshToken = newRefresh,
                 RefreshTokenExpiresAt = newRefreshExp,
                 Email = user.Email,
-                DisplayName = user.DisplayName
+                DisplayName = user.DisplayName,
+                Role = user.Role
             };
         }
 

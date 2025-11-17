@@ -1,5 +1,6 @@
 
 using System.Text;
+using System.Security.Claims;
 using CapstoneAPI.Data;
 using CapstoneAPI.Helpers;
 using CapstoneAPI.Services;
@@ -81,7 +82,9 @@ builder.Services.AddAuthentication(options =>
             IssuerSigningKey = signingKey,
 
             ValidateLifetime = true,                 // reject expired tokens
-            ClockSkew = TimeSpan.FromSeconds(15)     
+            ClockSkew = TimeSpan.FromSeconds(15),
+
+            RoleClaimType = ClaimTypes.Role
         };
     });
 
