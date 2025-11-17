@@ -2,7 +2,9 @@
 @using MudBlazor
 @using MudBlazor.Components
 @using CapstoneMaui.Core.Models
+@using CapstoneMaui.Core.Services.Abstractions
 @namespace CapstoneMaui.Core.Components.Pages
+
 @inject AbstractLoggerService Logger
 @inject NavigationManager Nav
 
@@ -19,11 +21,11 @@
         <MudSelectItem Value="@sites[2].Id">Suburban Housing Development</MudSelectItem>
     </MudSelect>
 
-     <JobSiteMap currentSiteId="@selectedSite" Height="25vh" Sites="@sites" OnChanged="@((site) => SaveSite(this, site))" />
+     <JobSiteMap currentSiteId="@selectedSite" Height="25vh" Sites="@sites" OnChanged="SaveSite" />
 
 
     <MudStack Row=true Justify="Justify.SpaceAround" Spacing="2">
-        <MudSelect	@bind-value="_value3" FitContent=true Variant="Variant.Outlined" Style="float:left;"> 
+        <MudSelect T="string" @bind-value="_value3" FitContent=true Variant="Variant.Outlined" Style="float:left;"> 
                     @foreach (var employee in _namePlaceholder)
                     {
                     <MudSelectItem Value="employee">@employee</MudSelectItem>
@@ -62,7 +64,7 @@
 
     private readonly string[] _namePlaceholder = { "Jeff", "Bob", "Alice", "Susan" };
 
-    public void SaveSite(object? sender, SiteDto site)
+    public void SaveSite(SiteDto site)
     {
         //handle site change
         new SiteDto(Guid.NewGuid(), "Test", 90.5301, 122.0326, 200);

@@ -62,7 +62,7 @@
                 await SecureStorage.Default.SetAsync("refresh_token", auth.RefreshToken);
 
             NavigationTracker.Push("/login");
-            Nav.NavigateTo("/employee-dashboard");
+            Nav.NavigateTo("/manager-dashboard");
         }
         catch(Exception ex)
         {
