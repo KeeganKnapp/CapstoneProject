@@ -1,19 +1,19 @@
-namespace CapstoneMaui.Core.Models;
-
-public record class SiteDto
-{
-    public Guid Id { get; init; }
-    public SiteDto(Guid Id, string Name, double Lat, double Lng, int RadiusMeters)
+    namespace CapstoneMaui.Core.Models {
+    public class SiteDto
     {
-        this.Id = Id;
-        this.Name = Name;
-        this.Lat = Lat;
-        this.Lng = Lng;
-        this.RadiusMeters = RadiusMeters;
-    }
-    public double Lat { get; init; }
-    public double Lng { get; init; }
-    public int RadiusMeters { get; init; }
-    public string Name { get; init; }
+        public Guid Id { get; set; }
+        public string Name { get; set; }
+        public double Lat { get; set; }
+        public double Lng { get; set; }
+        public double RadiusMeters { get; set; }
 
-}
+        public SiteDto(Guid id, string name, double lat, double lng, double radiusMeters)
+        {
+            Id = id;
+            Name = name;
+            Lat = lat;
+            Lng = lng;
+            RadiusMeters = radiusMeters;
+        }
+    }
+    }

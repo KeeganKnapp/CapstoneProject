@@ -1,11 +1,17 @@
 using CapstoneMaui.Core.Services.Abstractions;
-
 namespace CapstoneMaui.Core.Services.Auth
 {
     public class AuthService : IAuthService
     {
         private string? _authToken;
         private bool _isLoggedIn;
+
+        private readonly HttpClient _httpClient;
+
+        public AuthService(HttpClient httpClient)
+        {
+            _httpClient = httpClient;
+        }
 
         public async Task<bool> LoginAsync(string email, string password, CancellationToken cancellationToken = default)
         {

@@ -1,8 +1,7 @@
-﻿@using CapstoneMaui.Core.Components.Layout
-@using System.Reflection
+﻿@using System.Reflection
+@using CapstoneMaui.Components.Layout
 
-<Router AppAssembly="@typeof(MauiProgram).Assembly"
-        AdditionalAssemblies="new[] { typeof(CapstoneMaui.Core.Components.Pages.Login).Assembly }">
+<Router AppAssembly="@typeof(MauiProgram).Assembly">
     <Found Context="routeData">
         <RouteView RouteData="@routeData" DefaultLayout="@typeof(MainLayout)" />
         <FocusOnNavigate RouteData="@routeData" Selector="h1" />

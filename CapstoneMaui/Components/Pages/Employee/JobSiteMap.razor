@@ -1,13 +1,13 @@
-﻿@using CapstoneMaui.Core.Services
+﻿@using CapstoneMaui.Core.Services.Abstractions
 @using Microsoft.JSInterop
 @using CapstoneMaui.Core.Models
 @using MudBlazor
 @inject IJSRuntime JS
 @inject AbstractLoggerService Logger
-@namespace CapstoneMaui.Core.Components.Pages
+@namespace CapstoneMaui.Core.Components.Pages.Employee
 
 <!-- Filler, replace with actual map later -->
-<MudCard Class="m-0" Elevation="0" Style="@($"width:100vw; height:{Height};")">
+<MudCard Class="m-0" Elevation="0" Style="width:100vw; height:100vh;">
     <MudCardContent Style="padding:0;">
         <div id="@_id" style="height:100%; width:100%;"></div>
     </MudCardContent>
@@ -16,7 +16,6 @@
 
 @code {
     [Parameter] public Guid currentSiteId { get; set; } = Guid.Empty;
-    [Parameter] public string Height { get; set; } = "420px";
     [Parameter] public IEnumerable<SiteDto>? Sites { get; set; }
     [Parameter] public EventCallback<SiteDto> OnChanged { get; set; }
 
@@ -29,18 +28,19 @@
     {
         // Logic to focus on the job site on the map
         // This would typically involve calling a JS function to update the map view
+        Logger.Log(this,$"Focusing on job site: {siteId}");
         if(siteId == Guid.Empty) return;
         await JS.InvokeVoidAsync("capstoneMap.focusOnLocation", siteId);
     }
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
+        Logger.Log(this,$"JobSiteMap OnAfterRenderAsync firstRender={firstRender}");
         if (!firstRender) return;
         _ref = DotNetObjectReference.Create(this);
         await JS.InvokeVoidAsync("capstoneMap.init", $"#{_id}", _ref, Sites ?? Array.Empty<SiteDto>());
 
         if(currentSiteId != Guid.Empty)
         {
-            
             await FocusOnJobSite(currentSiteId);
         }
     }
@@ -49,6 +49,7 @@
     {
         if (initialized && previousSiteId != currentSiteId)
         {
+            Logger.Log(this,$"JobSiteMap OnParametersSetAsync previousSiteId={previousSiteId} currentSiteId={currentSiteId}");
             await FocusOnJobSite(currentSiteId);
             previousSiteId = currentSiteId;
         }
@@ -60,10 +61,17 @@
         }
     }
 
-    [JSInvokable] public Task OnSiteChanged(SiteDto site) => OnChanged.InvokeAsync(site);
-
+   [JSInvokable] 
+   public async Task OnSiteChanged(SiteDto site) 
+   {
+       if (OnChanged.HasDelegate)
+       {
+           await OnChanged.InvokeAsync(site);
+       }
+   }
     public async ValueTask DisposeAsync()
     {
+        Logger.Log(this,$"Disposing JobSiteMap");
         if (_ref is not null) _ref.Dispose();
         if(initialized)
             await JS.InvokeVoidAsync("capstoneMap.dispose");

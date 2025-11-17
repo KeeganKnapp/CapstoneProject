@@ -3,6 +3,7 @@ using MudBlazor;
 using MudBlazor.Services;
 using CapstoneMaui.Core.Services.Abstractions;
 using CapstoneMaui.Core.Services.Auth;
+using CapstoneMaui.Services;
 namespace CapstoneMaui
 {
 
@@ -20,21 +21,27 @@ namespace CapstoneMaui
 
 			builder.Services.AddMauiBlazorWebView();
 			builder.Services.AddMudServices();
+			builder.Services.AddHttpClient("CapstoneAPI", client =>
+			{
+				client.BaseAddress = new Uri("http://10.0.2.2:5162/"); // Android emulator -> host's localhost
+			});
+			builder.Services.AddScoped(sp => sp.GetRequiredService<IHttpClientFactory>().CreateClient("CapstoneAPI"));
 
 			//add API singletons here with abstraction and concrete implementation
 			builder.Services.AddSingleton<IAuthService, AuthService>();
-
+			builder.Services.AddSingleton<LocationManager>();
+			builder.Services.AddSingleton<NavigationTracker>();
 #if iOS
 			builder.Services.AddSingleton
-			<CapstoneMaui.Core.Services.AbstractLoggerService, Platforms.iOS.Services.iOSLoggerService>();
+			<CAbstractLoggerService, Platforms.iOS.Services.iOSLoggerService>();
 #endif
 #if ANDROID
 			builder.Services.AddSingleton
-			<CapstoneMaui.Core.Services.AbstractLoggerService, Platforms.Android.Services.AndroidLoggerService>();
+			<AbstractLoggerService, Platforms.Android.Services.AndroidLoggerService>();
 #endif
 #if WINDOWS
 			builder.Services.AddSingleton
-			<CapstoneMaui.Core.Services.AbstractLoggerService, Platforms.Windows.Services.WindowsLoggerService>();
+			<CAbstractLoggerService, Platforms.Windows.Services.WindowsLoggerService>();
 #endif
 
 #if DEBUG

@@ -1,0 +1,76 @@
+﻿@using Android.Util
+@using CapstoneMaui.Services
+@using MudBlazor
+@using CapstoneMaui.Core.Services.Auth
+@using CapstoneMaui.Core.Services.Abstractions
+@using CapstoneMaui.Core.Models
+@using CapstoneMaui.Core.Dtos
+@using System.Net.Http.Json
+
+@inject HttpClient http
+@inject NavigationManager Nav
+@inject AbstractLoggerService Logger
+
+@inject NavigationTracker NavigationTracker
+
+@page "/login"
+
+    <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 80vh;">
+        <div style="display: flex; flex-direction: column; align-items: center; gap: 8px;">
+            <MudTextField Label="Email" Variant="Variant.Outlined" Style="width: 250px;" @bind-Value="_email" />
+            <MudTextField Label="Password" Variant="Variant.Outlined" InputType="InputType.Password" Style="width: 250px;" @bind-Value="_password" />
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" Style="width: 250px;" OnClick="HandleValidSubmit">Login</MudButton>
+        </div>
+    </div>
+
+@code {
+    private string _email;
+    private string _password;
+
+    private bool busy;
+    private bool loggedIn;
+
+    private async Task HandleValidSubmit()
+    {
+        if(busy) return;
+        busy = true;
+        try
+        {
+            var lq = new LoginRequest
+            {
+                Email = _email,
+                Password = _password
+            };
+            using var res = await http.PostAsJsonAsync("auth/login", lq);
+            if(!res.IsSuccessStatusCode)
+            {
+                var body = await res.Content.ReadAsStringAsync();
+                Logger.Log(this, "Login failed: " + body, "error");
+                return;
+            }
+
+            var auth = await res.Content.ReadFromJsonAsync<AuthResponse>();
+            if(auth == null)
+            {
+                Logger.Log(this, "Login failed: no auth response", "error");
+                return;
+            }
+
+            if (!string.IsNullOrEmpty(auth.AccessToken))
+                await SecureStorage.Default.SetAsync("auth_token", auth.AccessToken);
+            if (!string.IsNullOrEmpty(auth.RefreshToken))
+                await SecureStorage.Default.SetAsync("refresh_token", auth.RefreshToken);
+
+            NavigationTracker.Push("/login");
+            Nav.NavigateTo("/manager-dashboard");
+        }
+        catch(Exception ex)
+        {
+            Logger.Log(this, "Login failed: " + ex.Message, "error");
+        }
+        finally
+        {
+            busy = false;
+        }
+    }
+}

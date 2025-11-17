@@ -1,22 +1,19 @@
-﻿@using CapstoneMaui.Core.Services
-@using MudBlazor
+﻿@using MudBlazor
 @using System.Linq
-@using CapstoneMaui.Core.Components.Pages
 @using System.Runtime.CompilerServices
+@using CapstoneMaui.Core.Services.Abstractions
+@using CapstoneMaui.Services
 @inherits LayoutComponentBase
 @inject AbstractLoggerService LoggerService  
-@namespace CapstoneMaui.Core.Components.Layout
+@inject NavigationManager Nav
+@inject NavigationTracker NavigationTracker
+@namespace CapstoneMaui.Components.Layout
 
     <MudThemeProvider @bind-IsDarkMode="@_isDarkMode" Theme="_theme"/>
     <MudDialogProvider />
     <MudSnackbarProvider/>
     <MudPopoverProvider /> 
-    <MudLayout Style="min-height: 100vh; overflow: hidden;">
-        <MudAppBar Color="Color.Primary" Elevation="0">
-            <MudText Typo="Typo.h6" Class="ml-2">CapstoneMaui</MudText>
-        </MudAppBar>
-       <CascadingValue Value="this"> 
-        <MudMainContent Style="margin: 16px;">
+    <MudLayout>
             @if (_isDebug) {
             <MudExpansionPanels>
                 <MudExpansionPanel Text="Debug Logs" Color="Color.Primary">
@@ -29,11 +26,17 @@
                 </MudExpansionPanel>
             </MudExpansionPanels>
             }
-            <div style="overflow: hidden; height: 100%;">
+            else {
+        <MudAppBar Color="Color.Primary" Elevation="0">
+            <MudIconButton Color="Color.Secondary" OnClick="GoBack" Icon="@Icons.Material.Filled.ArrowBack"/>
+            <MudText Typo="Typo.h6" Class="ml-2">CapstoneMaui</MudText>
+        </MudAppBar>
+            }   
+
+
+        <MudMainContent Style="overflow: hidden; margin: 16px; display: flex; flex-direction: column; height: 100%">
                 @Body
-            </div>
         </MudMainContent>
-        </CascadingValue>
     </MudLayout>
 
 @code {
@@ -72,10 +75,19 @@
         // You can add Typography/Layout later; keep defaults while stabilizing
     };
 
+
     protected override async Task OnInitializedAsync() {
         LoggerService.OnLogMessage += OnLog;
         LoggerService.Log(this, "MainLayout initialized", "info");
         await base.OnInitializedAsync();
+    }
+
+    private void GoBack() {
+        if(NavigationTracker.Count == 0) {
+            Nav.NavigateTo("/");
+            return;
+        }
+        Nav.NavigateTo(NavigationTracker.Pop());
     }
 
     private void OnLog(object? sender, string message) {
@@ -83,5 +95,6 @@
         if (_logMessages.Count > 20) {
             _logMessages.RemoveAt(0);
         }
+        StateHasChanged();
     }
 }
