@@ -1,0 +1,51 @@
+﻿@using MudBlazor
+@namespace CapstoneMaui.Core.Components.Pages
+@inject NavigationManager Nav
+
+
+
+<style>
+	.topBar {
+	width: 100%;
+	}
+</style>
+
+<div class="topBar"> 
+	<MudSelect @bind-Value="action" Label="Select Action" Variant="Variant.Outlined" Placeholder="Page">
+		<MudSelectItem Value=0>Dashboard</MudSelectItem>
+		<MudSelectItem Value=1>Status</MudSelectItem>
+		<MudSelectItem Value=2>Schedule</MudSelectItem>
+		<MudSelectItem Value=3>Progress</MudSelectItem>
+		<MudSelectItem Value=4>New Jobsite</MudSelectItem>
+		<MudSelectItem Value=5>Account Management</MudSelectItem>
+	</MudSelect>
+</div>
+
+@switch(action) {
+	case 0:
+		Nav.NavigateTo("/manager-dashboard");
+		break;
+	case 1:
+		Nav.NavigateTo("/manager-status");
+		break;
+	case 2:
+		Nav.NavigateTo("/manager-schedule");
+		break;
+	case 3:
+		Nav.NavigateTo("/manager-progress");
+		break;
+	case 4:
+		Nav.NavigateTo("/manager-newjobsite");
+		break;
+	case 5:
+		Nav.NavigateTo("/manager-account");
+		break;
+	default:
+		break;
+}
+
+
+@code {
+	[Parameter] public int action { get; set; } = 1;
+}
+

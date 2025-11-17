@@ -4,10 +4,14 @@
 @using MudBlazor
 @inject IJSRuntime JS
 @inject AbstractLoggerService Logger
-@namespace CapstoneMaui.Components.Pages.Employee
+@namespace CapstoneMaui.Core.Components.Pages.Employee
 
 <!-- Filler, replace with actual map later -->
-<div id="@_id" style="height:100%; width:100%;"></div> @* map canvas gets 100% of card *@
+<MudCard Class="m-0" Elevation="0" Style="width:100vw; height:100vh;">
+    <MudCardContent Style="padding:0;">
+        <div id="@_id" style="height:100%; width:100%;"></div>
+    </MudCardContent>
+</MudCard>
 
 
 @code {

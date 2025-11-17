@@ -1,11 +1,10 @@
-DROP TABLE IF EXISTS "TodoItem";
-DROP TYPE  IF EXISTS todo_status;
-
 DROP TABLE IF EXISTS "UserAssignment";
+DROP TABLE IF EXISTS "TodoItem";
 DROP TABLE IF EXISTS "TimeEntry";
 DROP TABLE IF EXISTS "RequestOff";
 DROP TABLE IF EXISTS "RefreshTokens";
 DROP TABLE IF EXISTS "Assignment";
+DROP TYPE  IF EXISTS todo_status;
 DROP TABLE IF EXISTS "Users";
 
 
@@ -75,7 +74,15 @@ CREATE TABLE IF NOT EXISTS "TimeEntry" (
 
 CREATE UNIQUE INDEX IF NOT EXISTS uq_timeentry_open_per_user ON "TimeEntry"("UserId") WHERE "EndTime" IS NULL;
 
-
+DROP TABLE IF EXISTS "ScheduleEntry";
+CREATE TABLE IF NOT EXISTS "ScheduleEntry" (
+  "ScheduleEntryId" BIGSERIAL PRIMARY KEY,
+  "UserId" INT NOT NULL,
+  "AssignmentId" INT NULL,
+  "StartTime" DATE NOT NULL,
+  "EndTime" DATE NOT NULL,
+  UNIQUE ("UserId", "AssignmentId")
+);
 
 DROP TABLE IF EXISTS "RequestOff";
 
