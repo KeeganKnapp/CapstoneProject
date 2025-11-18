@@ -23,6 +23,11 @@ namespace CapstoneMaui
 
 			//add API singletons here with abstraction and concrete implementation
 			builder.Services.AddSingleton<IAuthService, AuthService>();
+			
+			builder.Services.AddMudServices(config =>
+			{
+				config.SnackbarConfiguration.PositionClass = Defaults.Classes.Position.TopCenter; 
+			});
 
 #if iOS
 			builder.Services.AddSingleton

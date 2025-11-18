@@ -3,6 +3,7 @@
 @using Flurl;
 @using Flurl.Http;
 @using System;
+@inject ISnackbar Snackbar
 @inject NavigationManager Nav
 
 @page "/employee-request"
@@ -64,17 +65,22 @@
 
 	public async Task request()
 	{
+		try {
+			var response = await "http://10.0.2.2:5162/api/RequestOff"
+				.WithOAuthBearerToken("eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI0IiwiZW1haWwiOiJzdHJpbmciLCJkaXNwbGF5TmFtZSI6InN0cmluZyIsIm5iZiI6MTc2MzMyMzQzNSwiZXhwIjoxODUzMzIzNDM1LCJpc3MiOiJDYXBzdG9uZUFQSSIsImF1ZCI6IkNhcHN0b25lQ2xpZW50In0.ECKfnoUx3kPVx_Lm_XNrHhc5NQRRdt2rRhxYPDvEPbY")
+				.PostJsonAsync(new
+				{
+					startDate = _dateOne?.ToString("yyyy-MM-dd"),
+					endDate = _dateTwo?.ToString("yyyy-MM-dd"),
+					note = reason
+				});
 
-		var response = await "http://10.0.2.2:5162/api/RequestOff"
-			.WithOAuthBearerToken("eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI0IiwiZW1haWwiOiJzdHJpbmciLCJkaXNwbGF5TmFtZSI6InN0cmluZyIsIm5iZiI6MTc2MzMyMzQzNSwiZXhwIjoxODUzMzIzNDM1LCJpc3MiOiJDYXBzdG9uZUFQSSIsImF1ZCI6IkNhcHN0b25lQ2xpZW50In0.ECKfnoUx3kPVx_Lm_XNrHhc5NQRRdt2rRhxYPDvEPbY")
-			.PostJsonAsync(new
-			{
-				startDate = _dateOne?.ToString("yyyy-MM-dd"),
-				endDate = _dateTwo?.ToString("yyyy-MM-dd"),
-				note = reason
-			});
+			var result = await response.GetJsonAsync<dynamic>();
 
-		var result = await response.GetJsonAsync<dynamic>();
+		}
+		catch (FlurlHttpException ex) {
+			Snackbar.Add(ex.Message, Severity.Error);
+		}
 	}
 
 }

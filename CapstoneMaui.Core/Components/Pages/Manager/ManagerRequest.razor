@@ -4,7 +4,7 @@
 @using Newtonsoft.Json; 
 @using Newtonsoft.Json.Linq;
 @using System.Text.Json.Nodes;
-
+@inject ISnackbar Snackbar
 
 @namespace CapstoneMaui.Core.Components.Pages
 @inject NavigationManager Nav
@@ -102,29 +102,40 @@
 	}
 
 	// for testing
-	string token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI0IiwiZW1haWwiOiJzdHJpbmciLCJkaXNwbGF5TmFtZSI6InN0cmluZyIsIm5iZiI6MTc2MzMyMzQzNSwiZXhwIjoxODUzMzIzNDM1LCJpc3MiOiJDYXBzdG9uZUFQSSIsImF1ZCI6IkNhcHN0b25lQ2xpZW50In0.ECKfnoUx3kPVx_Lm_XNrHhc5NQRRdt2rRhxYPDvEPbY";
+	string token = "g eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI0IiwiZW1haWwiOiJzdHJpbmciLCJkaXNwbGF5TmFtZSI6InN0cmluZyIsIm5iZiI6MTc2MzMyMzQzNSwiZXhwIjoxODUzMzIzNDM1LCJpc3MiOiJDYXBzdG9uZUFQSSIsImF1ZCI6IkNhcHN0b25lQ2xpZW50In0.ECKfnoUx3kPVx_Lm_XNrHhc5NQRRdt2rRhxYPDvEPbY";
 	// get all outgoing requests
 	public async Task getRequest(){
+		try {
+			var response = await "http://10.0.2.2:5162/api/RequestOff/all"
+				.WithOAuthBearerToken(token)
+				.GetAsync();
 
-		var response = await "http://10.0.2.2:5162/api/RequestOff/all"
-			.WithOAuthBearerToken(token)
-			.GetAsync();
+			requestData = await response.GetJsonAsync<JsonArray>();
+			dataLoaded = true;
 
-		requestData = await response.GetJsonAsync<JsonArray>();
-		dataLoaded = true;
-
-	}
+		}
+		catch (FlurlHttpException ex) {
+			Snackbar.Add(ex.Message, Severity.Error);
+		}
+}
 
 	// delete specified request
 	public async Task deleteRequest(int id){
 
-		var response = await ("http://10.0.2.2:5162/api/RequestOff/" + id.ToString())
-		.WithOAuthBearerToken(token)
-		.DeleteAsync();
+		try {
+			var response = await ("http://10.0.2.2:5162/api/RequestOff/" + id.ToString())
+			.WithOAuthBearerToken(token)
+			.DeleteAsync();
 
-		var result = await response.GetJsonAsync<dynamic>();
+			var result = await response.GetJsonAsync<dynamic>();
 
-		await getRequest();
+			await getRequest();
+
+		}
+		catch (FlurlHttpException ex)
+		{
+			Snackbar.Add(ex.Message, Severity.Error);
+		}
 	}
 
 }

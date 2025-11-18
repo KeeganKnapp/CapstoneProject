@@ -8,6 +8,7 @@
 @namespace CapstoneMaui.Core.Components.Pages
 @inject AbstractLoggerService Logger
 @inject NavigationManager Nav
+@inject ISnackbar Snackbar
 
 @page "/manager-schedule"
 <style>
@@ -92,8 +93,7 @@
 
 
 @code {
-	private string _value;
-	private string _value2;
+
 
 	private Guid selectedSite = Guid.Empty;
 	public List<SiteDto> sites = new()
@@ -108,60 +108,58 @@
 	DateTime? _dateOne;
 	DateTime? _dateTwo;
 
-
-	private readonly string[] _pageSelect = { "Jobsite", "Schedule", "Status", "Progress", "Request", "Notification" };
-
-	private readonly string[] _namePlaceholder = { "Jeff", "Bob", "Alice", "Susan" };
-
-	// placeholder
-	private void Back()
-	{
-		Nav.NavigateTo("/employee-dashboard");
-	}
-
 	JsonArray? requestData = null;
 
 	bool dataLoaded = false;
 	string token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI5IiwiZW1haWwiOiJzdHJpbjEzMTJnIiwiZGlzcGxheU5hbWUiOiJzdHJpbmciLCJuYmYiOjE3NjMzMzMzMzUsImV4cCI6OTE3NjMzMzMzMzUsImlzcyI6IkNhcHN0b25lQVBJIiwiYXVkIjoiQ2Fwc3RvbmVDbGllbnQifQ.VdtCnT4BWt_Fu5gXFa1E_t1VEuBVnXtiqre6hrYOU5s";
 	public async Task getRequest()
 	{
-
+		try {
 		var response = await "http://10.0.2.2:5162/schedule/getAll"
 			.WithOAuthBearerToken(token)
 			.GetAsync();
 
 		requestData = await response.GetJsonAsync<JsonArray>();
 		dataLoaded = true;
-
+		}
+		catch (FlurlHttpException ex) {
+			Snackbar.Add(ex.Message, Severity.Error);
+		}
 	}
 	// delete specified request
 	public async Task deleteRequest(int id)
 	{
+		try {
+			var response = await ("http://10.0.2.2:5162/schedule/delete/" + id.ToString())
+			.WithOAuthBearerToken(token)
+			.DeleteAsync();
 
-		var response = await ("http://10.0.2.2:5162/schedule/delete/" + id.ToString())
-		.WithOAuthBearerToken(token)
-		.DeleteAsync();
+			var result = await response.GetJsonAsync<dynamic>();
 
-		var result = await response.GetJsonAsync<dynamic>();
-
-		await getRequest();
+			await getRequest();
+		} catch (FlurlHttpException ex) {
+			Snackbar.Add(ex.Message, Severity.Error);
+		}
 	}
 
 	public async Task schedule()
 	{
+		try {
+			var response = await "http://10.0.2.2:5162/schedule/createSchedule"
+				.WithOAuthBearerToken(token)
+				.PostJsonAsync(new
+				{
+					UserId = EmployeeId,
+					AssignmentId = SiteId,
+					startDate = _dateOne,
+					endDate = _dateTwo,
+				});
 
-		var response = await "http://10.0.2.2:5162/schedule/createSchedule"
-			.WithOAuthBearerToken(token)
-			.PostJsonAsync(new
-			{
-				UserId = EmployeeId,
-				AssignmentId = SiteId,
-				startDate = _dateOne,
-				endDate = _dateTwo,
-			});
-
-		var result = await response.GetJsonAsync<dynamic>();
-		await getRequest();
-	}
+			var result = await response.GetJsonAsync<dynamic>();
+			await getRequest();
+		} catch (FlurlHttpException ex) {
+			Snackbar.Add(ex.Message, Severity.Error);
+		}
+}
 
 }
