@@ -1,0 +1,47 @@
+@using MudBlazor
+@using CapstoneBlazorApp.Dtos
+@page "/employee-payroll"
+
+
+<MudStack AlignItems=AlignItems.Center JustifyContent=Justify.Center Style="height: 100vh;">
+    <MudText Typo="Typo.h6">Hours Worked: @totalHours</MudText>
+    <MudText Typo="Typo.h6">Hourly Rate: @hourlyRate</MudText>
+    <MudText Typo="Typo.h6">Total Pay: @totalPay</MudText>
+
+
+<MudTable Style="width: 100%;" Items="@payStubs" Breakpoint="Breakpoint.None" Elevation="1" Bordered="true" Hover="true">
+    <HeaderContent>
+        <MudTh>Period</MudTh>
+        <MudTh>Gross Pay</MudTh>
+        <MudTh>Net Pay</MudTh>
+    </HeaderContent>
+
+    <RowTemplate>
+        <MudTd>@context.period</MudTd>
+        <MudTd>@context.gross.ToString("C")</MudTd>
+        <MudTd>@context.net.ToString("C")</MudTd>
+    </RowTemplate>
+</MudTable>
+
+</MudStack>
+@code {
+    double totalHours = 0;
+    double hourlyRate = 20.0;
+    double totalPay => totalHours * hourlyRate;
+
+    private List<PayStubDto> payStubs = new List<PayStubDto>
+        {
+            //random paystubs with random string period, decimal gross, decimal net
+            new PayStubDto ("Jan 2024", 3200.00m, 2560.00m),
+            new PayStubDto ("Feb 2024", 3000.00m, 2400.00m),
+            new PayStubDto ("Mar 2024", 3400.00m, 2720.00m)
+        };  
+    private async Task OnInitializedAsync()
+    {
+        // Simulate fetching hours worked from a service
+        await Task.Delay(500); // Simulate async call
+        totalHours = 160; // Example value
+
+    }
+
+}

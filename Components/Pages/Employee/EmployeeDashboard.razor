@@ -1,0 +1,152 @@
+@using CapstoneBlazorApp.Services
+@using CapstoneBlazorApp.Services.Abstractions
+@using MudBlazor
+@using MudBlazor.Components
+@using CapstoneBlazorApp.Models
+@inject AbstractLoggerService Logger
+@inject LocationManager LocationManager
+@inject NavigationManager Nav
+@inject NavigationTracker NavigationTracker
+
+@namespace CapstoneMaui.Components.Pages.Employee
+
+@page "/employee-dashboard"
+
+<MudStack AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween" Spacing="3" Style="height: 100%;">   
+
+<MudSelect Style="flex-shrink: 1;" T="Guid" @bind-Value="selectedSite" Label="Select Job Site" Variant="Variant.Outlined">
+    <MudSelectItem Value="@sites[0].Id">Downtown Construction Site</MudSelectItem>
+    <MudSelectItem Value="@sites[1].Id">Uptown Renovation Project</MudSelectItem>
+    <MudSelectItem Value="@sites[2].Id">Suburban Housing Development</MudSelectItem>
+</MudSelect>
+
+@if(!clockedIn) {
+<MudCard Elevation="2" Style="flex-shrink: 0; height: 50vh; width: 100%;">
+    <MudCardContent Style="height: 100%; width:100%">
+        <JobSiteMap currentSiteId="@selectedSite" Sites="@sites" OnChanged="@HandleSiteChanged" />
+    </MudCardContent>
+</MudCard>
+}
+else {
+    <ToDo/>
+}
+
+<MudText Typo="Typo.body1">Hours Worked: @hoursWorked</MudText>
+
+@if (clockedIn)
+{
+    <MudButton Variant="Variant.Filled" FullWidth="true" Color="Color.Secondary" OnClick="ClockOut">
+        Clock Out
+    </MudButton>
+}
+else {
+
+    @if(isClockingIn)
+    {
+        <MudButton Disabled="@isClockingIn" Variant="Variant.Filled" FullWidth="true" Color="Color.Secondary" OnClick="ClockIn">
+            <MudProgressCircular Size="Size.Small" Indeterminate="true"/>
+        </MudButton>
+    }
+    else
+    {
+        <MudButton Disabled="@isClockingIn" Variant="Variant.Filled" FullWidth="true" Color="Color.Secondary" OnClick="ClockIn">
+            Clock In
+        </MudButton>
+    }
+}
+<MudStack Row="true" Justify="Justify.SpaceBetween">
+    <MudIconButton Icon="@Icons.Material.Filled.Wallet" Color="Color.Info" Size="Size.Large" OnClick="EmployeePayroll"/>
+    <MudButton Variant="Variant.Filled" OnClick="EmployeeRequest">Request</MudButton>
+    <MudIconButton Icon="@Icons.Material.Filled.Notifications" Color="Color.Warning" Size="Size.Large" OnClick="EmployeeNotifications" />
+</MudStack>
+
+</MudStack>
+
+
+@code {
+    private bool clockedIn = false;
+    private bool isClockingIn = false;
+    private double currentLatitude = 47.6062;
+    private double currentLongitude = -122.3321;
+
+    private Guid selectedSite = Guid.Empty;
+    public List<SiteDto> sites = new()
+    {
+        new SiteDto(Guid.NewGuid(), "Downtown Construction Site",41.1450, -81.3416, 100),
+        new SiteDto(Guid.NewGuid(), "Uptown Renovation Project", 47.6205, -122.3493, 150),
+        new SiteDto(Guid.NewGuid(), "Suburban Housing Development", 47.5301, -122.0326, 200)
+    };
+
+    private void EmployeeRequest()
+    {
+        NavigationTracker.Push(Nav.Uri);
+        Nav.NavigateTo("/employee-request");
+    }
+
+    private void EmployeeNotifications()
+    {
+        NavigationTracker.Push(Nav.Uri);
+        Nav.NavigateTo("/employee-notifications");
+    }
+
+    private void EmployeePayroll()
+    {
+        NavigationTracker.Push(Nav.Uri);
+        Nav.NavigateTo("/employee-payroll");
+    }
+
+   private void HandleSiteChanged(SiteDto site)
+   {
+       //handle site change
+       SaveSite(this, site);
+   }
+
+   public void SaveSite(object? sender, SiteDto site)
+   {
+       //handle site change
+       Logger.Log(this, $"Site changed to: {site.Name}");
+  }
+
+    private int hoursWorked = 0;
+    private async Task ClockIn()
+    {
+        isClockingIn = true;
+        try {
+        var site = sites.First(s => s.Id == selectedSite);
+        Logger.Log(this,$"Attempting to clock in at location: {currentLatitude}, {currentLongitude}");
+        //basic clock in, implement check for actual clock in later
+        //check current location against job site
+        if(selectedSite == Guid.Empty)
+        {
+            //no site selected
+            Logger.Log(this, "No job site selected", "error");
+            return;
+        }
+        if (await LocationManager.IsWithinRadiusAsync(site.Lat, site.Lng, site.RadiusMeters))
+        {
+            clockedIn = true;
+            Logger.Log(this, "Clocked in successfully", "info");
+        }
+        else
+        {
+            Logger.Log(this, "Not within radius of job site", "error");
+        }
+        }
+        catch(Exception ex)
+        {
+            Logger.Log(this, $"Error during clock in: {ex.Message}", "error");
+        }
+        finally
+        {
+            isClockingIn = false;
+            
+        }
+    }
+
+    private void ClockOut()
+    {
+        //basic clock out, implement check for actual clock out later
+        clockedIn = false;
+        StateHasChanged();
+    }
+}

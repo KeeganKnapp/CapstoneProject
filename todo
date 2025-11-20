@@ -1,0 +1,7 @@
+//fix geolocation fetching for web app
+//fix request loading in employee request page
+//fix secure storage of auth tokens in Login
+//fix request submission using token from storage
+//fix getting request in manager schedule, manager request, manage account (json issue)
+//fix deleting requests in manager schedule (json issue)
+//fix schedule() in manager schedule json posting issue

@@ -1,0 +1,33 @@
+@using MudBlazor
+@using CapstoneBlazorApp.Services
+@page "/employee-notifications"
+@namespace CapstoneBlazorApp.Components.Pages
+@inject NavigationManager Nav
+
+<MudTable Style="width: 100%;" Items="@notifications" Breakpoint="Breakpoint.None" Elevation="1" Bordered="true" Hover="true">
+    <HeaderContent>
+        <MudTh>Date</MudTh>
+        <MudTh>Message</MudTh>
+    </HeaderContent>
+
+    <RowTemplate>
+        <MudTd>@context.Date.ToString("g")</MudTd>
+        <MudTd>@context.Message</MudTd>
+    </RowTemplate>
+</MudTable>
+
+@code {
+    private List<NotificationDto> notifications = new()
+    {
+        new NotificationDto { Date = DateTime.Now.AddHours(-1), Message = "Your shift has been approved." },
+        new NotificationDto { Date = DateTime.Now.AddDays(-1), Message = "New company policies have been updated." },
+        new NotificationDto { Date = DateTime.Now.AddDays(-2), Message = "Your time-off request has been denied." }
+    };
+
+
+    public class NotificationDto
+    {
+        public DateTime Date { get; set; }
+        public string Message { get; set; }
+    }
+}
