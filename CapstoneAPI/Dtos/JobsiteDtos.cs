@@ -25,23 +25,13 @@ namespace CapstoneAPI.Dtos
     // returned to the frontend when showing jobsite data
     public class JobsiteResponse
     {
-        // Unique ID of the jobsite
+
         public int JobsiteId { get; set; }
-
-        // Name / label of this jobsite
         public string Name { get; set; } = null!;
-
-        // Location coordinates
         public double Latitude { get; set; }
         public double Longitude { get; set; }
-
-        // Geofence radius in meters
         public double RadiusMeters { get; set; }
-
-        // Time the jobsite was created
         public DateTime CreatedAt { get; set; }
-
-        // Last update timestamp
         public DateTime UpdatedAt { get; set; }
     }
 }
