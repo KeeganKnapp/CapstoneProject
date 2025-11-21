@@ -1,4 +1,4 @@
-/*
+
 using System.Security.Claims;
 using CapstoneAPI.Dtos;
 using CapstoneAPI.Services;
@@ -119,4 +119,3 @@ namespace CapstoneAPI.Controllers
         }
     }
 }
-*/

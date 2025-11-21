@@ -65,12 +65,32 @@ CREATE TABLE IF NOT EXISTS "Jobsite" (
 
 CREATE TABLE IF NOT EXISTS "Assignment" ( -- to do
   "AssignmentId" SERIAL PRIMARY KEY, -- unique id per jobsite
-  "TotalHours" INT NOT NULL DEFAULT 0, -- stored hours at that jobsite
-  "CreatedAt" TIMESTAMPTZ NOT NULL DEFAULT now(), -- creation of a jobsite
-  "UpdatedAt" TIMESTAMPTZ NOT NULL DEFAULT now(), -- last modified, dk if this is even neccessary but its here
+  "JobsiteId" INT NOT NULL,
+  "Title" TEXT NOT NULL,
+  "Description" TEXT,
+  "Status" TEXT NOT NULL DEFAULT 'todo',
+  "TotalHours" INT NOT NULL DEFAULT 0,
+  "CreatedByUserId" INT NOT NULL,
 
-  CONSTRAINT chk_assignment_hours_nonneg CHECK ("TotalHours" >= 0) -- making sure no negative hours
+  "CreatedAt" TIMESTAMPTZ NOT NULL DEFAULT now(),
+  "UpdatedAt" TIMESTAMPTZ NOT NULL DEFAULT now(),
+
+  -- ensure hours are never negative
+  CONSTRAINT chk_assignment_hours_nonneg CHECK ("TotalHours" >= 0),
+
+  -- status
+  CONSTRAINT check_assignment_status CHECK ("Status" IN ('todo', 'in_progress', 'done')),
+
+  -- each assignment belongs to a jobsite
+  CONSTRAINT fk_assignment_jobsite FOREIGN KEY ("JobsiteId") REFERENCES "Jobsite"("JobsiteId") ON DELETE CASCADE,
+
+  -- must be a valid user to create an assignment
+  CONSTRAINT fk_assignment_creator FOREIGN KEY ("CreatedByUserId") REFERENCES "Users"("UserId") ON DELETE RESTRICT
 );
+
+-- fast lookups by jobsite or creator
+CREATE INDEX IF NOT EXISTS idx_assignment_jobsite ON "Assignment"("JobsiteId");
+CREATE INDEX IF NOT EXISTS idx_assignment_created_by ON "Assignment"("CreatedByUserId");
 
 --
 -- tracks user clock ins and outs
@@ -124,51 +144,3 @@ CREATE TABLE IF NOT EXISTS "UserAssignment" (
 -- fast lookup indexes by user or assignment
 CREATE INDEX IF NOT EXISTS idx_userassignment_user       ON "UserAssignment"("UserId");
 CREATE INDEX IF NOT EXISTS idx_userassignment_assignment ON "UserAssignment"("AssignmentId");
-
---
--- tracks individual tasks for users, linked to Assignment
---
-
--- status enum for workflow stages
-DROP TYPE IF EXISTS todo_status;
-CREATE TYPE todo_status AS ENUM ('todo', 'in_progress', 'done');
-
-CREATE TABLE IF NOT EXISTS "ToDoItem" (
-  "ToDoId" BIGSERIAL PRIMARY KEY, -- unique task Id
-  "UserId" INT NOT NULL, -- user responsible for the task (idk maybe)
-  "AssignmentId" INT NULL, -- linking to a jobsite (assignment)
-  "TimeEntryId" BIGINT NULL,
-  "Title" VARCHAR NOT NULL, -- task name
-  "Details" TEXT,
-  "Status" todo_status NOT NULL DEFAULT 'todo', -- current stage = todo, in_progress, done
-  "DueAt" TIMESTAMPTZ NULL,
-  "CreatedAt" TIMESTAMPTZ NOT NULL DEFAULT now(),
-  "UpdatedAt" TIMESTAMPTZ NOT NULL DEFAULT now(),
-
-  -- linking to user assigned to this task
-  CONSTRAINT fk_todo_user FOREIGN KEY ("UserId") REFERENCES "Users"("UserId") ON DELETE CASCADE,
-
-  -- linking to jobsite, if deleted keep todo but unlink
-  CONSTRAINT fk_todo_assignment FOREIGN KEY ("AssignmentId") REFERENCES "Assignment"("AssignmentId") ON DELETE SET NULL,
-
-  -- link to a specific time entry for tasks tied to a session, if entry is deleted unlink but keep todo
-  CONSTRAINT fk_todo_timeentry FOREIGN KEY ("TimeEntryId") REFERENCES "TimeEntry"("TimeEntryId") ON DELETE SET NULL, -- didnt put much thought into this, might not even want it
-
-  -- preventing blank titles
-  CONSTRAINT chk_todo_title_not_blank CHECK (length(trim("Title")) > 0)
-);
-
--- lookup tasks by user
-CREATE INDEX IF NOT EXISTS idx_todo_user        ON "ToDoItem"("UserId");
-
--- lookup by assignment/jobsite
-CREATE INDEX IF NOT EXISTS idx_todo_assignment  ON "ToDoItem"("AssignmentId");
-
--- lookup by linked time entry
-CREATE INDEX IF NOT EXISTS idx_todo_timeentry   ON "ToDoItem"("TimeEntryId");
-
--- filter by status
-CREATE INDEX IF NOT EXISTS idx_todo_status      ON "ToDoItem"("Status");
-
--- sort/filter by due date
-CREATE INDEX IF NOT EXISTS idx_todo_due         ON "ToDoItem"("DueAt");
