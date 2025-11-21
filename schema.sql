@@ -46,6 +46,19 @@ CREATE TABLE IF NOT EXISTS "RefreshTokens" (
 -- index lookup
 CREATE INDEX IF NOT EXISTS "idx_refresh_tokens_user_id" ON "RefreshTokens"("UserId");
 
+-- jobsite table
+CREATE TABLE IF NOT EXISTS "Jobsite" (
+  "JobsiteId" SERIAL PRIMARY KEY,
+  "Name" TEXT NOT NULL,
+  "Latitude" DOUBLE PRECISION NOT NULL,
+  "Longitude" DOUBLE PRECISION NOT NULL,
+  "RadiusMeters" DOUBLE PRECISION NOT NULL,
+  "CreatedAt" TIMESTAMPTZ NOT NULL DEFAULT now(),
+  "UpdatedAt" TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+
+
 --
 -- represents jobsites that employees are assigned to
 --

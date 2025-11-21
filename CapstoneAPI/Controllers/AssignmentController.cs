@@ -1,4 +1,5 @@
-
+/*
+using System.Security.Claims;
 using CapstoneAPI.Dtos;
 using CapstoneAPI.Services;
 using Microsoft.AspNetCore.Authorization;
@@ -13,9 +14,29 @@ namespace CapstoneAPI.Controllers
     public class AssignmentController : ControllerBase
     {
         private readonly IAssignmentService _assignmentService;
-        public AssignmentController(IAssignmentService assignmentService) => _assignmentService = assignmentService;
+        public AssignmentController(IAssignmentService assignmentService)
+        {
+            _assignmentService = assignmentService;
+        }
+        
+        // helper for getting UserId's
+        private int GetUserId()
+        {
+            // try common claim types in order
+            var id = User.FindFirstValue("UserId") ?? User.FindFirstValue(ClaimTypes.NameIdentifier) ?? User.FindFirstValue("sub");
+
+            if (id is null) throw new UnauthorizedAccessException("UserId claim missing.");
+            
+            return int.Parse(id);
+        }
+
+
+        // POST api/AssignmentController
+        // manager creating a new jobsite
+        // returns 201 and newly created assignment DTO
 
         [HttpPost]
+        [Authorize(Roles = "Manager")]
         [ProducesResponseType(typeof(AssignmentResponse), 201)]
         public async Task<ActionResult<AssignmentResponse>> CreateAssignment([FromBody] CreateAssiignmentRequest req, CancellationToken ct)
         {
@@ -98,3 +119,4 @@ namespace CapstoneAPI.Controllers
         }
     }
 }
+*/

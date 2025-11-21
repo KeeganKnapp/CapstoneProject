@@ -92,6 +92,7 @@ builder.Services.AddAuthorization();
 
 builder.Services.AddScoped<ITokenService, TokenService>(); // creates/rotates tokens
 builder.Services.AddScoped<IAuthService, AuthService>();
+builder.Services.AddScoped<IJobsiteService, JobsiteService>();
 
 var app = builder.Build();
 

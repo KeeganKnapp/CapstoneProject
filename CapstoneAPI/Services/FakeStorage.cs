@@ -4,7 +4,7 @@
     hardcoded which employees are at which jobsite, todobyjobsite is a 
     sample todo list for each jobsite, timeoff holds submitted time off
     requests, and payhistory smaples the pay period and amounts
-*/
+
 
 using CapstoneAPI.Dtos;
 using CapstoneAPI.Models;
@@ -48,6 +48,6 @@ public static class FakeStorage
     };
 }
 
-/*
+
     needs replaced with EF Core services talking to our db
 */

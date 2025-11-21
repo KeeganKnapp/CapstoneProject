@@ -25,6 +25,7 @@ namespace CapstoneAPI.Data
         public DbSet<User> Users => Set<User>();
         public DbSet<RefreshToken> RefreshTokens => Set<RefreshToken>();
         public DbSet<RequestOff> RequestOffs => Set<RequestOff>();
+        public DbSet<Jobsite> Jobsites { get; set; } = null!;
 
         // postgres lowercases unquoted identifiers by default so this 
         // gets the exact tables names, column names, keys, and relationships
@@ -96,6 +97,20 @@ namespace CapstoneAPI.Data
                 e.Property(x => x.StartDate).HasColumnName("StartDate");
                 e.Property(x => x.EndDate).HasColumnName("EndDate");
                 e.Property(x => x.Note).HasColumnName("Note");
+                e.Property(x => x.CreatedAt).HasColumnName("CreatedAt");
+                e.Property(x => x.UpdatedAt).HasColumnName("UpdatedAt");
+            });
+
+            modelBuilder.Entity<Jobsite>(e =>
+            {
+                e.ToTable("Jobsite");
+                e.HasKey(Jobsites => Jobsites.JobsiteId);
+
+                e.Property(x => x.JobsiteId).HasColumnName("JobsiteId");
+                e.Property(x => x.Name).HasColumnName("Name");
+                e.Property(x => x.Latitude).HasColumnName("Latitude");
+                e.Property(x => x.Longitude).HasColumnName("Longitude");
+                e.Property(x => x.RadiusMeters).HasColumnName("RadiusMeters");
                 e.Property(x => x.CreatedAt).HasColumnName("CreatedAt");
                 e.Property(x => x.UpdatedAt).HasColumnName("UpdatedAt");
             });
