@@ -1,0 +1,37 @@
+﻿@using MudBlazor
+@namespace CapstoneBlazorApp.Components.Pages
+@inject NavigationManager Nav
+@rendermode InteractiveServer
+<script src="_content/MudBlazor/MudBlazor.js"></script>
+<style>
+	.bottomBar {
+		position: fixed;
+		left: 50%;
+		transform: translateX(-50%);
+		bottom: 16px;
+		width: auto;
+		padding: 8px 12px;
+		display: flex;
+	}
+</style>
+
+<div class="bottomBar"> 
+	<MudStack Row=true Justify="Justify.SpaceBetween">
+		<MudIconButton Icon="@Icons.Material.Filled.Wallet" Color="Color.Info" Size="Size.Large" OnClick="Notification"/>
+		<MudButton Variant="Variant.Filled" OnClick="RequestPage">Request</MudButton>
+		<MudIconButton Icon="@Icons.Material.Filled.Notifications" Color="Color.Warning" Size="Size.Large" OnClick="Notification"/>
+	</MudStack>
+</div>
+
+
+@code {
+	private void RequestPage()
+	{
+		Nav.NavigateTo("/manager-request");
+	}
+	private void Notification()
+	{
+		Nav.NavigateTo("/notification");
+	}
+}
+
