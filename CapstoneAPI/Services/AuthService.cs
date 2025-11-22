@@ -23,11 +23,13 @@ namespace CapstoneAPI.Services
     {
         private readonly CapstoneDbContext _db; // ef core DbContext for Users/RefreshTokens
         private readonly ITokenService _tokens; // creates access and refresh tokens
+        private readonly string[] _managerEmails;
 
-        public AuthService(CapstoneDbContext db, ITokenService tokens)
+        public AuthService(CapstoneDbContext db, ITokenService tokens, string[] managerEmails)
         {
             _db = db;
             _tokens = tokens;
+            _managerEmails = managerEmails;
         }
 
         // create a new user, hash their password, and issue access and refresh tokens
@@ -45,6 +47,9 @@ namespace CapstoneAPI.Services
             var exists = await _db.Users.AnyAsync(u => u.Email.ToLower() == emailNorm, ct);
             if (exists) throw new InvalidOperationException("Email already registered.");
 
+            
+            var role = _managerEmails.Contains(emailRaw, StringComparer.OrdinalIgnoreCase) ? "Manager" : "Employee";
+
             // creates a new user
             var user = new User
             {
@@ -53,7 +58,8 @@ namespace CapstoneAPI.Services
                 PasswordHash = PasswordHasher.Hash(req.Password),  // PBKDF2
                 IsActive = true,
                 CreatedAt = DateTimeOffset.UtcNow,
-                UpdatedAt = DateTimeOffset.UtcNow
+                UpdatedAt = DateTimeOffset.UtcNow,
+                Role = role
             };
 
             _db.Users.Add(user);

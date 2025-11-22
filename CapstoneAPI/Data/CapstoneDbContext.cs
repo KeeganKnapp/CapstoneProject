@@ -26,6 +26,11 @@ namespace CapstoneAPI.Data
         public DbSet<RefreshToken> RefreshTokens => Set<RefreshToken>();
         public DbSet<RequestOff> RequestOffs => Set<RequestOff>();
         public DbSet<Jobsite> Jobsites { get; set; } = null!;
+        public DbSet<Assignment> Assignments => Set<Assignment>();
+        public DbSet<UserAssignment> UserAssignments => Set<UserAssignment>();
+        public DbSet<AssignmentComment> AssignmentComments => Set<AssignmentComment>(); 
+
+        
 
         // postgres lowercases unquoted identifiers by default so this 
         // gets the exact tables names, column names, keys, and relationships
@@ -60,6 +65,7 @@ namespace CapstoneAPI.Data
                 e.Property(x => x.IsActive).HasColumnName("IsActive");
                 e.Property(x => x.CreatedAt).HasColumnName("CreatedAt");
                 e.Property(x => x.UpdatedAt).HasColumnName("UpdatedAt");
+                e.Property(x => x.Role).HasColumnName("Role");
 
                 e.HasMany(u => u.RefreshTokens).WithOne(rt => rt.User!)
                     .HasForeignKey(rt => rt.UserId);
@@ -113,6 +119,69 @@ namespace CapstoneAPI.Data
                 e.Property(x => x.RadiusMeters).HasColumnName("RadiusMeters");
                 e.Property(x => x.CreatedAt).HasColumnName("CreatedAt");
                 e.Property(x => x.UpdatedAt).HasColumnName("UpdatedAt");
+            });
+
+            modelBuilder.Entity<Assignment>(e =>
+            {
+                e.ToTable("Assignment");
+                e.HasKey(x => x.AssignmentId);
+
+                e.Property(x => x.AssignmentId).HasColumnName("AssignmentId");
+                e.Property(x => x.JobsiteId).HasColumnName("JobsiteId");
+                e.Property(x => x.Title).HasColumnName("Title");
+                e.Property(x => x.Descriptiion).HasColumnName("Description");
+                e.Property(x => x.Status).HasColumnName("Status");
+                e.Property(x => x.TotalHours).HasColumnName("TotalHours");
+                e.Property(x => x.CreatedByUserId).HasColumnName("CreatedByUserId");
+                e.Property(x => x.CreatedAt).HasColumnName("CreatedAt");
+                e.Property(x => x.UpdatedAt).HasColumnName("UpdatedAt");
+
+                // Assignment -> UserAssignment (1-to-many)
+                e.HasMany(a => a.UserAssignments)
+                    .WithOne() // no nav back on UserAssignment
+                    .HasForeignKey(ua => ua.AssignmentId)
+                    .OnDelete(DeleteBehavior.Cascade);
+
+                // Assignment -> AssignmentComment (1-to-many)
+                e.HasMany(a => a.Comments)
+                    .WithOne() // no nav back on AssignmentComment
+                    .HasForeignKey(c => c.AssignmentId)
+                    .OnDelete(DeleteBehavior.Cascade);
+            });
+
+            modelBuilder.Entity<UserAssignment>(e =>
+            {
+                e.ToTable("UserAssignment");
+
+                e.HasKey(x => new { x.AssignmentId, x.UserId });
+
+                e.Property(x => x.AssignmentId).HasColumnName("AssignmentId");
+                e.Property(x => x.UserId).HasColumnName("UserId");
+
+                // FK to Users
+                e.HasOne<User>()
+                    .WithMany() // no nav collection on User
+                    .HasForeignKey(x => x.UserId)
+                    .OnDelete(DeleteBehavior.Cascade);
+            });
+
+            modelBuilder.Entity<AssignmentComment>(e =>
+            {
+                e.ToTable("AssignmentComment");
+
+                e.HasKey(x => x.CommentId);
+
+                e.Property(x => x.CommentId).HasColumnName("CommentId");
+                e.Property(x => x.AssignmentId).HasColumnName("AssignmentId");
+                e.Property(x => x.UserId).HasColumnName("UserId");
+                e.Property(x => x.Text).HasColumnName("Text");
+                e.Property(x => x.CreatedAt).HasColumnName("CreatedAt");
+
+                // FK to Users
+                e.HasOne<User>()
+                    .WithMany() // no nav collection on User
+                    .HasForeignKey(x => x.UserId)
+                    .OnDelete(DeleteBehavior.Cascade);
             });
         }
     }

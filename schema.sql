@@ -144,3 +144,24 @@ CREATE TABLE IF NOT EXISTS "UserAssignment" (
 -- fast lookup indexes by user or assignment
 CREATE INDEX IF NOT EXISTS idx_userassignment_user       ON "UserAssignment"("UserId");
 CREATE INDEX IF NOT EXISTS idx_userassignment_assignment ON "UserAssignment"("AssignmentId");
+
+
+-- storing comments made by user on an assignment
+
+CREATE TABLE IF NOT EXISTS "AssignmentComment" (
+  "CommentId"    SERIAL PRIMARY KEY,
+  "AssignmentId" INT NOT NULL,
+  "UserId"       INT NOT NULL,
+  "Text"         TEXT NOT NULL,
+  "CreatedAt"    TIMESTAMPTZ NOT NULL DEFAULT now(),
+
+  CONSTRAINT fk_comment_assignment FOREIGN KEY ("AssignmentId")
+    REFERENCES "Assignment"("AssignmentId") ON DELETE CASCADE,
+
+  CONSTRAINT fk_comment_user FOREIGN KEY ("UserId")
+    REFERENCES "Users"("UserId") ON DELETE CASCADE
+);
+
+-- indexes
+CREATE INDEX IF NOT EXISTS idx_comment_assignment ON "AssignmentComment"("AssignmentId");
+CREATE INDEX IF NOT EXISTS idx_comment_user       ON "AssignmentComment"("UserId");

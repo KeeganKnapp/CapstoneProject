@@ -88,11 +88,16 @@ builder.Services.AddAuthentication(options =>
         };
     });
 
+var managerEmails = builder.Configuration.GetSection("ManagerEmails").Get<string[]>() ?? Array.Empty<string>();
+
+builder.Services.AddSingleton(managerEmails);
+
 builder.Services.AddAuthorization();
 
 builder.Services.AddScoped<ITokenService, TokenService>(); // creates/rotates tokens
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IJobsiteService, JobsiteService>();
+builder.Services.AddScoped<IAssignmentService, AssignmentService>();
 
 var app = builder.Build();
 
