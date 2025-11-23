@@ -164,6 +164,10 @@
                                                          Color="Color.Error" Size="Size.Small"
                                                          OnClick="@(() => DenyRequest(request))"
                                                          Title="Deny" />
+                                            <MudIconButton Icon="@Icons.Material.Filled.DeleteForever" 
+                                                         Color="Color.Error" Size="Size.Small"
+                                                         OnClick="@(() => DeleteRequest(request))"
+                                                         Title="Delete" />
                                         }
                                     </MudTd>
                                 </RowTemplate>
@@ -231,6 +235,11 @@
                                       StartIcon="@Icons.Material.Filled.Close"
                                       OnClick="@(() => DenyRequest(selectedRequest))">
                                 Deny Request
+                            </MudButton>
+                            <MudButton Variant="Variant.Filled" Color="Color.Error" 
+                                      StartIcon="@Icons.Material.Filled.DeleteForever"
+                                      OnClick="@(() => DeleteRequest(selectedRequest))">
+                                Delete Request
                             </MudButton>
                         </div>
                     }
@@ -404,6 +413,36 @@
         catch (Exception ex)
         {
             Logger.Log(this, $"Error denying request: {ex.Message}", "error");
+        }
+    }
+
+    private async Task DeleteRequest(RequestOffDto request)
+    {
+        try
+        {
+            Logger.Log(this, $"Deleted request {request.RequestOffId} for user {request.UserId}", "info");
+            
+            var success = await RequestApi.DeleteRequestAsync(request.RequestOffId);
+            if (success)
+            {
+                Logger.Log(this, "Request deleted successfully", "success");
+                await LoadRequests(); // Reload the list
+            }
+            else
+            {
+                Logger.Log(this, "Failed to delete request", "error");
+            }
+            
+            if (showDetailsDialog && selectedRequest?.RequestOffId == request.RequestOffId)
+            {
+                CloseDetailsDialog();
+            }
+            
+            await LoadRequests(); // Refresh data
+        }
+        catch (Exception ex)
+        {
+            Logger.Log(this, $"Error deleting request: {ex.Message}", "error");
         }
     }
 
