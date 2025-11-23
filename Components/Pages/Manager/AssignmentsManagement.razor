@@ -37,7 +37,7 @@
                             <div class="d-flex align-items-center">
                                 <MudIcon Icon="@Icons.Material.Filled.Assignment" Size="Size.Large" Color="Color.Primary" Class="mr-3" />
                                 <div>
-                                    <MudText Typo="Typo.h5">@totalAssignments</MudText>
+                                    <MudText Typo="Typo.h5">@totalCount</MudText>
                                     <MudText Typo="Typo.body2" Color="Color.Secondary">Total Assignments</MudText>
                                 </div>
                             </div>
@@ -51,7 +51,7 @@
                             <div class="d-flex align-items-center">
                                 <MudIcon Icon="@Icons.Material.Filled.PlayArrow" Size="Size.Large" Color="Color.Success" Class="mr-3" />
                                 <div>
-                                    <MudText Typo="Typo.h5">@activeAssignments</MudText>
+                                    <MudText Typo="Typo.h5">@activeCount</MudText>
                                     <MudText Typo="Typo.body2" Color="Color.Secondary">Active</MudText>
                                 </div>
                             </div>
@@ -65,7 +65,7 @@
                             <div class="d-flex align-items-center">
                                 <MudIcon Icon="@Icons.Material.Filled.CheckCircle" Size="Size.Large" Color="Color.Info" Class="mr-3" />
                                 <div>
-                                    <MudText Typo="Typo.h5">@completedAssignments</MudText>
+                                    <MudText Typo="Typo.h5">@completedCount</MudText>
                                     <MudText Typo="Typo.body2" Color="Color.Secondary">Completed</MudText>
                                 </div>
                             </div>
@@ -79,7 +79,7 @@
                             <div class="d-flex align-items-center">
                                 <MudIcon Icon="@Icons.Material.Filled.Schedule" Size="Size.Large" Color="Color.Warning" Class="mr-3" />
                                 <div>
-                                    <MudText Typo="Typo.h5">@overdueAssignments</MudText>
+                                    <MudText Typo="Typo.h5">@overdueCount</MudText>
                                     <MudText Typo="Typo.body2" Color="Color.Secondary">Overdue</MudText>
                                 </div>
                             </div>
@@ -93,16 +93,16 @@
                         <MudText Typo="Typo.h6" GutterBottom="true">Filters</MudText>
                         <MudGrid Spacing="3">
                             <MudItem xs="12" md="3">
-                                <MudSelect T="int?" @bind-Value="jobsiteFilter" Label="Jobsite" Variant="Variant.Outlined">
+                                <MudSelect T="int?" @bind-Value="selectedJobsiteFilter" Label="Jobsite" Variant="Variant.Outlined">
                                     <MudSelectItem Value="@((int?)null)">All Jobsites</MudSelectItem>
-                                    @foreach (var jobsite in jobsites)
+                                    @foreach (var jobsite in jobSites)
                                     {
                                         <MudSelectItem Value="@((int?)jobsite.JobsiteId)">@jobsite.Name</MudSelectItem>
                                     }
                                 </MudSelect>
                             </MudItem>
                             <MudItem xs="12" md="3">
-                                <MudSelect T="string" @bind-Value="statusFilter" Label="Status" Variant="Variant.Outlined">
+                                <MudSelect T="string" @bind-Value="selectedStatusFilter" Label="Status" Variant="Variant.Outlined">
                                     <MudSelectItem Value="@("All")">All Statuses</MudSelectItem>
                                     <MudSelectItem Value="@("Active")">Active</MudSelectItem>
                                     <MudSelectItem Value="@("Completed")">Completed</MudSelectItem>
@@ -110,7 +110,7 @@
                                 </MudSelect>
                             </MudItem>
                             <MudItem xs="12" md="3">
-                                <MudSelect T="string" @bind-Value="priorityFilter" Label="Priority" Variant="Variant.Outlined">
+                                <MudSelect T="string" @bind-Value="selectedPriorityFilter" Label="Priority" Variant="Variant.Outlined">
                                     <MudSelectItem Value="@("All")">All Priorities</MudSelectItem>
                                     <MudSelectItem Value="@("Low")">Low</MudSelectItem>
                                     <MudSelectItem Value="@("Medium")">Medium</MudSelectItem>
@@ -119,7 +119,7 @@
                             </MudItem>
                             <MudItem xs="12" md="3">
                                 <MudButton Variant="Variant.Filled" Color="Color.Primary" 
-                                          OnClick="ApplyFilters" FullWidth="true">
+                                          OnClick="FilterTheAssignments" FullWidth="true">
                                     Apply Filters
                                 </MudButton>
                             </MudItem>
@@ -134,18 +134,18 @@
                             <MudText Typo="Typo.h5">Assignments</MudText>
                             <MudButton Variant="Variant.Outlined" Color="Color.Primary" 
                                       StartIcon="@Icons.Material.Filled.Refresh"
-                                      OnClick="LoadAssignments">
+                                      OnClick="GetAllAssignments">
                                 Refresh
                             </MudButton>
                         </div>
 
-                        @if (isLoading)
+                        @if (loadingStuff)
                         {
                             <MudProgressCircular Indeterminate="true" />
                         }
                         else
                         {
-                            <MudTable Items="@filteredAssignments" Hover="true" Dense="true" Striped="true">
+                            <MudTable Items="@displayedAssignments" Hover="true" Dense="true" Striped="true">
                                 <HeaderContent>
                                     <MudTh>ID</MudTh>
                                     <MudTh>Title</MudTh>
@@ -161,7 +161,7 @@
                                     <MudTd DataLabel="Title">@assignment.Title</MudTd>
                                     <MudTd DataLabel="Jobsite">
                                         @{
-                                            var jobsite = jobsites.FirstOrDefault(j => j.JobsiteId == assignment.JobsiteId);
+                                            var jobsite = jobSites.FirstOrDefault(j => j.JobsiteId == assignment.JobsiteId);
                                         }
                                         @(jobsite?.Name ?? "Unknown")
                                     </MudTd>
@@ -212,39 +212,39 @@
         </MudContainer>
 
         <!-- assignment details / edit -->
-        <MudDialog @bind-Visible="showAssignmentDialog" Options="dialogOptions">
+        <MudDialog @bind-Visible="dialogIsOpen" Options="dialogOptions">
             <DialogContent>
                 <MudText Typo="Typo.h6" GutterBottom="true">
-                    @(editingAssignment != null ? "Edit Assignment" : selectedAssignment != null ? "Assignment Details" : "Create Assignment")
+                    @(assignmentBeingEdited != null ? "Edit Assignment" : currentAssignment != null ? "Assignment Details" : "Create Assignment")
                 </MudText>
                 
-                @if (selectedAssignment != null && editingAssignment == null)
+                @if (currentAssignment != null && assignmentBeingEdited == null)
                 {
                     <!-- View Mode -->
                     <MudGrid Spacing="3">
                         <MudItem xs="12">
-                            <MudTextField Label="Title" Value="@selectedAssignment.Title" ReadOnly="true" />
+                            <MudTextField Label="Title" Value="@currentAssignment.Title" ReadOnly="true" />
                         </MudItem>
                         <MudItem xs="12">
-                            <MudTextField Label="Description" Value="@selectedAssignment.Description" Lines="3" ReadOnly="true" />
+                            <MudTextField Label="Description" Value="@currentAssignment.Description" Lines="3" ReadOnly="true" />
                         </MudItem>
                         <MudItem xs="6">
-                            <MudTextField Label="Jobsite" Value="@(jobsites.FirstOrDefault(j => j.JobsiteId == selectedAssignment.JobsiteId)?.Name ?? "Unknown")" ReadOnly="true" />
+                            <MudTextField Label="Jobsite" Value="@(jobSites.FirstOrDefault(j => j.JobsiteId == currentAssignment.JobsiteId)?.Name ?? "Unknown")" ReadOnly="true" />
                         </MudItem>
                         <MudItem xs="6">
-                            <MudTextField Label="Assigned User" Value="@(selectedAssignment.AssignedUserId?.ToString() ?? "Unassigned")" ReadOnly="true" />
+                            <MudTextField Label="Assigned User" Value="@(currentAssignment.AssignedUserId?.ToString() ?? "Unassigned")" ReadOnly="true" />
                         </MudItem>
                         <MudItem xs="6">
-                            <MudTextField Label="Priority" Value="@(selectedAssignment.Priority ?? "Medium")" ReadOnly="true" />
+                            <MudTextField Label="Priority" Value="@(currentAssignment.Priority ?? "Medium")" ReadOnly="true" />
                         </MudItem>
                         <MudItem xs="6">
-                            <MudTextField Label="Status" Value="@GetAssignmentStatus(selectedAssignment)" ReadOnly="true" />
+                            <MudTextField Label="Status" Value="@GetAssignmentStatus(currentAssignment)" ReadOnly="true" />
                         </MudItem>
                         <MudItem xs="6">
-                            <MudTextField Label="Due Date" Value="@(selectedAssignment.DueDate?.ToString("yyyy-MM-dd") ?? "Not set")" ReadOnly="true" />
+                            <MudTextField Label="Due Date" Value="@(currentAssignment.DueDate?.ToString("yyyy-MM-dd") ?? "Not set")" ReadOnly="true" />
                         </MudItem>
                         <MudItem xs="6">
-                            <MudTextField Label="Created" Value="@(selectedAssignment.CreatedAt?.ToString("yyyy-MM-dd HH:mm") ?? "Unknown")" ReadOnly="true" />
+                            <MudTextField Label="Created" Value="@(currentAssignment.CreatedAt?.ToString("yyyy-MM-dd HH:mm") ?? "Unknown")" ReadOnly="true" />
                         </MudItem>
                     </MudGrid>
                 }
@@ -253,59 +253,59 @@
                     <!-- Edit/Create Mode -->
                     <MudGrid Spacing="3">
                         <MudItem xs="12">
-                            <MudTextField @bind-Value="assignmentTitle" Label="Title" Required="true" />
+                            <MudTextField @bind-Value="titleInput" Label="Title" Required="true" />
                         </MudItem>
                         <MudItem xs="12">
-                            <MudTextField @bind-Value="assignmentDescription" Label="Description" Lines="3" />
+                            <MudTextField @bind-Value="descriptionInput" Label="Description" Lines="3" />
                         </MudItem>
                         <MudItem xs="6">
-                            <MudSelect T="int" @bind-Value="assignmentJobsiteId" Label="Jobsite" Required="true">
-                                @foreach (var jobsite in jobsites)
+                            <MudSelect T="int" @bind-Value="selectedJobsiteId" Label="Jobsite" Required="true">
+                                @foreach (var jobsite in jobSites)
                                 {
                                     <MudSelectItem Value="@jobsite.JobsiteId">@jobsite.Name</MudSelectItem>
                                 }
                             </MudSelect>
                         </MudItem>
                         <MudItem xs="6">
-                            <MudNumericField @bind-Value="assignmentUserId" Label="Assigned User ID" />
+                            <MudNumericField @bind-Value="selectedUserId" Label="Assigned User ID" />
                         </MudItem>
                         <MudItem xs="6">
-                            <MudSelect T="string" @bind-Value="assignmentPriority" Label="Priority">
+                            <MudSelect T="string" @bind-Value="selectedPriority" Label="Priority">
                                 <MudSelectItem Value="@("Low")">Low</MudSelectItem>
                                 <MudSelectItem Value="@("Medium")">Medium</MudSelectItem>
                                 <MudSelectItem Value="@("High")">High</MudSelectItem>
                             </MudSelect>
                         </MudItem>
                         <MudItem xs="6">
-                            <MudDatePicker @bind-Date="assignmentDueDate" Label="Due Date" />
+                            <MudDatePicker @bind-Date="selectedDueDate" Label="Due Date" />
                         </MudItem>
                     </MudGrid>
 
-                    @if (!string.IsNullOrEmpty(errorMessage))
+                    @if (!string.IsNullOrEmpty(errorMsg))
                     {
-                        <MudAlert Severity="Severity.Error" Class="mt-3">@errorMessage</MudAlert>
+                        <MudAlert Severity="Severity.Error" Class="mt-3">@errorMsg</MudAlert>
                     }
                 }
             </DialogContent>
             <DialogActions>
                 <MudButton OnClick="CloseAssignmentDialog">
-                    @(selectedAssignment != null && editingAssignment == null ? "Close" : "Cancel")
+                    @(currentAssignment != null && assignmentBeingEdited == null ? "Close" : "Cancel")
                 </MudButton>
-                @if (selectedAssignment != null && editingAssignment == null)
+                @if (currentAssignment != null && assignmentBeingEdited == null)
                 {
-                    <MudButton Color="Color.Primary" OnClick="@(() => StartEditAssignment(selectedAssignment))">
+                    <MudButton Color="Color.Primary" OnClick="@(() => StartEditAssignment(currentAssignment))">
                         Edit
                     </MudButton>
                 }
-                else if (editingAssignment != null || selectedAssignment == null)
+                else if (assignmentBeingEdited != null || currentAssignment == null)
                 {
                     <MudButton Color="Color.Primary" Variant="Variant.Filled" 
-                              OnClick="SaveAssignment" Disabled="isSaving">
-                        @if (isSaving)
+                              OnClick="SaveAssignment" Disabled="currentlySaving">
+                        @if (currentlySaving)
                         {
                             <MudProgressCircular Size="Size.Small" Indeterminate="true" Class="mr-2"/>
                         }
-                        @(editingAssignment != null ? "Update" : "Create")
+                        @(assignmentBeingEdited != null ? "Update" : "Create")
                     </MudButton>
                 }
             </DialogActions>
@@ -317,51 +317,52 @@
 </AuthorizeView>
 
 @code {
-    // Sample data since we don't have Assignment API endpoints yet
-    private List<AssignmentDto> assignments = new();
-    private List<AssignmentDto> filteredAssignments = new();
-    private List<JobsiteDto> jobsites = new();
+    // for assignments
+    private List<AssignmentDto> allAssignments = new();
+    private List<AssignmentDto> displayedAssignments = new();
+    private List<JobsiteDto> jobSites = new();
     
-    private AssignmentDto? selectedAssignment;
-    private AssignmentDto? editingAssignment;
-    private bool isLoading = true;
-    private bool showAssignmentDialog = false;
-    private bool isSaving = false;
-    private string errorMessage = "";
+    private AssignmentDto? currentAssignment;
+    private AssignmentDto? assignmentBeingEdited;
+    private bool loadingStuff = true;
+    private bool dialogIsOpen = false;
+    private bool currentlySaving = false;
+    private string errorMsg = "";
 
-    // Statistics
-    private int totalAssignments = 0;
-    private int activeAssignments = 0;
-    private int completedAssignments = 0;
-    private int overdueAssignments = 0;
+    // counts 
+    private int totalCount = 0;
+    private int activeCount = 0;
+    private int completedCount = 0;
+    private int overdueCount = 0;
 
-    // Filters
-    private int? jobsiteFilter;
-    private string statusFilter = "All";
-    private string priorityFilter = "All";
+    // filters
+    private int? selectedJobsiteFilter;
+    private string selectedStatusFilter = "All";
+    private string selectedPriorityFilter = "All";
 
-    // Form fields
-    private string assignmentTitle = "";
-    private string assignmentDescription = "";
-    private int assignmentJobsiteId = 0;
-    private int? assignmentUserId;
-    private string assignmentPriority = "Medium";
-    private DateTime? assignmentDueDate;
+    // form
+    private string titleInput = "";
+    private string descriptionInput = "";
+    private int selectedJobsiteId = 0;
+    private int? selectedUserId;
+    private string selectedPriority = "Medium";
+    private DateTime? selectedDueDate;
 
     private DialogOptions dialogOptions = new() { MaxWidth = MaxWidth.Medium, FullWidth = true };
 
     protected override async Task OnInitializedAsync()
     {
-        await LoadJobsites();
-        await LoadAssignments();
+        // load all when page starts
+        await GetJobSites();
+        await GetAllAssignments();
     }
 
-    private async Task LoadJobsites()
+    private async Task GetJobSites()
     {
         try
         {
-            var result = await JobsiteApi.GetAllJobsitesAsync();
-            jobsites = result?.Select(j => new JobsiteDto
+            var stuff = await JobsiteApi.GetAllJobsitesAsync();
+            jobSites = stuff?.Select(j => new JobsiteDto
             {
                 JobsiteId = j.JobsiteId,
                 Name = j.Name,
@@ -374,87 +375,87 @@
         }
         catch (Exception ex)
         {
-            Logger.Log(this, $"Error loading jobsites: {ex.Message}", "error");
+            Logger.Log(this, $"uh oh cant load jobsites: {ex.Message}", "error");
         }
     }
 
-    private async Task LoadAssignments()
+    private async Task GetAllAssignments()
     {
         try
         {
-            isLoading = true;
+            loadingStuff = true;
             
-            // Get all jobsite IDs to load assignments for each
-            var jobsiteIds = jobsites.Select(j => j.JobsiteId).ToList();
+            // get the jobsite ids so we can get assignments for them
+            var jobsiteIdsList = jobSites.Select(j => j.JobsiteId).ToList();
             
-            if (jobsiteIds.Any())
+            if (jobsiteIdsList.Any())
             {
-                var allAssignments = await AssignmentApi.GetAllAssignmentsAsync(jobsiteIds);
-                assignments = allAssignments?.Select(a => new AssignmentDto
+                var assignmentData = await AssignmentApi.GetAllAssignmentsAsync(jobsiteIdsList);
+                allAssignments = assignmentData?.Select(a => new AssignmentDto
                 {
                     AssignmentId = a.AssignmentId,
                     Title = a.Title,
                     Description = a.Description,
                     JobsiteId = a.JobsiteId,
-                    AssignedUserId = a.AssignedUserIds?.FirstOrDefault(),
-                    Priority = "Medium", // Default since API doesn't have priority
-                    DueDate = null, // API doesn't have due date
+                    AssignedUserId = a.AssignedUserIds?.FirstOrDefault(), // just take the first one i guess
+                    Priority = "Medium", // api doesnt have this so just default it
+                    DueDate = null, // this too
                     CreatedAt = a.CreatedAt,
                     UpdatedAt = a.UpdatedAt
                 }).ToList() ?? new List<AssignmentDto>();
             }
             else
             {
-                assignments = new List<AssignmentDto>();
+                allAssignments = new List<AssignmentDto>(); // no jobsites = no assignments
             }
             
-            ApplyFilters();
-            CalculateStatistics();
+            FilterTheAssignments();
+            DoTheStatsCounting();
             
-            Logger.Log(this, $"Loaded {assignments.Count} assignments", "info");
+            Logger.Log(this, $"got {allAssignments.Count} assignments loaded", "info");
         }
         catch (Exception ex)
         {
-            Logger.Log(this, $"Error loading assignments: {ex.Message}", "error");
-            assignments = new List<AssignmentDto>();
+            Logger.Log(this, $"assignments loading broke: {ex.Message}", "error");
+            allAssignments = new List<AssignmentDto>(); // fallback to empty
         }
         finally
         {
-            isLoading = false;
-            StateHasChanged();
+            loadingStuff = false;
+            StateHasChanged(); // tell blazor to update
         }
     }
 
 
 
-    private void ApplyFilters()
+    private void FilterTheAssignments()
     {
-        filteredAssignments = assignments.Where(assignment =>
+        displayedAssignments = allAssignments.Where(assignment =>
         {
-            // Jobsite filter
-            if (jobsiteFilter.HasValue && assignment.JobsiteId != jobsiteFilter.Value)
+            // check jobsite first
+            if (selectedJobsiteFilter.HasValue && assignment.JobsiteId != selectedJobsiteFilter.Value)
                 return false;
 
-            // Status filter
-            if (statusFilter != "All" && GetAssignmentStatus(assignment) != statusFilter)
+            // status
+            if (selectedStatusFilter != "All" && GetAssignmentStatus(assignment) != selectedStatusFilter)
                 return false;
 
-            // Priority filter
-            if (priorityFilter != "All" && (assignment.Priority ?? "Medium") != priorityFilter)
+            // priority check
+            if (selectedPriorityFilter != "All" && (assignment.Priority ?? "Medium") != selectedPriorityFilter)
                 return false;
 
-            return true;
+            return true; // passes all filters
         }).ToList();
 
-        StateHasChanged();
+        StateHasChanged(); // make sure ui updates
     }
 
-    private void CalculateStatistics()
+    private void DoTheStatsCounting()
     {
-        totalAssignments = assignments.Count;
-        activeAssignments = assignments.Count(a => GetAssignmentStatus(a) == "Active");
-        completedAssignments = assignments.Count(a => GetAssignmentStatus(a) == "Completed");
-        overdueAssignments = assignments.Count(a => GetAssignmentStatus(a) == "Overdue");
+        totalCount = allAssignments.Count;
+        activeCount = allAssignments.Count(a => GetAssignmentStatus(a) == "Active");
+        completedCount = allAssignments.Count(a => GetAssignmentStatus(a) == "Completed");
+        overdueCount = allAssignments.Count(a => GetAssignmentStatus(a) == "Overdue");
     }
 
     private string GetAssignmentStatus(AssignmentDto assignment)
@@ -555,79 +556,79 @@
 
     private async Task SaveAssignment()
     {
-        if (string.IsNullOrWhiteSpace(assignmentTitle))
+        if (string.IsNullOrWhiteSpace(titleInput))
         {
-            errorMessage = "Title is required";
+            errorMsg = "Title is required";
             return;
         }
 
-        if (assignmentJobsiteId == 0)
+        if (selectedJobsiteId == 0)
         {
-            errorMessage = "Please select a jobsite";
+            errorMsg = "Please select a jobsite";
             return;
         }
 
         try
         {
-            isSaving = true;
-            errorMessage = "";
+            currentlySaving = true;
+            errorMsg = "";
 
-            if (editingAssignment != null)
+            if (assignmentBeingEdited != null)
             {
-                // Update existing assignment
+                // updating existing one
                 var updateRequest = new AssignmentUpdateRequest
                 {
-                    Title = assignmentTitle,
-                    Description = assignmentDescription,
-                    AssignedUserIds = assignmentUserId.HasValue ? new List<int> { assignmentUserId.Value } : null
+                    Title = titleInput,
+                    Description = descriptionInput,
+                    AssignedUserIds = selectedUserId.HasValue ? new List<int> { selectedUserId.Value } : null
                 };
 
-                var success = await AssignmentApi.UpdateAssignmentAsync(editingAssignment.AssignmentId, updateRequest);
+                var success = await AssignmentApi.UpdateAssignmentAsync(assignmentBeingEdited.AssignmentId, updateRequest);
                 if (success)
                 {
-                    Logger.Log(this, $"Updated assignment: {assignmentTitle}", "info");
+                    Logger.Log(this, $"updated assignment: {titleInput}", "info");
                 }
                 else
                 {
-                    errorMessage = "Failed to update assignment";
+                    errorMsg = "Failed to update assignment";
                     return;
                 }
             }
             else
             {
-                // Create new assignment
+                // making new one
                 var createRequest = new AssignmentCreateRequest
                 {
-                    Title = assignmentTitle,
-                    Description = assignmentDescription,
-                    JobsiteId = assignmentJobsiteId,
-                    AssignedUserIds = assignmentUserId.HasValue ? new List<int> { assignmentUserId.Value } : null
+                    Title = titleInput,
+                    Description = descriptionInput,
+                    JobsiteId = selectedJobsiteId,
+                    AssignedUserIds = selectedUserId.HasValue ? new List<int> { selectedUserId.Value } : null
                 };
 
                 var success = await AssignmentApi.CreateAssignmentAsync(createRequest);
                 if (success)
                 {
-                    Logger.Log(this, $"Created assignment: {assignmentTitle}", "info");
+                    Logger.Log(this, $"created new assignment: {titleInput}", "info");
                 }
                 else
                 {
-                    errorMessage = "Failed to create assignment";
+                    errorMsg = "Failed to create assignment";
                     return;
                 }
             }
 
-            showAssignmentDialog = false;
-            await LoadAssignments(); // Refresh the list
+            dialogIsOpen = false;
+            await GetAllAssignments(); // refresh everything
         }
         catch (Exception ex)
         {
-            Logger.Log(this, $"Error saving assignment: {ex.Message}", "error");
-            errorMessage = $"Error: {ex.Message}";
+            Logger.Log(this, $"something broke when saving: {ex.Message}", "error");
+            errorMsg = $"Error: {ex.Message}";
         }
         finally
         {
-            isSaving = false;
-            StateHasChanged();
+            currentlySaving = false;
+            StateHasChanged(); // make sure ui updates
         }
     }
 
@@ -639,7 +640,7 @@
             if (success)
             {
                 Logger.Log(this, $"Deleted assignment: {assignment.Title}", "info");
-                await LoadAssignments(); // Refresh the list
+                await GetAllAssignments(); // Refresh the list
             }
             else
             {
