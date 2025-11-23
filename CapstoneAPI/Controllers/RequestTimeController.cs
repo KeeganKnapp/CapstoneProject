@@ -45,9 +45,7 @@ namespace CapstoneAPI.Controllers
 
             var result = new RequestOffDto(entity.RequestOffId, entity.UserId, entity.StartDate, entity.EndDate, entity.Note);
             return CreatedAtAction(nameof(GetMineById), new { id = entity.RequestOffId }, result);
-        }
-
-        // GET /api/requestoff/{id}   (self-only)
+        }        // GET /api/requestoff/{id}   (self-only)
         [HttpGet("{id:long}")]
         [Authorize]
         public async Task<ActionResult<RequestOffDto>> GetMineById(long id)
@@ -59,6 +57,21 @@ namespace CapstoneAPI.Controllers
             if (entity is null) return NotFound();
 
             return new RequestOffDto(entity.RequestOffId, entity.UserId, entity.StartDate, entity.EndDate, entity.Note);
+        }
+
+        // GET /api/requestoff/mine   (get own requests)
+        [HttpGet("mine")]
+        [Authorize]
+        public async Task<ActionResult<IEnumerable<RequestOffDto>>> GetMyRequests()
+        {
+            var me = GetUserId();
+            var requests = await _db.RequestOffs.AsNoTracking()
+                .Where(r => r.UserId == me)
+                .OrderByDescending(r => r.CreatedAt)
+                .Select(r => new RequestOffDto(r.RequestOffId, r.UserId, r.StartDate, r.EndDate, r.Note))
+                .ToListAsync();
+
+            return Ok(requests);
         }
 
         // DELETE /api/requestoff/{id}   (self-only)

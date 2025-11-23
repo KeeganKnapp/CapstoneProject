@@ -25,8 +25,7 @@ CREATE TABLE IF NOT EXISTS "Users" (
   "IsActive"     boolean NOT NULL DEFAULT TRUE,        -- kill switch
   "CreatedAt"    timestamptz NOT NULL DEFAULT now(),
   "UpdatedAt"    timestamptz NOT NULL DEFAULT now(),
-
-  "Role" TEXT NOT NULL DEFAULT 'Employee' CHECK ("Role" IN ('Employee', 'Manager'));
+  "Role" TEXT NOT NULL DEFAULT 'Employee' CHECK ("Role" IN ('Employee', 'Manager'))
 );
 
 --

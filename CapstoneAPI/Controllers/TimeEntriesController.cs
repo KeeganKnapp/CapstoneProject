@@ -26,9 +26,21 @@ namespace CapstoneAPI.Controllers
             if (string.IsNullOrWhiteSpace(raw))
             {
                 throw new UnauthorizedAccessException("UserId claim missing");
-            }
+            }            return int.Parse(raw);
+        }
 
-            return int.Parse(raw);
+        // GET /time-entries/mine
+        [HttpGet("mine")]
+        public async Task<ActionResult<List<TimeEntry>>> GetMyTimeEntries(CancellationToken ct)
+        {
+            var me = GetUserId();
+            
+            var timeEntries = await _db.TimeEntries
+                .Where(t => t.UserId == me)
+                .OrderByDescending(t => t.StartTime)
+                .ToListAsync(ct);
+
+            return Ok(timeEntries);
         }
 
         // POST /time-entries/clock-in
