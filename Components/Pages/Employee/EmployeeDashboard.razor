@@ -3,27 +3,40 @@
 @using MudBlazor
 @using MudBlazor.Components
 @using CapstoneBlazorApp.Models
+@using CapstoneBlazorApp.Dtos
+@using Microsoft.AspNetCore.Components.Authorization
 @inject AbstractLoggerService Logger
 @inject LocationManager LocationManager
 @inject NavigationManager Nav
 @inject NavigationTracker NavigationTracker
+@inject JobsiteApiService JobsiteApi
+@inject TimeEntryApiService TimeEntryApi
 
 @namespace CapstoneBlazorApp.Components.Pages
 
 @page "/employee-dashboard"
 @rendermode InteractiveServer
 
-<MudContainer MaxWidth="MaxWidth.Large" Style="height: 100vh; padding: 16px;">
+<AuthorizeView>
+    <Authorized>
+        <MudContainer MaxWidth="MaxWidth.Large" Style="height: 100vh; padding: 16px;">
     <MudGrid Justify="Justify.Center" AlignItems="Center" Style="height: 100%;">
-        
-        <!-- Job Site Selection -->
+          <!-- Job Site Selection -->
         <MudItem xs="12" sm="8" md="6">
-            <MudSelect T="Guid" @bind-Value="selectedSite" Label="Select Job Site" 
-                      Variant="Variant.Outlined" FullWidth="true" Margin="Margin.Dense">
-                <MudSelectItem Value="@sites[0].Id">Downtown Construction Site</MudSelectItem>
-                <MudSelectItem Value="@sites[1].Id">Uptown Renovation Project</MudSelectItem>
-                <MudSelectItem Value="@sites[2].Id">Suburban Housing Development</MudSelectItem>
-            </MudSelect>
+            @if (isLoadingSites)
+            {
+                <MudSkeleton SkeletonType="SkeletonType.Rectangle" Height="56px" />
+            }
+            else
+            {
+                <MudSelect T="int" @bind-Value="selectedSite" Label="Select Job Site" 
+                          Variant="Variant.Outlined" FullWidth="true" Margin="Margin.Dense">
+                    @foreach (var site in sites)
+                    {
+                        <MudSelectItem Value="@site.Id">@site.Name</MudSelectItem>
+                    }
+                </MudSelect>
+            }
         </MudItem>
 
         <!-- Map/ToDo Section - Dynamic spacing -->
@@ -82,6 +95,7 @@
         <!-- Action Buttons - Evenly spaced -->
         <MudItem xs="12">
             <MudGrid Justify="Justify.SpaceEvenly" AlignItems="Center">
+                @*
                 <MudItem xs="4" sm="3" md="2" Class="text-center">
                     <MudButton Variant="Variant.Outlined" Color="Color.Info" 
                               Size="Size.Large" FullWidth="true" OnClick="EmployeePayroll"
@@ -89,7 +103,7 @@
                         Payroll
                     </MudButton>
                 </MudItem>
-                
+                *@ 
                 <MudItem xs="4" sm="3" md="2" Class="text-center">
                     <MudButton Variant="Variant.Outlined" Color="Color.Primary" 
                               Size="Size.Large" FullWidth="true" OnClick="EmployeeRequest"
@@ -98,6 +112,7 @@
                     </MudButton>
                 </MudItem>
                 
+                @*
                 <MudItem xs="4" sm="3" md="2" Class="text-center">
                     <MudButton Variant="Variant.Outlined" Color="Color.Warning" 
                               Size="Size.Large" FullWidth="true" OnClick="EmployeeNotifications"
@@ -105,26 +120,104 @@
                         Notifications
                     </MudButton>
                 </MudItem>
-            </MudGrid>
+                *@            </MudGrid>
         </MudItem>
 
     </MudGrid>
 </MudContainer>
+    </Authorized>
+    <NotAuthorized>
+        <RedirectToLogin />
+    </NotAuthorized>
+</AuthorizeView>
 
 
 @code {
     private bool clockedIn = false;
     private bool isClockingIn = false;
     private double currentLatitude = 47.6062;
-    private double currentLongitude = -122.3321;
-
-    private Guid selectedSite = Guid.Empty;
-    public List<SiteDto> sites = new()
+    private double currentLongitude = -122.3321;    private int selectedSite = 0;
+    public List<SiteDto> sites = new();
+    private bool isLoadingSites = true;    protected override async Task OnInitializedAsync()
     {
-        new SiteDto(Guid.NewGuid(), "Downtown Construction Site",41.1450, -81.3416, 100),
-        new SiteDto(Guid.NewGuid(), "Uptown Renovation Project", 47.6205, -122.3493, 150),
-        new SiteDto(Guid.NewGuid(), "Suburban Housing Development", 47.5301, -122.0326, 200)
-    };
+        await LoadJobsites();
+        await CheckCurrentClockStatus();
+    }
+
+    private async Task CheckCurrentClockStatus()
+    {
+        try
+        {
+            var openEntry = await TimeEntryApi.GetCurrentOpenTimeEntryAsync();
+            if (openEntry != null)
+            {
+                clockedIn = true;
+                currentTimeEntryId = openEntry.TimeEntryId;
+                Logger.Log(this, $"User is already clocked in (TimeEntryId: {currentTimeEntryId})", "info");
+            }
+            else
+            {
+                clockedIn = false;
+                currentTimeEntryId = null;
+                Logger.Log(this, "User is not currently clocked in", "info");
+            }
+        }
+        catch (Exception ex)
+        {
+            Logger.Log(this, $"Error checking clock status: {ex.Message}", "error");
+        }
+    }
+
+    private async Task LoadJobsites()
+    {
+        try
+        {
+            isLoadingSites = true;
+            var jobsites = await JobsiteApi.GetAllJobsitesAsync();
+            
+            if (jobsites != null && jobsites.Any())
+            {
+                sites = jobsites.Select(j => j.ToSiteDto()).ToList();
+                
+                if (sites.Any())
+                {
+                    selectedSite = sites.First().Id;
+                }
+                
+                Logger.Log(this, $"Loaded {sites.Count} jobsites from API", "info");
+            }
+            else
+            {
+                // Fallback
+                sites = new List<SiteDto>
+                {
+                    new SiteDto(1, "Downtown Construction Site", 41.1450, -81.3416, 100),
+                    new SiteDto(2, "Uptown Renovation Project", 47.6205, -122.3493, 150),
+                    new SiteDto(3, "Suburban Housing Development", 47.5301, -122.0326, 200)
+                };
+                selectedSite = sites.First().Id;
+                Logger.Log(this, "Using fallback jobsite data", "warning");
+            }
+        }
+        catch (Exception ex)
+        {
+            Logger.Log(this, $"Error loading jobsites: {ex.Message}", "error");
+            
+            // fallback to 
+            sites = new List<SiteDto>
+            {
+                new SiteDto(1, "Downtown Construction Site", 41.1450, -81.3416, 100),
+                new SiteDto(2, "Uptown Renovation Project", 47.6205, -122.3493, 150),
+                new SiteDto(3, "Suburban Housing Development", 47.5301, -122.0326, 200)
+            };
+            selectedSite = sites.First().Id;
+        }
+        finally
+        {
+            isLoadingSites = false;
+            StateHasChanged();
+        }
+    }
 
     private void EmployeeRequest()
     {
@@ -154,32 +247,36 @@
    {
        //handle site change
        Logger.Log(this, $"Site changed to: {site.Name}");
-  }
-
-    private int hoursWorked = 0;
-    private async Task ClockIn()
+  }    private int hoursWorked = 0;
+    private long? currentTimeEntryId = null;    private async Task ClockIn()
     {
         isClockingIn = true;
-        try {
-        var site = sites.First(s => s.Id == selectedSite);
-        Logger.Log(this,$"Attempting to clock in at location: {currentLatitude}, {currentLongitude}");
-        //basic clock in, implement check for actual clock in later
-        //check current location against job site
-        if(selectedSite == Guid.Empty)
+        try 
         {
-            //no site selected
-            Logger.Log(this, "No job site selected", "error");
-            return;
-        }
-        if (await LocationManager.IsWithinRadiusAsync(site.Lat, site.Lng, site.RadiusMeters))
-        {
-            clockedIn = true;
-            Logger.Log(this, "Clocked in successfully", "info");
-        }
-        else
-        {
-            Logger.Log(this, "Not within radius of job site", "error");
-        }
+            // Check if site is selected
+            if(selectedSite == 0)
+            {
+                Logger.Log(this, "No job site selected", "error");
+                return;
+            }
+
+            var site = sites.First(s => s.Id == selectedSite);
+            Logger.Log(this, $"Attempting to clock in at site: {site.Name}", "info");
+              // Call API to clock in (no assignment ID, just general site clock-in)
+            var success = await TimeEntryApi.ClockInAsync(null);
+            
+            if (success)
+            {
+                clockedIn = true;
+                // Get the current open time entry for tracking
+                var openEntry = await TimeEntryApi.GetCurrentOpenTimeEntryAsync();
+                currentTimeEntryId = openEntry?.TimeEntryId;
+                Logger.Log(this, $"Clocked in successfully at {site.Name}", "info");
+            }
+            else
+            {
+                Logger.Log(this, "Failed to clock in via API", "error");
+            }
         }
         catch(Exception ex)
         {
@@ -188,14 +285,36 @@
         finally
         {
             isClockingIn = false;
-            
+            StateHasChanged();
         }
     }
 
-    private void ClockOut()
+    private async Task ClockOut()
     {
-        //basic clock out, implement check for actual clock out later
-        clockedIn = false;
-        StateHasChanged();
+        try
+        {
+            Logger.Log(this, "Attempting to clock out", "info");
+            
+            var success = await TimeEntryApi.ClockOutAsync(currentTimeEntryId);
+            
+            if (success)
+            {
+                clockedIn = false;
+                currentTimeEntryId = null;
+                Logger.Log(this, "Clocked out successfully", "info");
+            }
+            else
+            {
+                Logger.Log(this, "Failed to clock out via API", "error");
+            }
+        }
+        catch (Exception ex)
+        {
+            Logger.Log(this, $"Error during clock out: {ex.Message}", "error");
+        }
+        finally
+        {
+            StateHasChanged();
+        }
     }
 }

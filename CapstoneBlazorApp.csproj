@@ -9,10 +9,10 @@
   <ItemGroup>
     <PackageReference Include="flurlhttpwrapper" Version="1.0.6" />
     <PackageReference Include="MudBlazor" Version="8.14.0" />
+    <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="8.15.0" />
   </ItemGroup>
-
   <ItemGroup>
-    <ProjectReference Include="CapstoneAPI\CapstoneAPI.csproj" />
+    <ProjectReference Include="..\API\CapstoneAPI\CapstoneAPI.csproj" />
   </ItemGroup>
 
 </Project>

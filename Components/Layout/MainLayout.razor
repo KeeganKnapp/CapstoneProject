@@ -4,10 +4,13 @@
 @using CapstoneBlazorApp.Services.Abstractions
 @using CapstoneBlazorApp.Services
 @using CapstoneBlazorApp.Components.Layout
+@using Microsoft.AspNetCore.Components.Authorization
 @inherits LayoutComponentBase
 @inject AbstractLoggerService LoggerService  
 @inject NavigationManager Nav
 @inject NavigationTracker NavigationTracker
+@inject IAuthService AuthService
+@inject AuthenticationStateProvider AuthStateProvider
 @namespace CapstoneBlazorApp.Components.Layout
 
 <MudThemeProvider @bind-IsDarkMode="@_isDarkMode" Theme="_theme"/>
@@ -15,15 +18,46 @@
 <MudSnackbarProvider/>
 <MudPopoverProvider /> 
 
-<MudLayout>
-    @if (!_isDebug) {
+<MudLayout>    @if (!_isDebug) {
         <MudAppBar Color="Color.Primary" Elevation="0">
             <MudIconButton Color="Color.Inherit" OnClick="GoBack" Icon="@Icons.Material.Filled.ArrowBack"/>
-            <MudText Typo="Typo.h6" Class="ml-3">CapstoneMaui</MudText>
+            <MudText Typo="Typo.h6" Class="ml-3">Capstone App</MudText>
             <MudSpacer />
+            
+            <AuthorizeView>
+                <Authorized>
+                    <MudText Typo="Typo.body2" Class="mr-3">Welcome, @context.User.Identity?.Name</MudText>
+                    <MudIconButton Color="Color.Inherit" Icon="@Icons.Material.Filled.Dashboard" 
+                                   OnClick="@(() => Nav.NavigateTo("/employee-dashboard"))" 
+                                   Title="Dashboard" />
+                    <MudIconButton Color="Color.Inherit" Icon="@Icons.Material.Filled.Logout" 
+                                   OnClick="HandleLogout" 
+                                   Title="Logout" />
+                </Authorized>
+                <NotAuthorized>
+                    <MudIconButton Color="Color.Inherit" Icon="@Icons.Material.Filled.Login" 
+                                   OnClick="@(() => Nav.NavigateTo("/login"))" 
+                                   Title="Login" />
+                </NotAuthorized>
+            </AuthorizeView>
+            
             <MudIconButton Color="Color.Inherit" Icon="@Icons.Material.Filled.DarkMode" OnClick="ToggleDarkMode" />
         </MudAppBar>
-    }   
+    }
+    else {
+        <MudExpansionPanels>
+            <MudExpansionPanel Text="Debug Log">
+                <MudList T="string" Dense="true">
+                    @foreach (var log in logMessages)
+                    {
+                        <MudListItem T="string">
+                            <MudText Typo="Typo.body2">@log</MudText>
+                        </MudListItem>
+                    }
+                </MudList>
+            </MudExpansionPanel>
+        </MudExpansionPanels>
+    }
 
     <MudMainContent Style="height: 100vh; overflow: hidden;">
         @Body
@@ -34,6 +68,7 @@
     private bool _isDarkMode = false;
     private bool _isDebug = false; // Set to false to show the app bar
     
+    private List<string> logMessages = new List<string>();
     private readonly MudTheme _theme = new()
     {
         PaletteLight = new PaletteLight
@@ -59,10 +94,16 @@
     };
 
     protected override async Task OnInitializedAsync() {
+        LoggerService.OnLogMessage += OnLog;
         LoggerService.Log(this, "MainLayout initialized", "info");
         await base.OnInitializedAsync();
     }
 
+    void OnLog(object? sender, string message)
+    {
+        logMessages.Add(message);
+        StateHasChanged();
+    }
     private void GoBack() {
         if(NavigationTracker.Count == 0) {
             Nav.NavigateTo("/");
@@ -70,10 +111,23 @@
         }
         Nav.NavigateTo(NavigationTracker.Pop());
     }
-    
-    private void ToggleDarkMode()
+      private void ToggleDarkMode()
     {
         _isDarkMode = !_isDarkMode;
         StateHasChanged();
+    }
+    
+    private async Task HandleLogout()
+    {
+        try
+        {
+            await AuthService.LogoutAsync();
+            LoggerService.Log(this, "User logged out successfully", "info");
+            Nav.NavigateTo("/login", true);
+        }
+        catch (Exception ex)
+        {
+            LoggerService.Log(this, "Logout failed: " + ex.Message, "error");
+        }
     }
 }

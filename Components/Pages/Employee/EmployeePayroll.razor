@@ -1,9 +1,12 @@
 @using MudBlazor
 @using CapstoneBlazorApp.Dtos
+@using Microsoft.AspNetCore.Components.Authorization
 @page "/employee-payroll"
 @namespace CapstoneBlazorApp.Components.Pages
 
-<MudStack AlignItems=AlignItems.Center JustifyContent=Justify.Center Style="height: 100vh;">
+<AuthorizeView>
+    <Authorized>
+        <MudStack AlignItems=AlignItems.Center JustifyContent=Justify.Center Style="height: 100vh;">
     <MudText Typo="Typo.h6">Hours Worked: @totalHours</MudText>
     <MudText Typo="Typo.h6">Hourly Rate: @hourlyRate</MudText>
     <MudText Typo="Typo.h6">Total Pay: @totalPay</MudText>
@@ -13,30 +16,31 @@
     <HeaderContent>
         <MudTh>Period</MudTh>
         <MudTh>Gross Pay</MudTh>
-        <MudTh>Net Pay</MudTh>
-    </HeaderContent>
-
-    <RowTemplate>
-        <MudTd>@context.period</MudTd>
-        <MudTd>@context.gross.ToString("C")</MudTd>
-        <MudTd>@context.net.ToString("C")</MudTd>
-    </RowTemplate>
+        <MudTh>Net Pay</MudTh>    </HeaderContent>    <RowTemplate Context="payStub">
+        <MudTd>@payStub.Period</MudTd>
+        <MudTd>@payStub.Gross.ToString("C")</MudTd>
+        <MudTd>@payStub.Net.ToString("C")</MudTd>    </RowTemplate>
 </MudTable>
 
 </MudStack>
+    </Authorized>
+    <NotAuthorized>
+        <RedirectToLogin />
+    </NotAuthorized>
+</AuthorizeView>
+
 @code {
     double totalHours = 0;
     double hourlyRate = 20.0;
     double totalPay => totalHours * hourlyRate;
 
-    private List<PayStubDto> payStubs = new List<PayStubDto>
+    private List<CapstoneBlazorApp.Dtos.PayStubDto> payStubs = new List<CapstoneBlazorApp.Dtos.PayStubDto>
         {
-            //random paystubs with random string period, decimal gross, decimal net
-            new PayStubDto ("Jan 2024", 3200.00m, 2560.00m),
-            new PayStubDto ("Feb 2024", 3000.00m, 2400.00m),
-            new PayStubDto ("Mar 2024", 3400.00m, 2720.00m)
+            //random paystubs with random string period, decimal gross, decimal net            new CapstoneBlazorApp.Dtos.PayStubDto ("Jan 2024", 3200.00m, 2560.00m),
+            new CapstoneBlazorApp.Dtos.PayStubDto ("Feb 2024", 3000.00m, 2400.00m),
+            new CapstoneBlazorApp.Dtos.PayStubDto ("Mar 2024", 3400.00m, 2720.00m)
         };  
-    private async Task OnInitializedAsync()
+    protected override async Task OnInitializedAsync()
     {
         // Simulate fetching hours worked from a service
         await Task.Delay(500); // Simulate async call

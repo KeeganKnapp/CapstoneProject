@@ -12,20 +12,18 @@
 <div id="@_id" style="height: 100%; width: 100%; min-height: 300px; border-radius: 4px; overflow: hidden;"></div>
 
 
-@code {
-    [Parameter] public Guid currentSiteId { get; set; } = Guid.Empty;
+@code {    [Parameter] public int currentSiteId { get; set; } = 0;
     [Parameter] public IEnumerable<SiteDto>? Sites { get; set; }
-    [Parameter] public EventCallback<SiteDto> OnChanged { get; set; }    bool initialized = false;
-    private Guid previousSiteId = Guid.Empty;
+    [Parameter] public EventCallback<SiteDto> OnChanged { get; set; }
+    bool initialized = false;
+    private int previousSiteId = 0;
     string _id = $"map_{Guid.NewGuid():N}";
-    DotNetObjectReference<JobSiteMap>? _ref;
-
-    private async Task FocusOnJobSite(Guid siteId)
+    DotNetObjectReference<JobSiteMap>? _ref;    private async Task FocusOnJobSite(int siteId)
     {
         try
         {
             Logger.Log(this,$"Focusing on job site: {siteId}");
-            if(siteId == Guid.Empty || !initialized) return;
+            if(siteId == 0 || !initialized) return;
             await JS.InvokeVoidAsync("capstoneMap.focusOnLocation", siteId);
         }
         catch (Exception ex)
@@ -45,7 +43,7 @@
             await JS.InvokeVoidAsync("capstoneMap.init", $"#{_id}", _ref, Sites ?? Array.Empty<SiteDto>());
             initialized = true;
 
-            if(currentSiteId != Guid.Empty)
+            if(currentSiteId != 0)
             {
                 await FocusOnJobSite(currentSiteId);
             }
@@ -66,7 +64,7 @@
         {
             await InitializeMap();
         }
-        else if (firstRender && currentSiteId != Guid.Empty)
+        else if (firstRender && currentSiteId != 0)
         {
             await FocusOnJobSite(currentSiteId);
         }
@@ -81,7 +79,7 @@
             await FocusOnJobSite(currentSiteId);
             previousSiteId = currentSiteId;
         }
-        else if (!initialized && currentSiteId != Guid.Empty)
+        else if (!initialized && currentSiteId != 0)
         {
             previousSiteId = currentSiteId;
         }

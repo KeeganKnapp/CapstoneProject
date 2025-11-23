@@ -17,5 +17,6 @@ namespace CapstoneBlazorApp.Dtos
         public DateTimeOffset RefreshTokenExpiresAt { get; set; }       // tells exactly when the token will expire
         public string Email { get; set; } = null!;                      // lets the client show which user is logged in
         public string? DisplayName { get; set; }
+        public string Role { get; set; } = null!;
     }
 }

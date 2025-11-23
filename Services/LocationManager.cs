@@ -34,53 +34,45 @@ public class LocationManager
         double distance = GetDistance(currentLat, currentLng, siteLat, siteLng);
         _logger.Log(this,$"Current Location: ({currentLat}, {currentLng}), Site Location: ({siteLat}, {siteLng}), Distance: {distance} meters, Site Radius: {radiusMeters} meters", "info");
         return distance <= radiusMeters;
-    }
-
-    public async Task<(double Latitude, double Longitude)> GetCurrentLocationAsync(CancellationToken cancellationToken = default)
+    }    public async Task<(double Latitude, double Longitude)> GetCurrentLocationAsync(CancellationToken cancellationToken = default)
     {
         _logger.Log(this, "Attempting to retrieve current location", "info");
-	//return error for now
+        
+        // For demo purposes, we'll simulate being at the first jobsite location
+        // In a real implementation, you would use JavaScript interop to call navigator.geolocation
+        await Task.Delay(1000, cancellationToken); // Simulate API delay
+        
+        // Simulate being at Downtown Construction Site location for demo
+        var demoLatitude = 41.1450;
+        var demoLongitude = -81.3416;
+        
+        _logger.Log(this, $"Demo location retrieved: ({demoLatitude}, {demoLongitude})", "info");
+        return (demoLatitude, demoLongitude);
+        
+        // TODO: Implement real browser geolocation using JavaScript interop
+        // Example implementation would look like:
+        /*
         try
         {
-/*            var location = await Geolocation.Default.GetLocationAsync(
-                new GeolocationRequest(GeolocationAccuracy.Medium, TimeSpan.FromSeconds(10)),
-                cancellationToken);
-		
-
-            if (location != null)
+            // Call JavaScript function that uses navigator.geolocation.getCurrentPosition
+            var position = await _jsRuntime.InvokeAsync<GeolocationPosition>("getLocation", cancellationToken);
+            if (position != null)
             {
-                _logger.Log(this, $"Location retrieved: ({location.Latitude}, {location.Longitude})", "info");
-                return (location.Latitude, location.Longitude);
+                _logger.Log(this, $"Location retrieved: ({position.Latitude}, {position.Longitude})", "info");
+                return (position.Latitude, position.Longitude);
             }
             else
             {
-	    */
                 _logger.Log(this, "Unable to retrieve current location", "error");
                 throw new Exception("Unable to retrieve current location");
             }
-        /*}
-        catch (FeatureNotSupportedException ex)
-        {
-            _logger.Log(this, $"Geolocation not supported: {ex.Message}", "error");
-            throw new Exception("Geolocation is not supported on this device");
         }
-        catch (FeatureNotEnabledException ex)
-        {
-            _logger.Log(this, $"Geolocation not enabled: {ex.Message}", "error");
-            throw new Exception("Geolocation is not enabled");
-        }
-        catch (PermissionException ex)
-        {
-            _logger.Log(this, $"Permission denied: {ex.Message}", "error");
-            throw new UnauthorizedAccessException("Location permission denied");
-        }
-
-	*/
         catch (Exception ex)
         {
             _logger.Log(this, $"Location retrieval failed: {ex.Message}", "error");
             throw;
         }
+        */
     }
 }
 

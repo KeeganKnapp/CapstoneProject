@@ -1,12 +1,16 @@
 using CapstoneBlazorApp.Services.Abstractions;
+using CapstoneBlazorApp.Dtos;
+using System.Net.Http.Json;
+
 namespace CapstoneBlazorApp.Services.Auth
 {
     public class AuthService : IAuthService
     {
         private string? _authToken;
-        private bool _isLoggedIn;
-
         private readonly HttpClient _httpClient;
+        
+        // Event to notify when authentication state changes
+        public event EventHandler<string?>? AuthenticationStateChanged;
 
         public AuthService(HttpClient httpClient)
         {
@@ -15,43 +19,73 @@ namespace CapstoneBlazorApp.Services.Auth
 
         public async Task<bool> LoginAsync(string email, string password, CancellationToken cancellationToken = default)
         {
-            await Task.Delay(1000, cancellationToken);
-
-            if (email == "test" && password == "test")
+            try
             {
-                //return employee token for demo purposes
-                _authToken = "employee-token";
-                _isLoggedIn = true;
-                return true;
+                var loginRequest = new LoginRequest
+                {
+                    Email = email,
+                    Password = password
+                };
+
+                var response = await _httpClient.PostAsJsonAsync("auth/login", loginRequest, cancellationToken);
+                
+                if (response.IsSuccessStatusCode)
+                {
+                    var authResponse = await response.Content.ReadFromJsonAsync<AuthResponse>(cancellationToken);                    if (authResponse?.AccessToken != null)
+                    {
+                        _authToken = authResponse.AccessToken;
+                        
+                        // Update HTTP client with new token
+                        _httpClient.DefaultRequestHeaders.Authorization = 
+                            new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", _authToken);
+                        
+                        // Notify authentication state change
+                        AuthenticationStateChanged?.Invoke(this, _authToken);
+                        
+                        return true;
+                    }
+                }                Console.WriteLine($"Login API failed with status: {response.StatusCode}");
+                var errorContent = await response.Content.ReadAsStringAsync(cancellationToken);
+                Console.WriteLine($"Login API error: {errorContent}");
+
+                return false;
             }
-
-            return false;
-        }
-
-        //check if user is manager for navigation purposes
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Login error: {ex.Message}");
+                return false;
+            }
+        }        //check if user is manager for navigation purposes
         public async Task<bool> IsUserManagerAsync(CancellationToken cancellationToken = default)
         {
             await Task.Delay(500, cancellationToken);
             //for demo purposes, if the auth token is "manager-token", return true
             return _authToken == "manager-token";
-        }
-
-        public async Task LogoutAsync(CancellationToken cancellationToken = default)
+        }        public async Task LogoutAsync(CancellationToken cancellationToken = default)
         {
-            await Task.Delay(1000, cancellationToken);
-            _authToken = null;
-            _isLoggedIn = false;
+            try
+            {
+                _authToken = null;
+                
+                // Clear authorization header
+                _httpClient.DefaultRequestHeaders.Authorization = null;
+                
+                // Notify authentication state change
+                AuthenticationStateChanged?.Invoke(this, null);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Logout error: {ex.Message}");
+            }
         }
 
         public async Task<bool> IsUserLoggedInAsync(CancellationToken cancellationToken = default)
         {
-            await Task.Delay(1000, cancellationToken);
-            return _isLoggedIn;
+            return !string.IsNullOrEmpty(_authToken);
         }
 
-        public async Task<string> GetAuthTokenAsync(CancellationToken cancellationToken = default)
+        public async Task<string?> GetAuthTokenAsync(CancellationToken cancellationToken = default)
         {
-            await Task.Delay(1000, cancellationToken);
             return _authToken;
         }
     }

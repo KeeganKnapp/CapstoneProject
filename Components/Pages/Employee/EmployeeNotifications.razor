@@ -1,20 +1,25 @@
 @using MudBlazor
 @using CapstoneBlazorApp.Services
+@using Microsoft.AspNetCore.Components.Authorization
 @page "/employee-notifications"
 @namespace CapstoneBlazorApp.Components.Pages
 @inject NavigationManager Nav
 
-<MudTable Style="width: 100%;" Items="@notifications" Breakpoint="Breakpoint.None" Elevation="1" Bordered="true" Hover="true">
+<AuthorizeView>
+    <Authorized>
+        <MudTable Style="width: 100%;" Items="@notifications" Breakpoint="Breakpoint.None" Elevation="1" Bordered="true" Hover="true">
     <HeaderContent>
         <MudTh>Date</MudTh>
         <MudTh>Message</MudTh>
-    </HeaderContent>
-
-    <RowTemplate>
-        <MudTd>@context.Date.ToString("g")</MudTd>
-        <MudTd>@context.Message</MudTd>
-    </RowTemplate>
+    </HeaderContent>    <RowTemplate Context="notification">
+        <MudTd>@notification.Date.ToString("g")</MudTd>
+        <MudTd>@notification.Message</MudTd>    </RowTemplate>
 </MudTable>
+    </Authorized>
+    <NotAuthorized>
+        <RedirectToLogin />
+    </NotAuthorized>
+</AuthorizeView>
 
 @code {
     private List<NotificationDto> notifications = new()

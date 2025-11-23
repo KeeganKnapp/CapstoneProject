@@ -5,71 +5,118 @@
 @using CapstoneBlazorApp.Models
 @using CapstoneBlazorApp.Dtos
 @using System.Net.Http.Json
+@using Microsoft.AspNetCore.Components.Authorization
+@using Microsoft.AspNetCore.WebUtilities
 
-@inject HttpClient http
+@inject IAuthService AuthService
 @inject NavigationManager Nav
 @inject AbstractLoggerService Logger
-
 @inject NavigationTracker NavigationTracker
 
 @page "/login"
+@rendermode InteractiveServer
 
-    <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 80vh;">
-        <div style="display: flex; flex-direction: column; align-items: center; gap: 8px;">
-            <MudTextField Label="Email" Variant="Variant.Outlined" Style="width: 250px;" @bind-Value="_email" />
-            <MudTextField Label="Password" Variant="Variant.Outlined" InputType="InputType.Password" Style="width: 250px;" @bind-Value="_password" />
-            <MudButton Variant="Variant.Filled" Color="Color.Primary" Style="width: 250px;" OnClick="HandleValidSubmit">Login</MudButton>
+<div style="display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 80vh;">
+        <div style="display: flex; flex-direction: column; align-items: center; gap: 16px; max-width: 300px; width: 100%;">
+            <MudText Typo="Typo.h4" Color="Color.Primary" Style="margin-bottom: 16px;">Login</MudText>
+            
+            @if (!string.IsNullOrEmpty(errorMessage))
+            {
+                <MudAlert Severity="Severity.Error" Style="width: 100%;">@errorMessage</MudAlert>
+            }
+            
+            <MudTextField 
+                Label="Email" 
+                Variant="Variant.Outlined" 
+                Style="width: 100%;" 
+                @bind-Value="_email" 
+                Disabled="busy"
+                Required="true" />
+                
+            <MudTextField 
+                Label="Password" 
+                Variant="Variant.Outlined" 
+                InputType="InputType.Password" 
+                Style="width: 100%;" 
+                @bind-Value="_password" 
+                Disabled="busy"
+                Required="true" />
+                
+            <MudButton 
+                Variant="Variant.Filled" 
+                Color="Color.Primary" 
+                Style="width: 100%;" 
+                OnClick="HandleValidSubmit"
+                Disabled="busy || string.IsNullOrWhiteSpace(_email) || string.IsNullOrWhiteSpace(_password)">
+                @if (busy)
+                {
+                    <MudProgressCircular Class="ms-n1" Size="Size.Small" Indeterminate="true"/>
+                    <MudText Class="ms-2">Logging in...</MudText>
+                }
+                else
+                {
+                    <text>Login</text>
+                }
+            </MudButton>
+            
+            <MudText Typo="Typo.caption" Color="Color.Secondary" Style="margin-top: 16px; text-align: center;">
+                Demo credentials: test / test
+            </MudText>
         </div>
     </div>
 
 @code {
-    private string _email;
-    private string _password;
-
+    private string _email = "";
+    private string _password = "";
     private bool busy;
-    private bool loggedIn;
+    private string? errorMessage;
+    private string? returnUrl;
+
+    protected override void OnInitialized()
+    {
+        var uri = Nav.ToAbsoluteUri(Nav.Uri);
+        if (QueryHelpers.ParseQuery(uri.Query).TryGetValue("returnUrl", out var returnUrlValue))
+        {
+            returnUrl = returnUrlValue;
+        }
+    }
 
     private async Task HandleValidSubmit()
     {
-        if(busy) return;
+        if (busy) return;
         busy = true;
+        errorMessage = null;
+        
         try
-        {
-            var lq = new LoginRequest
+        {            var success = await AuthService.LoginAsync(_email, _password);
+              if (success)
             {
-                Email = _email,
-                Password = _password
-            };
-            using var res = await http.PostAsJsonAsync("auth/login", lq);
-            if(!res.IsSuccessStatusCode)
-            {
-                var body = await res.Content.ReadAsStringAsync();
-                Logger.Log(this, "Login failed: " + body, "error");
-                return;
+                Logger.Log(this, "Login successful", "info");
+                NavigationTracker.Push("/login");
+                
+                // Wait longer for authentication state to update
+                await Task.Delay(500);
+                
+                // Redirect to return URL or dashboard
+                var targetUrl = !string.IsNullOrEmpty(returnUrl) ? returnUrl : "/employee-dashboard";
+                Logger.Log(this, $"Navigating to: {targetUrl}", "info");
+                Nav.NavigateTo(targetUrl, false); // Don't force reload
             }
-
-            var auth = await res.Content.ReadFromJsonAsync<AuthResponse>();
-            if(auth == null)
+            else
             {
-                Logger.Log(this, "Login failed: no auth response", "error");
-                return;
+                errorMessage = "Invalid email or password. Please try again.";
+                Logger.Log(this, "Login failed: Invalid credentials", "error");
             }
-
-            if (!string.IsNullOrEmpty(auth.AccessToken))
-                //await SecureStorage.Default.SetAsync("auth_token", auth.AccessToken);
-            if (!string.IsNullOrEmpty(auth.RefreshToken))
-                //await SecureStorage.Default.SetAsync("refresh_token", auth.RefreshToken);
-
-            NavigationTracker.Push("/login");
-            Nav.NavigateTo("/employee-dashboard");
         }
-        catch(Exception ex)
+        catch (Exception ex)
         {
+            errorMessage = "Login failed. Please try again.";
             Logger.Log(this, "Login failed: " + ex.Message, "error");
         }
         finally
         {
             busy = false;
+            StateHasChanged();
         }
     }
 }

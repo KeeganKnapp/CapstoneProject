@@ -6,8 +6,10 @@ namespace CapstoneBlazorApp.Services.Abstractions
         Task LogoutAsync(CancellationToken cancellationToken = default);
         Task<bool> IsUserLoggedInAsync(CancellationToken cancellationToken = default);
 
-        Task<string> GetAuthTokenAsync(CancellationToken cancellationToken = default);
+        Task<string?> GetAuthTokenAsync(CancellationToken cancellationToken = default);
 
-        Task<bool> IsUserManagerAsync(CancellationToken cancellationToken = default); 
+        Task<bool> IsUserManagerAsync(CancellationToken cancellationToken = default);
+        
+        event EventHandler<string?>? AuthenticationStateChanged;
     }
 }

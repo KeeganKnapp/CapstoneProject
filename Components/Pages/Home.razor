@@ -1,32 +1,47 @@
 ﻿@using MudBlazor
-@using CapstoneBlazorApp.Services.Auth
+@using Microsoft.AspNetCore.Components.Authorization
 @using CapstoneBlazorApp.Services.Abstractions
 @inject NavigationManager Nav
+@inject AuthenticationStateProvider AuthStateProvider
 @inject IAuthService AuthService
 
 @page "/"
 
+<AuthorizeView>
+    <Authorized>
+        <div style="display: flex; justify-content: center; align-items: center; height: 100vh;">
+            <MudProgressCircular Indeterminate="true" Size="Size.Large" />
+            <MudText Typo="Typo.h6" Style="margin-left: 16px;">Redirecting...</MudText>
+        </div>
+    </Authorized>
+    <NotAuthorized>
+        <div style="display: flex; justify-content: center; align-items: center; height: 100vh;">
+            <MudProgressCircular Indeterminate="true" Size="Size.Large" />
+            <MudText Typo="Typo.h6" Style="margin-left: 16px;">Redirecting to login...</MudText>
+        </div>
+    </NotAuthorized>
+</AuthorizeView>
+
 @code {
     protected override async Task OnInitializedAsync()
     {
-        if (await AuthService.IsUserLoggedInAsync())
+        var authState = await AuthStateProvider.GetAuthenticationStateAsync();
+        
+        if (authState.User.Identity?.IsAuthenticated == true)
         {
-            if(await AuthService.IsUserManagerAsync())
+            if (await AuthService.IsUserManagerAsync())
             {
-                Nav.NavigateTo("/admin-dashboard");
+                Nav.NavigateTo("/admin-dashboard", true);
             }
             else
             {
-                Nav.NavigateTo("/employee-dashboard");
+                Nav.NavigateTo("/employee-dashboard", true);
             }
-            
-
         }
         else
         {
-            Nav.NavigateTo("/login");
+            Nav.NavigateTo("/login", true);
         }
-
     }
 }
 

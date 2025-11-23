@@ -17,6 +17,7 @@ namespace CapstoneBlazorApp.Models
         public bool IsActive { get; set; } = true;       // "IsActive"
         public DateTimeOffset CreatedAt { get; set; }    // "CreatedAt"
         public DateTimeOffset UpdatedAt { get; set; }    // "UpdatedAt"
+        public string Role { get; set; } = "Employee";   // automatically hold employee role
 
         // navigation
         public ICollection<RefreshToken> RefreshTokens { get; set; } = new List<RefreshToken>();

@@ -1,6 +1,51 @@
-﻿<Router AppAssembly="typeof(Program).Assembly">
+﻿@using Microsoft.AspNetCore.Authorization
+@using Microsoft.AspNetCore.Components.Authorization
+@using MudBlazor
+
+<Router AppAssembly="typeof(Program).Assembly">
     <Found Context="routeData">
-        <RouteView RouteData="routeData" DefaultLayout="typeof(Layout.MainLayout)" />
+        <AuthorizeRouteView RouteData="routeData" DefaultLayout="typeof(Layout.MainLayout)">
+            <NotAuthorized Context="authContext">
+                @if (authContext.User.Identity?.IsAuthenticated != true)
+                {
+                    <RedirectToLogin />
+                }
+                else
+                {
+                    <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 50vh;">
+                        <MudIcon Icon="@Icons.Material.Filled.Lock" Size="Size.Large" Style="margin-bottom: 16px; color: var(--mud-palette-error);" />
+                        <MudText Typo="Typo.h5" Style="margin-bottom: 16px;">Access Denied</MudText>
+                        <MudText Typo="Typo.body1" Style="margin-bottom: 32px; text-align: center;">
+                            You don't have permission to access this page.
+                        </MudText>
+                        <MudButton Variant="Variant.Filled" Color="Color.Primary" Href="/employee-dashboard">
+                            Go to Dashboard
+                        </MudButton>
+                    </div>
+                }
+            </NotAuthorized>
+            <Authorizing>
+                <div style="display: flex; justify-content: center; align-items: center; height: 50vh;">
+                    <MudProgressCircular Indeterminate="true" Size="Size.Large" />
+                    <MudText Typo="Typo.h6" Style="margin-left: 16px;">Checking authentication...</MudText>
+                </div>
+            </Authorizing>
+        </AuthorizeRouteView>
         <FocusOnNavigate RouteData="routeData" Selector="h1" />
     </Found>
+    <NotFound>
+        <PageTitle>Not found</PageTitle>
+        <LayoutView Layout="typeof(Layout.MainLayout)">
+            <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 50vh;">
+                <MudIcon Icon="@Icons.Material.Filled.ErrorOutline" Size="Size.Large" Style="margin-bottom: 16px; color: var(--mud-palette-warning);" />
+                <MudText Typo="Typo.h4" Style="margin-bottom: 16px;">Page Not Found</MudText>
+                <MudText Typo="Typo.body1" Style="margin-bottom: 32px;">
+                    Sorry, there's nothing at this address.
+                </MudText>
+                <MudButton Variant="Variant.Filled" Color="Color.Primary" Href="/employee-dashboard">
+                    Go to Dashboard
+                </MudButton>
+            </div>
+        </LayoutView>
+    </NotFound>
 </Router>
