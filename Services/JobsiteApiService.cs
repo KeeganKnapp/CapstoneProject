@@ -1,6 +1,7 @@
 using System.Net.Http.Headers;
 using System.Text.Json;
 using CapstoneBlazorApp.Dtos;
+using CapstoneBlazorApp.Models;
 using CapstoneBlazorApp.Services.Abstractions;
 
 namespace CapstoneBlazorApp.Services
@@ -112,6 +113,94 @@ namespace CapstoneBlazorApp.Services
             catch (Exception)
             {
                 return null;
+            }
+        }
+
+        public async Task<bool> CreateJobsiteAsync(JobsiteDto jobsite, CancellationToken cancellationToken = default)
+        {
+            try
+            {
+                // Get authorization token
+                var loginResponse = await LoginAndGetTokenAsync();
+                if (!string.IsNullOrEmpty(loginResponse?.AccessToken))
+                {
+                    _httpClient.DefaultRequestHeaders.Authorization = 
+                        new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", loginResponse.AccessToken);
+                }
+
+                var createRequest = new
+                {
+                    Name = jobsite.Name,
+                    Latitude = jobsite.Latitude,
+                    Longitude = jobsite.Longitude,
+                    RadiusMeters = jobsite.RadiusMeters
+                };
+
+                var json = JsonSerializer.Serialize(createRequest);
+                var content = new StringContent(json, System.Text.Encoding.UTF8, "application/json");
+                
+                var response = await _httpClient.PostAsync("/api/Jobsite", content, cancellationToken);
+                
+                return response.IsSuccessStatusCode;
+            }
+            catch (Exception)
+            {
+                return false;
+            }
+        }
+
+        public async Task<bool> UpdateJobsiteAsync(JobsiteDto jobsite, CancellationToken cancellationToken = default)
+        {
+            try
+            {
+                // Get authorization token
+                var loginResponse = await LoginAndGetTokenAsync();
+                if (!string.IsNullOrEmpty(loginResponse?.AccessToken))
+                {
+                    _httpClient.DefaultRequestHeaders.Authorization = 
+                        new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", loginResponse.AccessToken);
+                }
+
+                var updateRequest = new
+                {
+                    Name = jobsite.Name,
+                    Latitude = jobsite.Latitude,
+                    Longitude = jobsite.Longitude,
+                    RadiusMeters = jobsite.RadiusMeters
+                };
+
+                var json = JsonSerializer.Serialize(updateRequest);
+                var content = new StringContent(json, System.Text.Encoding.UTF8, "application/json");
+                
+                var response = await _httpClient.PutAsync($"/api/Jobsite/{jobsite.JobsiteId}", content, cancellationToken);
+                
+                return response.IsSuccessStatusCode;
+            }
+            catch (Exception)
+            {
+                return false;
+            }
+        }
+
+        public async Task<bool> DeleteJobsiteAsync(int jobsiteId, CancellationToken cancellationToken = default)
+        {
+            try
+            {
+                // Get authorization token
+                var loginResponse = await LoginAndGetTokenAsync();
+                if (!string.IsNullOrEmpty(loginResponse?.AccessToken))
+                {
+                    _httpClient.DefaultRequestHeaders.Authorization = 
+                        new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", loginResponse.AccessToken);
+                }
+
+                var response = await _httpClient.DeleteAsync($"/api/Jobsite/{jobsiteId}", cancellationToken);
+                
+                return response.IsSuccessStatusCode;
+            }
+            catch (Exception)
+            {
+                return false;
             }
         }
     }

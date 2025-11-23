@@ -1,0 +1,215 @@
+@using CapstoneBlazorApp.Services.Abstractions
+@using Microsoft.JSInterop
+@using CapstoneBlazorApp.Models
+@using CapstoneBlazorApp.Dtos
+@inject IJSRuntime JS
+@inject AbstractLoggerService Logger
+@implements IAsyncDisposable
+
+@namespace CapstoneBlazorApp.Components.Pages.Manager
+
+<!-- Interactive Manager Job Site Map with Add Capability -->
+<div id="@_id" style="height: 400px; width: 100%; border-radius: 4px; overflow: hidden; border: 1px solid #e0e0e0;"></div>
+
+@if (IsAddMode)
+{
+    <div class="mt-3">
+        <MudAlert Severity="Severity.Info" Dense="true">
+            <MudText Typo="Typo.body2">Click on the map to select a location for the new jobsite.</MudText>
+        </MudAlert>
+        
+        @if (SelectedLocation != null)
+        {
+            <MudPaper Class="pa-3 mt-2" Elevation="2">
+                <MudText Typo="Typo.subtitle2" Class="mb-2">Selected Location:</MudText>
+                <MudGrid>
+                    <MudItem xs="6">
+                        <MudTextField Label="Latitude" Value="@SelectedLocation.Value.Lat.ToString("F6")" ReadOnly="true" />
+                    </MudItem>
+                    <MudItem xs="6">
+                        <MudTextField Label="Longitude" Value="@SelectedLocation.Value.Lng.ToString("F6")" ReadOnly="true" />
+                    </MudItem>
+                </MudGrid>
+            </MudPaper>
+        }
+    </div>
+}
+
+@code {
+    [Parameter] public IEnumerable<JobsiteDto>? Jobsites { get; set; }
+    [Parameter] public EventCallback<JobsiteDto> OnJobsiteSelected { get; set; }
+    [Parameter] public bool IsAddMode { get; set; } = false;
+    [Parameter] public EventCallback<(double Lat, double Lng)> OnLocationSelected { get; set; }
+    
+    public (double Lat, double Lng)? SelectedLocation { get; private set; }
+    
+    bool initialized = false;
+    string _id = $"manager_map_{Guid.NewGuid():N}";
+    DotNetObjectReference<JobsiteMapManager>? _ref;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!initialized && firstRender)
+        {
+            await InitializeMap();
+        }
+        else if (!firstRender && !initialized)
+        {
+            // Re-initialize if needed (e.g., dialog reopened)
+            await Task.Delay(300);
+            await InitializeMap();
+        }
+    }
+
+    private async Task InitializeMap()
+    {
+        try
+        {
+            Logger.Log(this, $"Initializing Manager JobSite Map with ID: {_id}, AddMode: {IsAddMode}");
+            
+            // Wait for DOM element to be fully rendered
+            await Task.Delay(IsAddMode ? 300 : 100);
+            
+            _ref = DotNetObjectReference.Create(this);
+            
+            // Convert JobsiteDto to SiteDto for the map
+            var sites = Jobsites?.Select(j => new SiteDto(
+                j.JobsiteId,
+                j.Name,
+                j.Latitude,
+                j.Longitude,
+                j.RadiusMeters
+            )).ToArray() ?? Array.Empty<SiteDto>();
+
+            Logger.Log(this, $"Initializing map with {sites.Length} sites");
+
+            await JS.InvokeVoidAsync("capstoneManagerMap.init", $"#{_id}", _ref, sites, IsAddMode);
+            initialized = true;
+            
+            Logger.Log(this, $"Map initialized successfully with ID: {_id}");
+        }
+        catch (Exception ex)
+        {
+            Logger.Log(this, $"Error initializing manager map: {ex.Message}", "error");
+            initialized = false;
+            
+            // Retry once after a longer delay
+            await Task.Delay(500);
+            try
+            {
+                await JS.InvokeVoidAsync("capstoneManagerMap.init", $"#{_id}", _ref, Array.Empty<SiteDto>(), IsAddMode);
+                initialized = true;
+                Logger.Log(this, $"Map initialized on retry");
+            }
+            catch (Exception retryEx)
+            {
+                Logger.Log(this, $"Map initialization retry failed: {retryEx.Message}", "error");
+            }
+        }
+    }
+
+    [JSInvokable]
+    public async Task OnSiteClicked(int siteId)
+    {
+        if (!IsAddMode && OnJobsiteSelected.HasDelegate)
+        {
+            var jobsite = Jobsites?.FirstOrDefault(j => j.JobsiteId == siteId);
+            if (jobsite != null)
+            {
+                await OnJobsiteSelected.InvokeAsync(jobsite);
+            }
+        }
+    }
+
+    [JSInvokable]
+    public async Task OnMapClicked(double lat, double lng)
+    {
+        if (IsAddMode)
+        {
+            SelectedLocation = (lat, lng);
+            StateHasChanged();
+            
+            if (OnLocationSelected.HasDelegate)
+            {
+                await OnLocationSelected.InvokeAsync((lat, lng));
+            }
+        }
+    }
+
+    public async Task RefreshMap()
+    {
+        try
+        {
+            if (initialized)
+            {
+                var sites = Jobsites?.Select(j => new SiteDto(
+                    j.JobsiteId,
+                    j.Name,
+                    j.Latitude,
+                    j.Longitude,
+                    j.RadiusMeters
+                )).ToArray() ?? Array.Empty<SiteDto>();
+
+                Logger.Log(this, $"Refreshing map with {sites.Length} sites");
+                await JS.InvokeVoidAsync("capstoneManagerMap.setLocations", $"#{_id}", sites);
+            }
+            else
+            {
+                Logger.Log(this, "Map not initialized, attempting to initialize for refresh");
+                await InitializeMap();
+            }
+        }
+        catch (Exception ex)
+        {
+            Logger.Log(this, $"Error refreshing map: {ex.Message}", "error");
+        }
+    }
+
+    public void ClearSelectedLocation()
+    {
+        SelectedLocation = null;
+        StateHasChanged();
+    }
+
+    public async Task FocusOnLocation(int jobsiteId)
+    {
+        try
+        {
+            if (initialized)
+            {
+                Logger.Log(this, $"Focusing map on jobsite ID: {jobsiteId}", "info");
+                await JS.InvokeVoidAsync("capstoneManagerMap.focusOnLocation", $"#{_id}", jobsiteId);
+            }
+            else
+            {
+                Logger.Log(this, "Cannot focus - map not initialized", "warn");
+            }
+        }
+        catch (Exception ex)
+        {
+            Logger.Log(this, $"Error focusing on location: {ex.Message}", "error");
+        }
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        try
+        {
+            if (initialized)
+            {
+                await JS.InvokeVoidAsync("capstoneManagerMap.dispose", $"#{_id}");
+                initialized = false;
+            }
+            
+            if (_ref is not null) 
+            {
+                _ref.Dispose();
+                _ref = null;
+            }
+        }
+        catch (Exception ex)
+        {
+            Logger.Log(this, $"Error during Manager JobSite Map disposal: {ex.Message}", "error");
+        }
+    }
+}

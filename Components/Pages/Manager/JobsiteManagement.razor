@@ -1,0 +1,407 @@
+@page "/manager/jobsites"
+@rendermode InteractiveServer
+
+@using CapstoneBlazorApp.Services
+@using CapstoneBlazorApp.Services.Abstractions
+@using CapstoneBlazorApp.Models
+@using CapstoneBlazorApp.Dtos
+@using CapstoneBlazorApp.Components.Pages.Manager
+@using Microsoft.AspNetCore.Components.Authorization
+
+@inject AbstractLoggerService Logger
+@inject NavigationManager Nav
+@inject NavigationTracker NavTracker
+@inject JobsiteApiService JobsiteApi
+@inject IJSRuntime JSRuntime
+
+<AuthorizeView>
+    <Authorized>
+        <MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="py-4">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div class="d-flex align-items-center">
+                    @if (!NavTracker.IsEmpty())
+                    {
+                        <MudIconButton Icon="@Icons.Material.Filled.ArrowBack" 
+                                     Color="Color.Primary" 
+                                     Class="me-2"
+                                     OnClick="GoBack"
+                                     Title="@NavTracker.ButtonLabel" />
+                    }
+                    <MudText Typo="Typo.h4">Jobsite Management</MudText>
+                </div>
+                <MudButton Variant="Variant.Filled" Color="Color.Primary"
+                          StartIcon="@Icons.Material.Filled.Add"
+                          OnClick="OpenCreateJobsiteDialog">
+                    Add New Jobsite
+                </MudButton>
+            </div>
+
+            <MudGrid Spacing="4">
+                <!-- Jobsites List -->
+                <MudItem xs="12" lg="6">
+                    <MudPaper Class="p-4">
+                        <MudText Typo="Typo.h5" GutterBottom="true">Current Jobsites</MudText>
+                        
+                        @if (isLoading)
+                        {
+                            <MudProgressCircular Indeterminate="true" />
+                        }
+                        else if (jobsites.Any())
+                        {
+                            <MudList T="string" Clickable="true">
+                                @foreach (var jobsite in jobsites)
+                                {
+                                    <MudListItem @onclick="@(() => SelectJobsite(jobsite))">
+                                        <div class="d-flex justify-content-between align-items-center w-100">
+                                            <div class="flex-grow-1">
+                                                <MudText Typo="Typo.subtitle1">@jobsite.Name</MudText>
+                                                <MudText Typo="Typo.body2" Color="Color.Secondary">
+                                                    Lat: @jobsite.Latitude.ToString("F4"), Lng: @jobsite.Longitude.ToString("F4")
+                                                </MudText>
+                                                <MudText Typo="Typo.body2" Color="Color.Secondary">
+                                                    Radius: @jobsite.RadiusMeters m
+                                                </MudText>
+                                            </div>
+                                            <div class="d-flex gap-2">
+                                                <MudIconButton Icon="@Icons.Material.Filled.Edit" 
+                                                             Size="Size.Small" 
+                                                             Color="Color.Primary"
+                                                             OnClick="@(() => EditJobsite(jobsite))" />
+                                                <MudIconButton Icon="@Icons.Material.Filled.Delete" 
+                                                             Size="Size.Small" 
+                                                             Color="Color.Error"
+                                                             OnClick="@(() => DeleteJobsite(jobsite))" />
+                                            </div>
+                                        </div>
+                                    </MudListItem>
+                                    @if (jobsite != jobsites.Last())
+                                    {
+                                        <MudDivider />
+                                    }
+                                }
+                            </MudList>
+                        }
+                        else
+                        {
+                            <MudText Color="Color.Secondary">No jobsites found. Click "Add New Jobsite" to create one.</MudText>
+                        }
+                    </MudPaper>
+                </MudItem>
+
+                <!-- Map Display -->
+                <MudItem xs="12" lg="6">
+                    <MudPaper Class="p-4">
+                        <MudText Typo="Typo.h5" GutterBottom="true">Interactive Map</MudText>
+                        <JobsiteMapManager @ref="mainMapRef" 
+                                         Jobsites="jobsites" 
+                                         OnJobsiteSelected="OnJobsiteSelectedFromMap" />
+                        @if (selectedJobsite != null)
+                        {
+                            <MudText Typo="Typo.subtitle2" Class="mt-3">
+                                Selected: @selectedJobsite.Name
+                            </MudText>
+                            <MudText Typo="Typo.body2" Color="Color.Secondary">
+                                Location: @selectedJobsite.Latitude.ToString("F6"), @selectedJobsite.Longitude.ToString("F6")
+                            </MudText>
+                        }
+                    </MudPaper>
+                </MudItem>
+            </MudGrid>
+        </MudContainer>
+
+        <!-- Create/Edit Jobsite Dialog -->
+        @if (showJobsiteDialog)
+        {
+            <MudOverlay @onclick="CancelJobsiteDialog" Visible="true" ZIndex="9998" />
+            <MudCard Style="position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 9999; width: 90%; max-width: 800px; max-height: 90vh; overflow-y: auto;">
+                <MudCardHeader>
+                    <CardHeaderContent>
+                        <MudText Typo="Typo.h6">
+                            @(editingJobsite != null ? "Edit Jobsite" : "Create New Jobsite")
+                        </MudText>
+                    </CardHeaderContent>
+                </MudCardHeader>
+                <MudCardContent>
+                    <MudTextField @bind-Value="jobsiteName" Label="Jobsite Name" 
+                                 Variant="Variant.Outlined" Class="mb-3" Required="true" />
+                    
+                    <MudGrid Spacing="2" Class="mb-3">
+                        <MudItem xs="6">
+                            <MudNumericField @bind-Value="jobsiteLatitude" Label="Latitude" 
+                                            Variant="Variant.Outlined" Format="F6" />
+                        </MudItem>
+                        <MudItem xs="6">
+                            <MudNumericField @bind-Value="jobsiteLongitude" Label="Longitude" 
+                                            Variant="Variant.Outlined" Format="F6" />
+                        </MudItem>
+                    </MudGrid>
+                    
+                    <MudNumericField @bind-Value="jobsiteRadius" Label="Radius (meters)" 
+                                    Variant="Variant.Outlined" Class="mb-3" />
+
+                    <!-- Map Selector -->
+                    <MudText Typo="Typo.subtitle2" GutterBottom="true" Class="mt-3">Select location on map (click on map):</MudText>
+                    <div style="height: 400px; width: 100%; margin-top: 8px;">
+                        <JobsiteMapManager @ref="dialogMapRef" 
+                                         Jobsites="@(new List<JobsiteDto>())" 
+                                         IsAddMode="true"
+                                         OnLocationSelected="OnLocationSelectedFromMap" />
+                    </div>
+
+                    @if (!string.IsNullOrEmpty(errorMessage))
+                    {
+                        <MudAlert Severity="Severity.Error" Class="mb-3">@errorMessage</MudAlert>
+                    }
+                </MudCardContent>
+                <MudCardActions>
+                    <MudButton OnClick="CancelJobsiteDialog">Cancel</MudButton>
+                    <MudButton Color="Color.Primary" Variant="Variant.Filled" 
+                              OnClick="SaveJobsite" Disabled="isSaving">
+                        @if (isSaving)
+                        {
+                            <MudProgressCircular Size="Size.Small" Indeterminate="true" Class="mr-2"/>
+                        }
+                        @(editingJobsite != null ? "Update" : "Create")
+                    </MudButton>
+                </MudCardActions>
+            </MudCard>
+        }
+    </Authorized>
+    <NotAuthorized>
+        <RedirectToLogin />
+    </NotAuthorized>
+</AuthorizeView>
+
+@code {
+    private List<JobsiteDto> jobsites = new();
+    private JobsiteDto? selectedJobsite;
+    private JobsiteDto? editingJobsite;
+    private bool isLoading = true;
+    private bool showJobsiteDialog = false;
+    private bool isSaving = false;
+    private string errorMessage = "";
+    
+    // Map references
+    private JobsiteMapManager? mainMapRef;
+    private JobsiteMapManager? dialogMapRef;
+
+    // Form fields
+    private string jobsiteName = "";
+    private double jobsiteLatitude = 40.7128;
+    private double jobsiteLongitude = -74.0060;
+    private double jobsiteRadius = 100;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadJobsites();
+    }
+    
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender && mainMapRef != null && jobsites.Any())
+        {
+            // Ensure the map is refreshed after initial render with jobsites
+            await Task.Delay(500); // Give the map time to fully initialize
+            Logger.Log(this, "Refreshing map after first render", "info");
+            await mainMapRef.RefreshMap();
+        }
+    }
+
+    private async Task LoadJobsites()
+    {
+        try
+        {
+            isLoading = true;
+            var result = await JobsiteApi.GetAllJobsitesAsync();
+            jobsites = result?.Select(j => j.ToJobsiteDto()).ToList() ?? new List<JobsiteDto>();
+            Logger.Log(this, $"Loaded {jobsites.Count} jobsites", "info");
+            
+            // Update the UI first
+            isLoading = false;
+            StateHasChanged();
+            
+            // Give the component time to update with new jobsites data
+            await Task.Delay(200);
+            
+            // Refresh the main map with new jobsites
+            if (mainMapRef != null)
+            {
+                Logger.Log(this, "Refreshing main map with jobsites", "info");
+                await mainMapRef.RefreshMap();
+            }
+        }
+        catch (Exception ex)
+        {
+            Logger.Log(this, $"Error loading jobsites: {ex.Message}", "error");
+            isLoading = false;
+            StateHasChanged();
+        }
+    }
+
+    private async Task SelectJobsite(JobsiteDto jobsite)
+    {
+        selectedJobsite = jobsite;
+        Logger.Log(this, $"Selected jobsite: {jobsite.Name}", "info");
+        
+        // Focus the map on the selected jobsite
+        if (mainMapRef != null)
+        {
+            await mainMapRef.FocusOnLocation(jobsite.JobsiteId);
+        }
+        
+        StateHasChanged();
+    }
+
+    private async Task OpenCreateJobsiteDialog()
+    {
+        editingJobsite = null;
+        jobsiteName = "";
+        jobsiteLatitude = 40.7128;
+        jobsiteLongitude = -74.0060;
+        jobsiteRadius = 100;
+        errorMessage = "";
+        showJobsiteDialog = true;
+        StateHasChanged();
+
+        // Give the dialog time to render before initializing the map
+        await Task.Delay(200);
+        StateHasChanged();
+    }
+
+    private async Task EditJobsite(JobsiteDto jobsite)
+    {
+        editingJobsite = jobsite;
+        jobsiteName = jobsite.Name;
+        jobsiteLatitude = jobsite.Latitude;
+        jobsiteLongitude = jobsite.Longitude;
+        jobsiteRadius = jobsite.RadiusMeters;
+        errorMessage = "";
+        showJobsiteDialog = true;
+        StateHasChanged();
+
+        // Give the dialog time to render before initializing the map
+        await Task.Delay(200);
+        StateHasChanged();
+    }
+
+    private void CancelJobsiteDialog()
+    {
+        showJobsiteDialog = false;
+        editingJobsite = null;
+        errorMessage = "";
+        
+        if (dialogMapRef != null)
+        {
+            dialogMapRef.ClearSelectedLocation();
+        }
+    }
+
+    private async Task SaveJobsite()
+    {
+        if (string.IsNullOrWhiteSpace(jobsiteName))
+        {
+            errorMessage = "Jobsite name is required";
+            return;
+        }
+
+        if (jobsiteRadius <= 0)
+        {
+            errorMessage = "Radius must be greater than 0";
+            return;
+        }
+
+        try
+        {
+            isSaving = true;
+            errorMessage = "";
+
+            var jobsiteData = new JobsiteDto
+            {
+                JobsiteId = editingJobsite?.JobsiteId ?? 0,
+                Name = jobsiteName,
+                Latitude = jobsiteLatitude,
+                Longitude = jobsiteLongitude,
+                RadiusMeters = jobsiteRadius
+            };
+
+            bool success;
+            if (editingJobsite != null)
+            {
+                success = await JobsiteApi.UpdateJobsiteAsync(jobsiteData);
+                Logger.Log(this, $"Updated jobsite: {jobsiteName}", "info");
+            }
+            else
+            {
+                success = await JobsiteApi.CreateJobsiteAsync(jobsiteData);
+                Logger.Log(this, $"Created jobsite: {jobsiteName}", "info");
+            }
+
+            if (success)
+            {
+                showJobsiteDialog = false;
+                await LoadJobsites(); // This will also refresh the main map
+            }
+            else
+            {
+                errorMessage = "Failed to save jobsite. Please try again.";
+            }
+        }
+        catch (Exception ex)
+        {
+            Logger.Log(this, $"Error saving jobsite: {ex.Message}", "error");
+            errorMessage = $"Error: {ex.Message}";
+        }
+        finally
+        {
+            isSaving = false;
+            StateHasChanged();
+        }
+    }
+
+    private async Task DeleteJobsite(JobsiteDto jobsite)
+    {
+        try
+        {
+            var success = await JobsiteApi.DeleteJobsiteAsync(jobsite.JobsiteId);
+            if (success)
+            {
+                Logger.Log(this, $"Deleted jobsite: {jobsite.Name}", "info");
+                await LoadJobsites(); // This will also refresh the main map
+                if (selectedJobsite?.JobsiteId == jobsite.JobsiteId)
+                {
+                    selectedJobsite = null;
+                }
+            }
+            else
+            {
+                Logger.Log(this, $"Failed to delete jobsite: {jobsite.Name}", "error");
+            }
+        }
+        catch (Exception ex)
+        {
+            Logger.Log(this, $"Error deleting jobsite: {ex.Message}", "error");
+        }
+    }
+
+    private void GoBack()
+    {
+        if (!NavTracker.IsEmpty())
+        {
+            var previousUri = NavTracker.Pop();
+            Nav.NavigateTo(previousUri);
+        }
+    }
+
+    private async Task OnJobsiteSelectedFromMap(JobsiteDto jobsite)
+    {
+        await SelectJobsite(jobsite);
+    }
+
+    private void OnLocationSelectedFromMap((double Lat, double Lng) location)
+    {
+        jobsiteLatitude = location.Lat;
+        jobsiteLongitude = location.Lng;
+        Logger.Log(this, $"Location selected from map: {location.Lat:F6}, {location.Lng:F6}", "info");
+        StateHasChanged();
+    }
+}

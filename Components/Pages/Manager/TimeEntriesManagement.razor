@@ -1,0 +1,362 @@
+@using CapstoneBlazorApp.Services
+@using CapstoneBlazorApp.Services.Abstractions
+@using MudBlazor
+@using CapstoneBlazorApp.Models
+@using CapstoneBlazorApp.Dtos
+@using Microsoft.AspNetCore.Components.Authorization
+@inject AbstractLoggerService Logger
+@inject NavigationManager Nav
+@inject NavigationTracker NavTracker
+@inject TimeEntryApiService TimeEntryApi
+@inject JobsiteApiService JobsiteApi
+
+@namespace CapstoneBlazorApp.Components.Pages
+
+@page "/manager/time-entries"
+@rendermode InteractiveServer
+
+<AuthorizeView>
+    <Authorized>
+        <MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="py-4">
+            <div class="d-flex align-items-center mb-4">
+                <MudText Typo="Typo.h4">Time Entries Management</MudText>
+            </div>
+
+            <MudGrid Spacing="4">
+                <!-- Filters -->
+                <MudItem xs="12">
+                    <MudPaper Class="p-4">
+                        <MudText Typo="Typo.h6" GutterBottom="true">Filters</MudText>
+                        <MudGrid Spacing="3">
+                            <MudItem xs="12" md="3">
+                                <MudDatePicker @bind-Date="filterStartDate" Label="Start Date" />
+                            </MudItem>
+                            <MudItem xs="12" md="3">
+                                <MudDatePicker @bind-Date="filterEndDate" Label="End Date" />
+                            </MudItem>
+                            <MudItem xs="12" md="3">
+                                <MudSwitch T="bool" @bind-Checked="showActiveOnly" Label="Active Only" Color="Color.Primary" />
+                            </MudItem>
+                            <MudItem xs="12" md="3">
+                                <MudButton Variant="Variant.Filled" Color="Color.Primary" 
+                                          OnClick="ApplyFilters" FullWidth="true">
+                                    Apply Filters
+                                </MudButton>
+                            </MudItem>
+                        </MudGrid>
+                    </MudPaper>
+                </MudItem>
+
+                <!-- Statistics Cards -->
+                <MudItem xs="12" md="4">
+                    <MudCard>
+                        <MudCardContent>
+                            <div class="d-flex align-items-center">
+                                <MudIcon Icon="@Icons.Material.Filled.AccessTime" Size="Size.Large" Color="Color.Success" Class="mr-3" />
+                                <div>
+                                    <MudText Typo="Typo.h5">@activeEntries</MudText>
+                                    <MudText Typo="Typo.body2" Color="Color.Secondary">Currently Active</MudText>
+                                </div>
+                            </div>
+                        </MudCardContent>
+                    </MudCard>
+                </MudItem>
+
+                <MudItem xs="12" md="4">
+                    <MudCard>
+                        <MudCardContent>
+                            <div class="d-flex align-items-center">
+                                <MudIcon Icon="@Icons.Material.Filled.Schedule" Size="Size.Large" Color="Color.Info" Class="mr-3" />
+                                <div>
+                                    <MudText Typo="Typo.h5">@totalEntries</MudText>
+                                    <MudText Typo="Typo.body2" Color="Color.Secondary">Total Entries</MudText>
+                                </div>
+                            </div>
+                        </MudCardContent>
+                    </MudCard>
+                </MudItem>
+
+                <MudItem xs="12" md="4">
+                    <MudCard>
+                        <MudCardContent>
+                            <div class="d-flex align-items-center">
+                                <MudIcon Icon="@Icons.Material.Filled.Timer" Size="Size.Large" Color="Color.Warning" Class="mr-3" />
+                                <div>
+                                    <MudText Typo="Typo.h5">@totalHours.ToString("F1")h</MudText>
+                                    <MudText Typo="Typo.body2" Color="Color.Secondary">Total Hours</MudText>
+                                </div>
+                            </div>
+                        </MudCardContent>
+                    </MudCard>
+                </MudItem>
+
+                <!-- Time Entries Table -->
+                <MudItem xs="12">
+                    <MudPaper Class="p-4">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <MudText Typo="Typo.h5">Time Entries</MudText>
+                            <MudButton Variant="Variant.Outlined" Color="Color.Primary" 
+                                      StartIcon="@Icons.Material.Filled.Refresh"
+                                      OnClick="LoadTimeEntries">
+                                Refresh
+                            </MudButton>
+                        </div>
+
+                        @if (isLoading)
+                        {
+                            <MudProgressCircular Indeterminate="true" />
+                        }
+                        else
+                        {
+                            <MudTable Items="@filteredTimeEntries" Hover="true" Dense="true" Striped="true">
+                                <HeaderContent>
+                                    <MudTh>Entry ID</MudTh>
+                                    <MudTh>User ID</MudTh>
+                                    <MudTh>Assignment ID</MudTh>
+                                    <MudTh>Start Time</MudTh>
+                                    <MudTh>End Time</MudTh>
+                                    <MudTh>Duration</MudTh>
+                                    <MudTh>Status</MudTh>
+                                    <MudTh>Actions</MudTh>
+                                </HeaderContent>
+                                <RowTemplate Context="entry">
+                                    <MudTd DataLabel="Entry ID">@entry.TimeEntryId</MudTd>
+                                    <MudTd DataLabel="User ID">@entry.UserId</MudTd>
+                                    <MudTd DataLabel="Assignment ID">@(entry.AssignmentId?.ToString() ?? "N/A")</MudTd>
+                                    <MudTd DataLabel="Start Time">@entry.StartTime.ToString("MMM dd, yyyy HH:mm")</MudTd>
+                                    <MudTd DataLabel="End Time">
+                                        @if (entry.EndTime.HasValue)
+                                        {
+                                            @entry.EndTime.Value.ToString("MMM dd, yyyy HH:mm")
+                                        }
+                                        else
+                                        {
+                                            <MudText Color="Color.Secondary">-</MudText>
+                                        }
+                                    </MudTd>
+                                    <MudTd DataLabel="Duration">
+                                        @if (entry.Duration.HasValue)
+                                        {
+                                            @($"{entry.Duration.Value.TotalHours:F1}h")
+                                        }
+                                        else
+                                        {
+                                            @($"{(DateTimeOffset.UtcNow - entry.StartTime).TotalHours:F1}h (active)")
+                                        }
+                                    </MudTd>
+                                    <MudTd DataLabel="Status">
+                                        @if (entry.IsActive)
+                                        {
+                                            <MudChip T="string" Color="Color.Success" Size="Size.Small">Active</MudChip>
+                                        }
+                                        else
+                                        {
+                                            <MudChip T="string" Color="Color.Default" Size="Size.Small">Completed</MudChip>
+                                        }
+                                    </MudTd>
+                                    <MudTd DataLabel="Actions">
+                                        @if (entry.IsActive)
+                                        {
+                                            <MudIconButton Icon="@Icons.Material.Filled.Stop" 
+                                                         Color="Color.Error" Size="Size.Small"
+                                                         OnClick="@(() => ForceClockOut(entry))"
+                                                         Title="Force Clock Out" />
+                                        }
+                                        <MudIconButton Icon="@Icons.Material.Filled.Visibility" 
+                                                     Color="Color.Primary" Size="Size.Small"
+                                                     OnClick="@(() => ViewDetails(entry))"
+                                                     Title="View Details" />
+                                    </MudTd>
+                                </RowTemplate>
+                                <PagerContent>
+                                    <MudTablePager PageSizeOptions="new int[]{10, 25, 50, 100}" />
+                                </PagerContent>
+                            </MudTable>
+                        }
+                    </MudPaper>
+                </MudItem>
+            </MudGrid>
+        </MudContainer>
+
+        <!-- Time Entry Details Dialog -->
+        <MudDialog @bind-IsVisible="showDetailsDialog" Options="dialogOptions">
+            <DialogContent>
+                @if (selectedEntry != null)
+                {
+                    <MudText Typo="Typo.h6" GutterBottom="true">Time Entry Details</MudText>
+                    
+                    <MudGrid Spacing="2">
+                        <MudItem xs="6">
+                            <MudTextField Label="Entry ID" Value="@selectedEntry.TimeEntryId.ToString()" ReadOnly="true" />
+                        </MudItem>
+                        <MudItem xs="6">
+                            <MudTextField Label="User ID" Value="@selectedEntry.UserId.ToString()" ReadOnly="true" />
+                        </MudItem>
+                        <MudItem xs="6">
+                            <MudTextField Label="Assignment ID" Value="@(selectedEntry.AssignmentId?.ToString() ?? "N/A")" ReadOnly="true" />
+                        </MudItem>
+                        <MudItem xs="6">
+                            <MudTextField Label="Status" Value="@(selectedEntry.IsActive ? "Active" : "Completed")" ReadOnly="true" />
+                        </MudItem>
+                        <MudItem xs="12">
+                            <MudTextField Label="Start Time" Value="@selectedEntry.StartTime.ToString("yyyy-MM-dd HH:mm:ss")" ReadOnly="true" />
+                        </MudItem>
+                        <MudItem xs="12">
+                            <MudTextField Label="End Time" 
+                                        Value="@(selectedEntry.EndTime?.ToString("yyyy-MM-dd HH:mm:ss") ?? "Not set")" 
+                                        ReadOnly="true" />
+                        </MudItem>
+                        <MudItem xs="12">
+                            <MudTextField Label="Duration" 
+                                        Value="@(selectedEntry.Duration?.ToString(@"hh\:mm\:ss") ?? "Ongoing")" 
+                                        ReadOnly="true" />
+                        </MudItem>
+                    </MudGrid>
+                }
+            </DialogContent>
+            <DialogActions>
+                <MudButton OnClick="CloseDetailsDialog">Close</MudButton>
+                @if (selectedEntry != null && selectedEntry.IsActive)
+                {
+                    <MudButton Color="Color.Error" OnClick="@(() => ForceClockOut(selectedEntry))">
+                        Force Clock Out
+                    </MudButton>
+                }
+            </DialogActions>
+        </MudDialog>
+    </Authorized>
+    <NotAuthorized>
+        <RedirectToLogin />
+    </NotAuthorized>
+</AuthorizeView>
+
+@code {
+    private List<TimeEntryDto> timeEntries = new();
+    private List<TimeEntryDto> filteredTimeEntries = new();
+    private TimeEntryDto? selectedEntry;
+    private bool isLoading = true;
+    private bool showDetailsDialog = false;
+
+    // Statistics
+    private int activeEntries = 0;
+    private int totalEntries = 0;
+    private double totalHours = 0;
+
+    // Filters
+    private DateTime? filterStartDate;
+    private DateTime? filterEndDate;
+    private bool showActiveOnly = false;
+
+    private DialogOptions dialogOptions = new() { MaxWidth = MaxWidth.Medium, FullWidth = true };
+
+    protected override async Task OnInitializedAsync()
+    {
+        // Set default filter dates (last 30 days)
+        filterEndDate = DateTime.Today;
+        filterStartDate = DateTime.Today.AddDays(-30);
+        
+        await LoadTimeEntries();
+    }
+
+    private async Task LoadTimeEntries()
+    {
+        try
+        {
+            isLoading = true;
+            
+            // Note: This uses the user-specific endpoint since we don't have a manager endpoint yet
+            // In a real implementation, you'd have an endpoint like /api/time-entries/all
+            timeEntries = await TimeEntryApi.GetMyTimeEntriesAsync();
+            
+            ApplyFilters();
+            CalculateStatistics();
+            
+            Logger.Log(this, $"Loaded {timeEntries.Count} time entries", "info");
+        }
+        catch (Exception ex)
+        {
+            Logger.Log(this, $"Error loading time entries: {ex.Message}", "error");
+        }
+        finally
+        {
+            isLoading = false;
+            StateHasChanged();
+        }
+    }
+
+    private void ApplyFilters()
+    {
+        filteredTimeEntries = timeEntries.Where(entry =>
+        {
+            // Date range filter
+            if (filterStartDate.HasValue && entry.StartTime.Date < filterStartDate.Value.Date)
+                return false;
+            
+            if (filterEndDate.HasValue && entry.StartTime.Date > filterEndDate.Value.Date)
+                return false;
+
+            // Active only filter
+            if (showActiveOnly && !entry.IsActive)
+                return false;
+
+            return true;
+        }).OrderByDescending(e => e.StartTime).ToList();
+
+        StateHasChanged();
+    }
+
+    private void CalculateStatistics()
+    {
+        activeEntries = timeEntries.Count(e => e.IsActive);
+        totalEntries = timeEntries.Count;
+        totalHours = timeEntries.Where(e => e.Duration.HasValue)
+                               .Sum(e => e.Duration.Value.TotalHours);
+    }
+
+    private void ViewDetails(TimeEntryDto entry)
+    {
+        selectedEntry = entry;
+        showDetailsDialog = true;
+    }
+
+    private void CloseDetailsDialog()
+    {
+        showDetailsDialog = false;
+        selectedEntry = null;
+    }
+
+    private async Task ForceClockOut(TimeEntryDto entry)
+    {
+        try
+        {
+            var success = await TimeEntryApi.ClockOutAsync(entry.TimeEntryId);
+            if (success)
+            {
+                Logger.Log(this, $"Forced clock out for entry {entry.TimeEntryId}", "info");
+                await LoadTimeEntries(); // Refresh data
+                
+                if (showDetailsDialog && selectedEntry?.TimeEntryId == entry.TimeEntryId)
+                {
+                    CloseDetailsDialog(); // Close dialog if it was showing this entry
+                }
+            }
+            else
+            {
+                Logger.Log(this, $"Failed to force clock out for entry {entry.TimeEntryId}", "error");
+            }
+        }
+        catch (Exception ex)
+        {
+            Logger.Log(this, $"Error forcing clock out: {ex.Message}", "error");
+        }
+    }
+
+    private void GoBack()
+    {
+        if (!NavTracker.IsEmpty())
+        {
+            var previousUri = NavTracker.Pop();
+            Nav.NavigateTo(previousUri);
+        }
+    }
+}

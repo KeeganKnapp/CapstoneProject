@@ -1,0 +1,85 @@
+@page "/test-map"
+@using CapstoneBlazorApp.Services
+@using CapstoneBlazorApp.Services.Abstractions
+@using CapstoneBlazorApp.Models
+@using CapstoneBlazorApp.Dtos
+@using Microsoft.AspNetCore.Components.Authorization
+@using CapstoneBlazorApp.Components.Pages.Manager
+@inject AbstractLoggerService Logger
+@inject NavigationManager Nav
+@inject JobsiteApiService JobsiteApi
+@inject IJSRuntime JSRuntime
+@rendermode InteractiveServer
+
+<MudContainer>
+    <MudText Typo="Typo.h4">Map Test</MudText>
+    <MudButton OnClick="@(() => { showDialog = true; StateHasChanged(); })">Open Dialog</MudButton>
+    
+    @if (showDialog)
+    {
+        <div style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); z-index: 1000;">
+            <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: white; padding: 20px; border-radius: 8px; width: 80%; max-width: 600px;">
+                <h3>Test Dialog</h3>
+                <input @bind="siteName" placeholder="Site Name" />
+                <br/><br/>
+                <input @bind="lat" placeholder="Latitude" />
+                <input @bind="lng" placeholder="Longitude" />
+                <br/><br/>
+                <div style="height: 300px; border: 1px solid #ddd;">
+                    <JobsiteMapManager @ref="mapRef" 
+                                     Jobsites="@(new List<JobsiteDto>())" 
+                                     IsAddMode="true"
+                                     OnLocationSelected="OnLocationSelected" />
+                </div>
+                <br/>
+                <button @onclick="@(() => { showDialog = false; })">Cancel</button>
+                <button @onclick="CreateJobsite">Create</button>
+            </div>
+        </div>
+    }
+</MudContainer>
+
+@code {
+    private bool showDialog = false;
+    private string siteName = "";
+    private double lat = 40.7128;
+    private double lng = -74.0060;
+    private JobsiteMapManager? mapRef;
+    
+    private void OnLocationSelected((double Lat, double Lng) location)
+    {
+        lat = location.Lat;
+        lng = location.Lng;
+        Logger.Log(this, $"Location selected: {lat:F6}, {lng:F6}", "info");
+        StateHasChanged();
+    }
+    
+    private async Task CreateJobsite()
+    {
+        if (string.IsNullOrWhiteSpace(siteName))
+        {
+            Logger.Log(this, "Site name required", "error");
+            return;
+        }
+        
+        var jobsite = new JobsiteDto
+        {
+            Name = siteName,
+            Latitude = lat,
+            Longitude = lng,
+            RadiusMeters = 100
+        };
+        
+        var success = await JobsiteApi.CreateJobsiteAsync(jobsite);
+        if (success)
+        {
+            Logger.Log(this, $"Created jobsite: {siteName}", "info");
+            showDialog = false;
+            StateHasChanged();
+        }
+        else
+        {
+            Logger.Log(this, "Failed to create jobsite", "error");
+        }
+    }
+}

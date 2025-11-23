@@ -20,16 +20,23 @@
 
 <MudLayout>    @if (!_isDebug) {
         <MudAppBar Color="Color.Primary" Elevation="0">
-            <MudIconButton Color="Color.Inherit" OnClick="GoBack" Icon="@Icons.Material.Filled.ArrowBack"/>
+            @if(NavigationTracker.Count > 0) {
+                <MudIconButton Icon="@Icons.Material.Filled.ArrowBack" 
+                             Color="Color.Secondary" 
+                             Class="me-2"
+                             OnClick="GoBack"
+                             Title="Go Back" />
+            }
             <MudText Typo="Typo.h6" Class="ml-3">Capstone App</MudText>
             <MudSpacer />
             
             <AuthorizeView>
                 <Authorized>
-                    <MudText Typo="Typo.body2" Class="mr-3">Welcome, @context.User.Identity?.Name</MudText>
-                    <MudIconButton Color="Color.Inherit" Icon="@Icons.Material.Filled.Dashboard" 
+                    <MudText Typo="Typo.body2" Class="mr-3">Welcome, @context.User.Identity?.Name</MudText>                    <MudIconButton Color="Color.Inherit" Icon="@Icons.Material.Filled.Dashboard" 
                                    OnClick="@(() => Nav.NavigateTo("/employee-dashboard"))" 
-                                   Title="Dashboard" />
+                                   Title="Employee Dashboard" />                    <MudIconButton Color="Color.Inherit" Icon="@Icons.Material.Filled.AdminPanelSettings" 
+                                   OnClick="@(() => NavigateToManager())" 
+                                   Title="Manager Dashboard" />
                     <MudIconButton Color="Color.Inherit" Icon="@Icons.Material.Filled.Logout" 
                                    OnClick="HandleLogout" 
                                    Title="Logout" />
@@ -116,8 +123,7 @@
         _isDarkMode = !_isDarkMode;
         StateHasChanged();
     }
-    
-    private async Task HandleLogout()
+      private async Task HandleLogout()
     {
         try
         {
@@ -129,5 +135,13 @@
         {
             LoggerService.Log(this, "Logout failed: " + ex.Message, "error");
         }
+    }
+
+    private void NavigateToManager()
+    {
+        // Push current location to navigation tracker so user can go back
+        NavigationTracker.Push(Nav.Uri);
+        NavigationTracker.ButtonLabel = "Back to Dashboard";
+        Nav.NavigateTo("/manager-dashboard");
     }
 }

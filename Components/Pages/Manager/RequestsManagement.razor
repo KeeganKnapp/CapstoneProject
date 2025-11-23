@@ -1,0 +1,427 @@
+@using CapstoneBlazorApp.Services
+@using CapstoneBlazorApp.Services.Abstractions
+@using MudBlazor
+@using CapstoneBlazorApp.Models
+@using CapstoneBlazorApp.Dtos
+@using Microsoft.AspNetCore.Components.Authorization
+@inject AbstractLoggerService Logger
+@inject NavigationManager Nav
+@inject NavigationTracker NavTracker
+@inject RequestOffApiService RequestApi
+
+@namespace CapstoneBlazorApp.Components.Pages
+
+@page "/manager/requests"
+@rendermode InteractiveServer
+
+<AuthorizeView>
+    <Authorized>
+        <MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="py-4">
+            <div class="d-flex align-items-center mb-4">
+
+                <MudText Typo="Typo.h4">Time-Off Requests Management</MudText>
+            </div>
+
+            <MudGrid Spacing="4">
+                <!-- Summary Cards -->
+                <MudItem xs="12" md="4">
+                    <MudCard>
+                        <MudCardContent>
+                            <div class="d-flex align-items-center">
+                                <MudIcon Icon="@Icons.Material.Filled.HourglassEmpty" Size="Size.Large" Color="Color.Warning" Class="mr-3" />
+                                <div>
+                                    <MudText Typo="Typo.h5">@pendingCount</MudText>
+                                    <MudText Typo="Typo.body2" Color="Color.Secondary">Pending Requests</MudText>
+                                </div>
+                            </div>
+                        </MudCardContent>
+                    </MudCard>
+                </MudItem>
+
+                <MudItem xs="12" md="4">
+                    <MudCard>
+                        <MudCardContent>
+                            <div class="d-flex align-items-center">
+                                <MudIcon Icon="@Icons.Material.Filled.CheckCircle" Size="Size.Large" Color="Color.Success" Class="mr-3" />
+                                <div>
+                                    <MudText Typo="Typo.h5">@approvedCount</MudText>
+                                    <MudText Typo="Typo.body2" Color="Color.Secondary">Approved This Month</MudText>
+                                </div>
+                            </div>
+                        </MudCardContent>
+                    </MudCard>
+                </MudItem>
+
+                <MudItem xs="12" md="4">
+                    <MudCard>
+                        <MudCardContent>
+                            <div class="d-flex align-items-center">
+                                <MudIcon Icon="@Icons.Material.Filled.RequestPage" Size="Size.Large" Color="Color.Info" Class="mr-3" />
+                                <div>
+                                    <MudText Typo="Typo.h5">@totalRequests</MudText>
+                                    <MudText Typo="Typo.body2" Color="Color.Secondary">Total Requests</MudText>
+                                </div>
+                            </div>
+                        </MudCardContent>
+                    </MudCard>
+                </MudItem>
+
+                <!-- Filters -->
+                <MudItem xs="12">
+                    <MudPaper Class="p-4">
+                        <MudText Typo="Typo.h6" GutterBottom="true">Filters</MudText>
+                        <MudGrid Spacing="3">
+                            <MudItem xs="12" md="3">
+                                <MudSelect T="string" @bind-Value="statusFilter" Label="Status" Variant="Variant.Outlined">
+                                    <MudSelectItem Value="@("All")">All Statuses</MudSelectItem>
+                                    <MudSelectItem Value="@("Pending")">Pending</MudSelectItem>
+                                    <MudSelectItem Value="@("Approved")">Approved</MudSelectItem>
+                                    <MudSelectItem Value="@("Denied")">Denied</MudSelectItem>
+                                </MudSelect>
+                            </MudItem>
+                            <MudItem xs="12" md="3">
+                                <MudDatePicker @bind-Date="filterStartDate" Label="From Date" />
+                            </MudItem>
+                            <MudItem xs="12" md="3">
+                                <MudDatePicker @bind-Date="filterEndDate" Label="To Date" />
+                            </MudItem>
+                            <MudItem xs="12" md="3">
+                                <MudButton Variant="Variant.Filled" Color="Color.Primary" 
+                                          OnClick="ApplyFilters" FullWidth="true">
+                                    Apply Filters
+                                </MudButton>
+                            </MudItem>
+                        </MudGrid>
+                    </MudPaper>
+                </MudItem>
+
+                <!-- Requests Table -->
+                <MudItem xs="12">
+                    <MudPaper Class="p-4">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <MudText Typo="Typo.h5">Time-Off Requests</MudText>
+                            <MudButton Variant="Variant.Outlined" Color="Color.Primary" 
+                                      StartIcon="@Icons.Material.Filled.Refresh"
+                                      OnClick="LoadRequests">
+                                Refresh
+                            </MudButton>
+                        </div>
+
+                        @if (isLoading)
+                        {
+                            <MudProgressCircular Indeterminate="true" />
+                        }
+                        else
+                        {
+                            <MudTable Items="@filteredRequests" Hover="true" Dense="true" Striped="true">
+                                <HeaderContent>
+                                    <MudTh>Request ID</MudTh>
+                                    <MudTh>User ID</MudTh>
+                                    <MudTh>Start Date</MudTh>
+                                    <MudTh>End Date</MudTh>
+                                    <MudTh>Days</MudTh>
+                                    <MudTh>Note</MudTh>
+                                    <MudTh>Status</MudTh>
+                                    <MudTh>Actions</MudTh>
+                                </HeaderContent>
+                                <RowTemplate Context="request">
+                                    <MudTd DataLabel="Request ID">@request.RequestOffId</MudTd>
+                                    <MudTd DataLabel="User ID">@request.UserId</MudTd>
+                                    <MudTd DataLabel="Start Date">@request.StartDate.ToString("MMM dd, yyyy")</MudTd>
+                                    <MudTd DataLabel="End Date">@request.EndDate.ToString("MMM dd, yyyy")</MudTd>
+                                    <MudTd DataLabel="Days">@(request.EndDate.DayNumber - request.StartDate.DayNumber + 1)</MudTd>
+                                    <MudTd DataLabel="Note">
+                                        @if (string.IsNullOrEmpty(request.Note))
+                                        {
+                                            <MudText Color="Color.Secondary">No note</MudText>
+                                        }
+                                        else
+                                        {
+                                            @request.Note.Substring(0, Math.Min(request.Note.Length, 50))
+                                            @if (request.Note.Length > 50)
+                                            {
+                                                <text>...</text>
+                                            }
+                                        }
+                                    </MudTd>
+                                    <MudTd DataLabel="Status">
+                                        <MudChip T="string" Color="@GetStatusColor(request)" Size="Size.Small">
+                                            @GetStatusText(request)
+                                        </MudChip>
+                                    </MudTd>
+                                    <MudTd DataLabel="Actions">
+                                        <MudIconButton Icon="@Icons.Material.Filled.Visibility" 
+                                                     Color="Color.Primary" Size="Size.Small"
+                                                     OnClick="@(() => ViewRequestDetails(request))"
+                                                     Title="View Details" />
+                                        @if (GetStatusText(request) == "Pending")
+                                        {
+                                            <MudIconButton Icon="@Icons.Material.Filled.Check" 
+                                                         Color="Color.Success" Size="Size.Small"
+                                                         OnClick="@(() => ApproveRequest(request))"
+                                                         Title="Approve" />
+                                            <MudIconButton Icon="@Icons.Material.Filled.Close" 
+                                                         Color="Color.Error" Size="Size.Small"
+                                                         OnClick="@(() => DenyRequest(request))"
+                                                         Title="Deny" />
+                                        }
+                                    </MudTd>
+                                </RowTemplate>
+                                <PagerContent>
+                                    <MudTablePager PageSizeOptions="new int[]{10, 25, 50}" />
+                                </PagerContent>
+                            </MudTable>
+                        }
+                    </MudPaper>
+                </MudItem>
+            </MudGrid>
+        </MudContainer>
+
+        <!-- Request Details Dialog -->
+        <MudDialog @bind-IsVisible="showDetailsDialog" Options="dialogOptions">
+            <DialogContent>
+                @if (selectedRequest != null)
+                {
+                    <MudText Typo="Typo.h6" GutterBottom="true">Request Details</MudText>
+                    
+                    <MudGrid Spacing="3">
+                        <MudItem xs="6">
+                            <MudTextField Label="Request ID" Value="@selectedRequest.RequestOffId.ToString()" ReadOnly="true" />
+                        </MudItem>
+                        <MudItem xs="6">
+                            <MudTextField Label="User ID" Value="@selectedRequest.UserId.ToString()" ReadOnly="true" />
+                        </MudItem>
+                        <MudItem xs="6">
+                            <MudTextField Label="Start Date" Value="@selectedRequest.StartDate.ToString("yyyy-MM-dd")" ReadOnly="true" />
+                        </MudItem>
+                        <MudItem xs="6">
+                            <MudTextField Label="End Date" Value="@selectedRequest.EndDate.ToString("yyyy-MM-dd")" ReadOnly="true" />
+                        </MudItem>
+                        <MudItem xs="6">
+                            <MudTextField Label="Total Days" Value="@GetTotalDays(selectedRequest)" ReadOnly="true" />
+                        </MudItem>
+                        <MudItem xs="6">
+                            <MudTextField Label="Status" Value="@GetStatusText(selectedRequest)" ReadOnly="true" />
+                        </MudItem>
+                        <MudItem xs="12">
+                            <MudTextField Label="Note" Value="@(selectedRequest.Note ?? "No note provided")" 
+                                        Lines="3" ReadOnly="true" />
+                        </MudItem>
+                        @if (selectedRequest.CreatedAt.HasValue)
+                        {
+                            <MudItem xs="12">
+                                <MudTextField Label="Submitted On" 
+                                            Value="@selectedRequest.CreatedAt.Value.ToString("yyyy-MM-dd HH:mm:ss")" 
+                                            ReadOnly="true" />
+                            </MudItem>
+                        }
+                    </MudGrid>
+
+                    @if (GetStatusText(selectedRequest) == "Pending")
+                    {
+                        <MudDivider Class="my-4" />
+                        <MudText Typo="Typo.subtitle1" GutterBottom="true">Manager Actions</MudText>
+                        <div class="d-flex gap-3">
+                            <MudButton Variant="Variant.Filled" Color="Color.Success" 
+                                      StartIcon="@Icons.Material.Filled.Check"
+                                      OnClick="@(() => ApproveRequest(selectedRequest))">
+                                Approve Request
+                            </MudButton>
+                            <MudButton Variant="Variant.Filled" Color="Color.Error" 
+                                      StartIcon="@Icons.Material.Filled.Close"
+                                      OnClick="@(() => DenyRequest(selectedRequest))">
+                                Deny Request
+                            </MudButton>
+                        </div>
+                    }
+                }
+            </DialogContent>
+            <DialogActions>
+                <MudButton OnClick="CloseDetailsDialog">Close</MudButton>
+            </DialogActions>
+        </MudDialog>
+    </Authorized>
+    <NotAuthorized>
+        <RedirectToLogin />
+    </NotAuthorized>
+</AuthorizeView>
+
+@code {
+    private List<RequestOffDto> requests = new();
+    private List<RequestOffDto> filteredRequests = new();
+    private RequestOffDto? selectedRequest;
+    private bool isLoading = true;
+    private bool showDetailsDialog = false;
+
+    // Statistics
+    private int pendingCount = 0;
+    private int approvedCount = 0;
+    private int totalRequests = 0;
+
+    // Filters
+    private string statusFilter = "All";
+    private DateTime? filterStartDate;
+    private DateTime? filterEndDate;
+
+    private DialogOptions dialogOptions = new() { MaxWidth = MaxWidth.Medium, FullWidth = true };
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadRequests();
+    }
+
+    private async Task LoadRequests()
+    {
+        try
+        {
+            isLoading = true;
+            
+            // Note: This uses the user-specific endpoint since we don't have a manager endpoint yet
+            // In a real implementation, you'd have an endpoint like /api/requestoff/all
+            requests = await RequestApi.GetMyRequestsAsync();
+            
+            ApplyFilters();
+            CalculateStatistics();
+            
+            Logger.Log(this, $"Loaded {requests.Count} requests", "info");
+        }
+        catch (Exception ex)
+        {
+            Logger.Log(this, $"Error loading requests: {ex.Message}", "error");
+        }
+        finally
+        {
+            isLoading = false;
+            StateHasChanged();
+        }
+    }
+
+    private void ApplyFilters()
+    {
+        filteredRequests = requests.Where(request =>
+        {
+            // Status filter
+            if (statusFilter != "All" && GetStatusText(request) != statusFilter)
+                return false;
+
+            // Date range filter
+            if (filterStartDate.HasValue && request.StartDate.ToDateTime(TimeOnly.MinValue) < filterStartDate.Value.Date)
+                return false;
+            
+            if (filterEndDate.HasValue && request.EndDate.ToDateTime(TimeOnly.MinValue) > filterEndDate.Value.Date)
+                return false;
+
+            return true;
+        }).OrderByDescending(r => r.CreatedAt ?? DateTimeOffset.MinValue).ToList();
+
+        StateHasChanged();
+    }
+
+    private void CalculateStatistics()
+    {
+        totalRequests = requests.Count;
+        pendingCount = requests.Count(r => GetStatusText(r) == "Pending");
+        
+        // Approved this month
+        var thisMonth = DateTime.Now.Date.AddDays(-DateTime.Now.Day + 1);
+        approvedCount = requests.Count(r => GetStatusText(r) == "Approved" && 
+                                           r.CreatedAt.HasValue && 
+                                           r.CreatedAt.Value.Date >= thisMonth);
+    }
+
+    private string GetStatusText(RequestOffDto request)
+    {
+        // For now, all requests are pending since we don't have status field in DTO
+        // In a real implementation, you'd have a Status field
+        return "Pending";
+    }
+
+    private Color GetStatusColor(RequestOffDto request)
+    {
+        return GetStatusText(request) switch
+        {
+            "Pending" => Color.Warning,
+            "Approved" => Color.Success,
+            "Denied" => Color.Error,
+            _ => Color.Default
+        };
+    }
+
+    private void ViewRequestDetails(RequestOffDto request)
+    {
+        selectedRequest = request;
+        showDetailsDialog = true;
+    }
+
+    private void CloseDetailsDialog()
+    {
+        showDetailsDialog = false;
+        selectedRequest = null;
+    }
+
+    private async Task ApproveRequest(RequestOffDto request)
+    {
+        try
+        {
+            // TODO: Implement approval API call
+            // For now, just log the action
+            Logger.Log(this, $"Approved request {request.RequestOffId} for user {request.UserId}", "info");
+            
+            // In a real implementation, you'd call something like:
+            // await RequestApi.ApproveRequestAsync(request.RequestOffId);
+            
+            if (showDetailsDialog && selectedRequest?.RequestOffId == request.RequestOffId)
+            {
+                CloseDetailsDialog();
+            }
+            
+            await LoadRequests(); // Refresh data
+        }
+        catch (Exception ex)
+        {
+            Logger.Log(this, $"Error approving request: {ex.Message}", "error");
+        }
+    }
+
+    private async Task DenyRequest(RequestOffDto request)
+    {
+        try
+        {
+            // TODO: Implement denial API call
+            // For now, just log the action
+            Logger.Log(this, $"Denied request {request.RequestOffId} for user {request.UserId}", "info");
+            
+            // In a real implementation, you'd call something like:
+            // await RequestApi.DenyRequestAsync(request.RequestOffId);
+            
+            if (showDetailsDialog && selectedRequest?.RequestOffId == request.RequestOffId)
+            {
+                CloseDetailsDialog();
+            }
+            
+            await LoadRequests(); // Refresh data
+        }
+        catch (Exception ex)
+        {
+            Logger.Log(this, $"Error denying request: {ex.Message}", "error");
+        }
+    }
+
+    private string GetTotalDays(RequestOffDto request)
+    {
+        if (request != null)
+        {
+            return (request.EndDate.DayNumber - request.StartDate.DayNumber + 1).ToString();
+        }
+        return "0";
+    }
+
+    private void GoBack()
+    {
+        if (!NavTracker.IsEmpty())
+        {
+            var previousUri = NavTracker.Pop();
+            Nav.NavigateTo(previousUri);
+        }
+    }
+}

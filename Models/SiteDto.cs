@@ -1,6 +1,13 @@
+using System.Text.Json.Serialization;
+
 namespace CapstoneBlazorApp.Models
 {
-    public record SiteDto(int Id, string Name, double Lat, double Lng, double RadiusMeters);
+    public record SiteDto(
+        [property: JsonPropertyName("id")] int Id, 
+        [property: JsonPropertyName("name")] string Name, 
+        [property: JsonPropertyName("lat")] double Lat, 
+        [property: JsonPropertyName("lng")] double Lng, 
+        [property: JsonPropertyName("radiusMeters")] double RadiusMeters);
 
     // Extension method to convert from JobsiteResponse to SiteDto
     public static class SiteDtoExtensions

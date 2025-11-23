@@ -1,3 +1,5 @@
+using CapstoneBlazorApp.Models;
+
 namespace CapstoneBlazorApp.Dtos
 {
     // used when creating a brand new jobsite
@@ -20,12 +22,9 @@ namespace CapstoneBlazorApp.Dtos
         public double? RadiusMeters { get; set; }
     }
 
-
-
     // returned to the frontend when showing jobsite data
     public class JobsiteResponse
     {
-
         public int JobsiteId { get; set; }
         public string Name { get; set; } = null!;
         public double Latitude { get; set; }
@@ -33,5 +32,52 @@ namespace CapstoneBlazorApp.Dtos
         public double RadiusMeters { get; set; }
         public DateTime CreatedAt { get; set; }
         public DateTime UpdatedAt { get; set; }
+          public SiteDto ToSiteDto()
+        {
+            return new SiteDto(JobsiteId, Name, Latitude, Longitude, (int)RadiusMeters);
+        }
+        
+        public JobsiteDto ToJobsiteDto()
+        {
+            return new JobsiteDto
+            {
+                JobsiteId = JobsiteId,
+                Name = Name,
+                Latitude = Latitude,
+                Longitude = Longitude,
+                RadiusMeters = RadiusMeters,
+                CreatedAt = CreatedAt,
+                UpdatedAt = UpdatedAt
+            };
+        }
+    }
+
+    // DTO for general jobsite operations
+    public class JobsiteDto
+    {
+        public int JobsiteId { get; set; }
+        public string Name { get; set; } = null!;
+        public double Latitude { get; set; }
+        public double Longitude { get; set; }
+        public double RadiusMeters { get; set; }
+        public DateTime? CreatedAt { get; set; }
+        public DateTime? UpdatedAt { get; set; }
+    }
+
+    // Request DTOs for API operations
+    public class JobsiteCreateRequest
+    {
+        public string Name { get; set; } = null!;
+        public double Latitude { get; set; }
+        public double Longitude { get; set; }
+        public double RadiusMeters { get; set; }
+    }
+
+    public class JobsiteUpdateRequest
+    {
+        public string Name { get; set; } = null!;
+        public double Latitude { get; set; }
+        public double Longitude { get; set; }
+        public double RadiusMeters { get; set; }
     }
 }

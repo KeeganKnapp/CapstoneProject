@@ -1,0 +1,264 @@
+@using CapstoneBlazorApp.Services
+@using CapstoneBlazorApp.Services.Abstractions
+@using MudBlazor
+@using CapstoneBlazorApp.Models
+@using CapstoneBlazorApp.Dtos
+@using Microsoft.AspNetCore.Components.Authorization
+@inject AbstractLoggerService Logger
+@inject NavigationManager Nav
+@inject JobsiteApiService JobsiteApi
+@inject TimeEntryApiService TimeEntryApi
+@inject RequestOffApiService RequestApi
+@inject NavigationTracker NavTracker
+
+@namespace CapstoneBlazorApp.Components.Pages
+
+@page "/manager-dashboard"
+@rendermode InteractiveServer
+
+<AuthorizeView>
+    <Authorized>
+        <MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="py-4">
+            <MudText Typo="Typo.h3" GutterBottom="true" Class="mb-4">Manager Dashboard</MudText>
+            
+            <MudGrid Spacing="4">
+                <!-- Quick Stats Cards -->
+                <MudItem xs="12" md="6" lg="3">
+                    <MudCard Class="h-100">
+                        <MudCardContent>
+                            <div class="d-flex align-items-center">
+                                <MudIcon Icon="@Icons.Material.Filled.Business" Size="Size.Large" Color="Color.Primary" Class="mr-3" />
+                                <div>
+                                    <MudText Typo="Typo.h6">@totalJobsites</MudText>
+                                    <MudText Typo="Typo.body2" Color="Color.Secondary">Active Jobsites</MudText>
+                                </div>
+                            </div>
+                        </MudCardContent>
+                    </MudCard>
+                </MudItem>
+                
+                <MudItem xs="12" md="6" lg="3">
+                    <MudCard Class="h-100">
+                        <MudCardContent>
+                            <div class="d-flex align-items-center">
+                                <MudIcon Icon="@Icons.Material.Filled.AccessTime" Size="Size.Large" Color="Color.Success" Class="mr-3" />
+                                <div>
+                                    <MudText Typo="Typo.h6">@activeClockIns</MudText>
+                                    <MudText Typo="Typo.body2" Color="Color.Secondary">Currently Clocked In</MudText>
+                                </div>
+                            </div>
+                        </MudCardContent>
+                    </MudCard>
+                </MudItem>
+                
+                <MudItem xs="12" md="6" lg="3">
+                    <MudCard Class="h-100">
+                        <MudCardContent>
+                            <div class="d-flex align-items-center">
+                                <MudIcon Icon="@Icons.Material.Filled.RequestPage" Size="Size.Large" Color="Color.Warning" Class="mr-3" />
+                                <div>
+                                    <MudText Typo="Typo.h6">@pendingRequests</MudText>
+                                    <MudText Typo="Typo.body2" Color="Color.Secondary">Pending Requests</MudText>
+                                </div>
+                            </div>
+                        </MudCardContent>
+                    </MudCard>
+                </MudItem>
+                
+                <MudItem xs="12" md="6" lg="3">
+                    <MudCard Class="h-100">
+                        <MudCardContent>
+                            <div class="d-flex align-items-center">
+                                <MudIcon Icon="@Icons.Material.Filled.Assignment" Size="Size.Large" Color="Color.Info" Class="mr-3" />
+                                <div>
+                                    <MudText Typo="Typo.h6">@totalAssignments</MudText>
+                                    <MudText Typo="Typo.body2" Color="Color.Secondary">Total Assignments</MudText>
+                                </div>
+                            </div>
+                        </MudCardContent>
+                    </MudCard>
+                </MudItem>
+
+                <!-- Quick Action Buttons -->
+                <MudItem xs="12">
+                    <MudPaper Class="p-4">
+                        <MudText Typo="Typo.h5" GutterBottom="true">Quick Actions</MudText>
+                        <MudGrid Spacing="3">
+                            <MudItem xs="6" md="3">
+                                <MudButton Variant="Variant.Filled" Color="Color.Primary" FullWidth="true"
+                                          StartIcon="@Icons.Material.Filled.AddLocation"
+                                          OnClick="@(() => NavigateToPage("/manager/jobsites"))">
+                                    Manage Jobsites
+                                </MudButton>
+                            </MudItem>
+                            <MudItem xs="6" md="3">
+                                <MudButton Variant="Variant.Filled" Color="Color.Success" FullWidth="true"
+                                          StartIcon="@Icons.Material.Filled.Schedule"
+                                          OnClick="@(() => NavigateToPage("/manager/time-entries"))">
+                                    View Time Entries
+                                </MudButton>
+                            </MudItem>
+                            <MudItem xs="6" md="3">
+                                <MudButton Variant="Variant.Filled" Color="Color.Warning" FullWidth="true"
+                                          StartIcon="@Icons.Material.Filled.RequestPage"
+                                          OnClick="@(() => NavigateToPage("/manager/requests"))">
+                                    Manage Requests
+                                </MudButton>
+                            </MudItem>
+                            <MudItem xs="6" md="3">
+                                <MudButton Variant="Variant.Filled" Color="Color.Info" FullWidth="true"
+                                          StartIcon="@Icons.Material.Filled.Assignment"
+                                          OnClick="@(() => NavigateToPage("/manager/assignments"))">
+                                    Manage Assignments
+                                </MudButton>
+                            </MudItem>
+                        </MudGrid>
+                    </MudPaper>
+                </MudItem>
+
+                <!-- Recent Activity -->
+                <MudItem xs="12" md="6">
+                    <MudPaper Class="p-4" Style="min-height: 400px;">
+                        <MudText Typo="Typo.h5" GutterBottom="true">Recent Time Entries</MudText>
+                        @if (isLoadingTimeEntries)
+                        {
+                            <MudSkeleton Height="40px" Class="mb-2" />
+                            <MudSkeleton Height="40px" Class="mb-2" />
+                            <MudSkeleton Height="40px" />
+                        }
+                        else if (recentTimeEntries.Any())
+                        {
+                            <MudList T="string" Dense="true">
+                                @foreach (var entry in recentTimeEntries.Take(5))
+                                {
+                                    <MudListItem>
+                                        <div class="d-flex justify-content-between align-items-center">
+                                            <div>
+                                                <MudText Typo="Typo.body1">User ID: @entry.UserId</MudText>
+                                                <MudText Typo="Typo.body2" Color="Color.Secondary">
+                                                    @entry.StartTime.ToString("MMM dd, HH:mm")
+                                                    @if (entry.EndTime.HasValue)
+                                                    {
+                                                        <text> - @entry.EndTime.Value.ToString("HH:mm")</text>
+                                                    }
+                                                    else
+                                                    {
+                                                        <MudChip Size="Size.Small" Color="Color.Success">Active</MudChip>
+                                                    }
+                                                </MudText>
+                                            </div>
+                                        </div>
+                                    </MudListItem>
+                                }
+                            </MudList>
+                        }
+                        else
+                        {
+                            <MudText Color="Color.Secondary">No time entries found</MudText>
+                        }
+                    </MudPaper>
+                </MudItem>
+
+                <!-- Recent Requests -->
+                <MudItem xs="12" md="6">
+                    <MudPaper Class="p-4" Style="min-height: 400px;">
+                        <MudText Typo="Typo.h5" GutterBottom="true">Recent Requests</MudText>
+                        @if (isLoadingRequests)
+                        {
+                            <MudSkeleton Height="40px" Class="mb-2" />
+                            <MudSkeleton Height="40px" Class="mb-2" />
+                            <MudSkeleton Height="40px" />
+                        }
+                        else if (recentRequests.Any())
+                        {
+                            <MudList T="string" Dense="true">
+                                @foreach (var request in recentRequests.Take(5))
+                                {
+                                    <MudListItem>
+                                        <div class="d-flex justify-content-between align-items-center">
+                                            <div>
+                                                <MudText Typo="Typo.body1">User ID: @request.UserId</MudText>
+                                                <MudText Typo="Typo.body2" Color="Color.Secondary">
+                                                    @request.StartDate.ToString("MMM dd") - @request.EndDate.ToString("MMM dd")
+                                                </MudText>
+                                                @if (!string.IsNullOrEmpty(request.Note))
+                                                {
+                                                    <MudText Typo="Typo.caption">@request.Note</MudText>
+                                                }
+                                            </div>
+                                            <MudChip Size="Size.Small" Color="Color.Warning">Pending</MudChip>
+                                        </div>
+                                    </MudListItem>
+                                }
+                            </MudList>
+                        }
+                        else
+                        {
+                            <MudText Color="Color.Secondary">No requests found</MudText>
+                        }
+                    </MudPaper>
+                </MudItem>
+            </MudGrid>
+        </MudContainer>
+    </Authorized>
+    <NotAuthorized>
+        <RedirectToLogin />
+    </NotAuthorized>
+</AuthorizeView>
+
+@code {
+    private int totalJobsites = 0;
+    private int activeClockIns = 0;
+    private int pendingRequests = 0;
+    private int totalAssignments = 0;
+    
+    private List<TimeEntryDto> recentTimeEntries = new();
+    private List<RequestOffDto> recentRequests = new();
+    
+    private bool isLoadingTimeEntries = true;
+    private bool isLoadingRequests = true;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadDashboardData();
+    }
+
+    private async Task LoadDashboardData()
+    {
+        try
+        {
+            // Load jobsites
+            var jobsites = await JobsiteApi.GetAllJobsitesAsync();
+            totalJobsites = jobsites?.Count ?? 0;
+
+            // Load time entries
+            isLoadingTimeEntries = true;
+            // Note: We'd need a manager endpoint to get all time entries
+            // For now, using the user-specific endpoint
+            recentTimeEntries = await TimeEntryApi.GetMyTimeEntriesAsync();
+            activeClockIns = recentTimeEntries.Count(te => !te.EndTime.HasValue);
+            isLoadingTimeEntries = false;
+
+            // Load requests
+            isLoadingRequests = true;
+            recentRequests = await RequestApi.GetMyRequestsAsync();
+            pendingRequests = recentRequests.Count;
+            isLoadingRequests = false;
+
+            Logger.Log(this, $"Dashboard loaded: {totalJobsites} jobsites, {activeClockIns} active clock-ins, {pendingRequests} pending requests", "info");
+            StateHasChanged();
+        }
+        catch (Exception ex)
+        {
+            Logger.Log(this, $"Error loading dashboard data: {ex.Message}", "error");
+        }
+    }
+
+    private void NavigateToPage(string url)
+    {
+        // Push current dashboard page to navigation tracker for back button functionality
+        NavTracker.Push("/manager-dashboard");
+        NavTracker.ButtonLabel = "Back to Dashboard";
+        Nav.NavigateTo(url);
+    }
+}
