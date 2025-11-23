@@ -1,12 +1,33 @@
 ﻿@using MudBlazor
 @namespace CapstoneBlazorApp.Components.Pages
 
-<MudCard Style="flex-grow: 0; height: 50vh" Class="m-0" Elevation="2">
-    <MudCardContent>
-        <MudText Typo="Typo.h4">To Do</MudText>
-        <MudText>This is a placeholder for the to-do list. The actual list will be implemented later.</MudText>
-    </MudCardContent>
-</MudCard>
+<MudStack Style="height: 100%;" Justify="Justify.FlexStart" AlignItems="AlignItems.Stretch">
+    <MudText Typo="Typo.h4" Color="Color.Primary" Class="mb-4">
+        <MudIcon Icon="@Icons.Material.Filled.Assignment" Class="mr-2"/>
+        Today's Tasks
+    </MudText>
+    
+    <MudDivider Class="mb-4"/>
+    
+    <MudStack Spacing="3" Style="flex-grow: 1;">        <MudPaper Class="pa-4" Elevation="1">
+            <MudText Typo="Typo.h6" Color="Color.Secondary">Morning Safety Check</MudText>
+            <MudText Typo="Typo.body2" Class="mt-2">Complete safety inspection before starting work</MudText>
+            <MudChip T="string" Color="Color.Warning" Size="Size.Small" Class="mt-2">Pending</MudChip>
+        </MudPaper>
+        
+        <MudPaper Class="pa-4" Elevation="1">
+            <MudText Typo="Typo.h6" Color="Color.Secondary">Equipment Maintenance</MudText>
+            <MudText Typo="Typo.body2" Class="mt-2">Check and maintain assigned equipment</MudText>
+            <MudChip T="string" Color="Color.Info" Size="Size.Small" Class="mt-2">In Progress</MudChip>
+        </MudPaper>
+        
+        <MudPaper Class="pa-4" Elevation="1">
+            <MudText Typo="Typo.h6" Color="Color.Secondary">Daily Report</MudText>
+            <MudText Typo="Typo.body2" Class="mt-2">Submit end-of-day progress report</MudText>
+            <MudChip T="string" Color="Color.Success" Size="Size.Small" Class="mt-2">Completed</MudChip>
+        </MudPaper>
+    </MudStack>
+</MudStack>
 
 @code {
 

@@ -8,59 +8,108 @@
 @inject NavigationManager Nav
 @inject NavigationTracker NavigationTracker
 
-@namespace CapstoneMaui.Components.Pages.Employee
+@namespace CapstoneBlazorApp.Components.Pages
 
 @page "/employee-dashboard"
+@rendermode InteractiveServer
 
-<MudStack AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween" Spacing="3" Style="height: 100%;">   
+<MudContainer MaxWidth="MaxWidth.Large" Style="height: 100vh; padding: 16px;">
+    <MudGrid Justify="Justify.Center" AlignItems="Center" Style="height: 100%;">
+        
+        <!-- Job Site Selection -->
+        <MudItem xs="12" sm="8" md="6">
+            <MudSelect T="Guid" @bind-Value="selectedSite" Label="Select Job Site" 
+                      Variant="Variant.Outlined" FullWidth="true" Margin="Margin.Dense">
+                <MudSelectItem Value="@sites[0].Id">Downtown Construction Site</MudSelectItem>
+                <MudSelectItem Value="@sites[1].Id">Uptown Renovation Project</MudSelectItem>
+                <MudSelectItem Value="@sites[2].Id">Suburban Housing Development</MudSelectItem>
+            </MudSelect>
+        </MudItem>
 
-<MudSelect Style="flex-shrink: 1;" T="Guid" @bind-Value="selectedSite" Label="Select Job Site" Variant="Variant.Outlined">
-    <MudSelectItem Value="@sites[0].Id">Downtown Construction Site</MudSelectItem>
-    <MudSelectItem Value="@sites[1].Id">Uptown Renovation Project</MudSelectItem>
-    <MudSelectItem Value="@sites[2].Id">Suburban Housing Development</MudSelectItem>
-</MudSelect>
+        <!-- Map/ToDo Section - Dynamic spacing -->
+        <MudItem xs="12" Style="flex-grow: 1; min-height: 0;">
+            @if(!clockedIn) {
+                <MudCard Elevation="2" Style="height: 100%; width: 100%;">
+                    <MudCardContent Style="height: 100%; padding: 0;">
+                        <JobSiteMap currentSiteId="@selectedSite" Sites="@sites" OnChanged="@HandleSiteChanged" />
+                    </MudCardContent>
+                </MudCard>
+            }
+            else {
+                <MudCard Elevation="2" Style="height: 100%; width: 100%;">
+                    <MudCardContent Style="height: 100%;">
+                        <ToDo/>
+                    </MudCardContent>
+                </MudCard>
+            }
+        </MudItem>
 
-@if(!clockedIn) {
-<MudCard Elevation="2" Style="flex-shrink: 0; height: 50vh; width: 100%;">
-    <MudCardContent Style="height: 100%; width:100%">
-        <JobSiteMap currentSiteId="@selectedSite" Sites="@sites" OnChanged="@HandleSiteChanged" />
-    </MudCardContent>
-</MudCard>
-}
-else {
-    <ToDo/>
-}
+        <!-- Hours Worked Display -->
+        <MudItem xs="12" Class="text-center">
+            <MudText Typo="Typo.h6" Color="Color.Primary">Hours Worked: @hoursWorked</MudText>
+        </MudItem>
 
-<MudText Typo="Typo.body1">Hours Worked: @hoursWorked</MudText>
+        <!-- Clock In/Out Button -->
+        <MudItem xs="12" sm="8" md="6">
+            @if (clockedIn)
+            {
+                <MudButton Variant="Variant.Filled" FullWidth="true" Color="Color.Error" 
+                          Size="Size.Large" OnClick="ClockOut">
+                    <MudIcon Icon="@Icons.Material.Filled.AccessTime" Class="mr-2"/>
+                    Clock Out
+                </MudButton>
+            }
+            else {
+                @if(isClockingIn)
+                {
+                    <MudButton Disabled="true" Variant="Variant.Filled" FullWidth="true" 
+                              Color="Color.Success" Size="Size.Large">
+                        <MudProgressCircular Size="Size.Small" Indeterminate="true" Class="mr-2"/>
+                        Clocking In...
+                    </MudButton>
+                }
+                else
+                {
+                    <MudButton Variant="Variant.Filled" FullWidth="true" Color="Color.Success" 
+                              Size="Size.Large" OnClick="ClockIn">
+                        <MudIcon Icon="@Icons.Material.Filled.AccessTime" Class="mr-2"/>
+                        Clock In
+                    </MudButton>
+                }
+            }
+        </MudItem>
 
-@if (clockedIn)
-{
-    <MudButton Variant="Variant.Filled" FullWidth="true" Color="Color.Secondary" OnClick="ClockOut">
-        Clock Out
-    </MudButton>
-}
-else {
+        <!-- Action Buttons - Evenly spaced -->
+        <MudItem xs="12">
+            <MudGrid Justify="Justify.SpaceEvenly" AlignItems="Center">
+                <MudItem xs="4" sm="3" md="2" Class="text-center">
+                    <MudButton Variant="Variant.Outlined" Color="Color.Info" 
+                              Size="Size.Large" FullWidth="true" OnClick="EmployeePayroll"
+                              StartIcon="@Icons.Material.Filled.AccountBalanceWallet">
+                        Payroll
+                    </MudButton>
+                </MudItem>
+                
+                <MudItem xs="4" sm="3" md="2" Class="text-center">
+                    <MudButton Variant="Variant.Outlined" Color="Color.Primary" 
+                              Size="Size.Large" FullWidth="true" OnClick="EmployeeRequest"
+                              StartIcon="@Icons.Material.Filled.RequestPage">
+                        Request
+                    </MudButton>
+                </MudItem>
+                
+                <MudItem xs="4" sm="3" md="2" Class="text-center">
+                    <MudButton Variant="Variant.Outlined" Color="Color.Warning" 
+                              Size="Size.Large" FullWidth="true" OnClick="EmployeeNotifications"
+                              StartIcon="@Icons.Material.Filled.Notifications">
+                        Notifications
+                    </MudButton>
+                </MudItem>
+            </MudGrid>
+        </MudItem>
 
-    @if(isClockingIn)
-    {
-        <MudButton Disabled="@isClockingIn" Variant="Variant.Filled" FullWidth="true" Color="Color.Secondary" OnClick="ClockIn">
-            <MudProgressCircular Size="Size.Small" Indeterminate="true"/>
-        </MudButton>
-    }
-    else
-    {
-        <MudButton Disabled="@isClockingIn" Variant="Variant.Filled" FullWidth="true" Color="Color.Secondary" OnClick="ClockIn">
-            Clock In
-        </MudButton>
-    }
-}
-<MudStack Row="true" Justify="Justify.SpaceBetween">
-    <MudIconButton Icon="@Icons.Material.Filled.Wallet" Color="Color.Info" Size="Size.Large" OnClick="EmployeePayroll"/>
-    <MudButton Variant="Variant.Filled" OnClick="EmployeeRequest">Request</MudButton>
-    <MudIconButton Icon="@Icons.Material.Filled.Notifications" Color="Color.Warning" Size="Size.Large" OnClick="EmployeeNotifications" />
-</MudStack>
-
-</MudStack>
+    </MudGrid>
+</MudContainer>
 
 
 @code {

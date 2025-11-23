@@ -1,0 +1,99 @@
+/*~~*/ /*~~~~~*/
+/*~~~~~~*/ /*~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~*/
+/*~~~*/ /*~~~~~~~~~~~~~*/ ~~~
+/*~*/ /*~~~~~~~~~~~~~~~~*/
+
+<style>
+	.users {
+	  display: flex;
+	  justify-content: space-between;
+	  flex-wrap: wrap;
+	}
+	.border {
+		border-style: solid;
+		border-width: 1px;
+	}
+	.textStandard {
+		font-size: 20px; 
+		font-weight:bold;
+	}
+	.headingText {
+		display: flex;
+		justify-content: space-between;
+		margin-left: 5px;
+		margin-right: 5px;
+	}
+	.marginStandard {
+		margin-left: 20px;
+		margin-right: 20px;
+	}
+	.inputStyle {
+		border-style: solid;
+		border-width: 1px; 
+		border-color: black;
+	}
+	.divide {
+		margin-bottom: 10px;
+	}
+</style>
+
+<ManagerTopBar action="0"/>
+
+<!-- Break this down into a switch statement to allow switching? -->
+<MudDivider DividerType="DividerType.Middle" class = "divide"/>
+<div class="headingText textStandard">
+	<div>Site Status</div>
+	<div>
+		<MudButton Variant="Variant.Filled" EndIcon="/*~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~*/" Color="Color.Secondary" OnClick="Status">
+			Status
+		</MudButton>
+	</div>
+</div>
+<div class="ma-0" style="height:150px;overflow: auto; ">
+	<MudPaper Elevation="0"Outlined="true" Height="1000px">
+	</MudPaper>
+</div>
+<MudDivider DividerType="DividerType.Middle" class = "divide"/>
+<div class="headingText textStandard">
+	<div>Progress Updates</div>
+	<div>
+		<MudButton Variant="Variant.Filled" EndIcon="/*~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~*/" Color="Color.Secondary" OnClick="Progress">
+			Progress
+		</MudButton>
+	</div>
+</div>
+<div class="ma-0" style="height:150px;overflow: auto; ">
+	<MudPaper Elevation="0"Outlined="true" Height="1000px">
+	</MudPaper>
+</div>
+<MudDivider DividerType="DividerType.Middle" class = "divide"/>
+<div class="headingText textStandard">
+	<div>Scheduling</div>
+	<div>
+		<MudButton Variant="Variant.Filled" EndIcon="/*~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~*/" Color="Color.Secondary" OnClick="Scheduling">
+			Scheduling
+		</MudButton>
+	</div>
+</div>
+<div class="ma-0" style="height:150px;overflow: auto; ">
+	<MudPaper Elevation="0"Outlined="true" Height="1000px">
+	</MudPaper>
+</div>
+
+<ManagerBottomBar/>
+
+/*~*/ ~
+	/*~~~*/ /**/ /*~~~~*/
+	~
+		/*~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~*/
+	~
+	/*~~~*/ /**/ /*~~~~~~*/
+	~
+		/*~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~*/
+	~
+	/*~~~*/ /**/ /*~~~~~~~~*/
+	~
+		/*~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~*/
+	~
+~
+

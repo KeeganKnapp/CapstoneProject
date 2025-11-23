@@ -4,18 +4,26 @@
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <base href="/" />
-    <link rel="stylesheet" href="bootstrap/bootstrap.min.css" />
-    <link rel="stylesheet" href="app.css" />
-    <link rel="stylesheet" href="CapstoneBlazorApp.styles.css" />
-    <link rel="icon" type="image/png" href="favicon.png" />
-    <link href="_content/MudBlazor/MudBlazor.min.css" rel="stylesheet" />
+    <base href="/" />		    <link rel="stylesheet" href="bootstrap/bootstrap.min.css" />
+		    <link rel="stylesheet" href="app.css" />
+		    <link rel="stylesheet" href="CapstoneBlazorApp.styles.css" />
+		    <link href="_content/MudBlazor/MudBlazor.min.css" rel="stylesheet" />
+		    <link rel="icon" type="image/png" href="favicon.png" />
     <HeadOutlet />
 </head>
 
-<body>
-    <Routes />
-    <script src="_framework/blazor.web.js"></script>
+<body>		    <Routes @rendermode="InteractiveServer" />
+		    <script src="_framework/blazor.web.js"></script>
+		    <script src="_content/MudBlazor/MudBlazor.min.js"></script>
+
+
+ <script async defer
+    src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAPPPStCVGwoFQv7ExemRHAsbmS0GGOFy4&libraries=geometry&v=weekly&loading=async">
+  </script>
+
+  <script src="js/map.js"></script>
+
+
 </body>
 
 </html>

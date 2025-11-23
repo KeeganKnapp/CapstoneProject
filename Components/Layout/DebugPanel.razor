@@ -1,0 +1,65 @@
+@using System.Linq
+@using CapstoneBlazorApp.Services.Abstractions
+@inject AbstractLoggerService LoggerService
+@rendermode InteractiveServer
+@implements IDisposable
+@namespace CapstoneBlazorApp.Components.Layout
+<div class="debug-panel">
+a   <details open>
+        <summary class="bg-primary text-white p-2">Debug Logs</summary>
+        <div class="p-2 border">
+            @if (_logMessages?.Any() == true)
+            {
+                <ul class="list-unstyled">
+                    @foreach (var log in _logMessages.AsEnumerable().Reverse())
+                    {
+                        <li class="p-1 border-bottom">@log</li>
+                    }
+                </ul>
+            }
+            else
+            {
+                <p class="text-muted">No logs available</p>
+            }
+        </div>
+    </details>
+</div>
+
+@code {
+    private List<string> _logMessages = new() { "Debug panel initialized" };
+
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (LoggerService != null)
+        {
+            LoggerService.OnLogMessage += OnLog;
+            LoggerService.Log(this, "DebugPanel initialized", "info");
+        }
+        await base.OnInitializedAsync();
+    }
+
+    private void OnLog(object? sender, string message)
+    {
+        if (string.IsNullOrEmpty(message)) return;
+        
+        _ = InvokeAsync(() =>
+        {
+            _logMessages.Add(message);
+            if (_logMessages.Count > 20)
+            {
+                _logMessages.RemoveAt(0);
+            }
+
+            StateHasChanged();
+        });
+    }
+
+    public void Dispose()
+    {
+        if (LoggerService != null)
+        {
+            LoggerService.OnLogMessage -= OnLog;
+        }
+    }
+}

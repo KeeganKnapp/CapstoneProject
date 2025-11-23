@@ -4,43 +4,69 @@
 @using MudBlazor
 @inject IJSRuntime JS
 @inject AbstractLoggerService Logger
+@implements IAsyncDisposable
 
 @namespace CapstoneBlazorApp.Components.Pages
 
-<!-- Filler, replace with actual map later -->
-<MudCard Class="m-0" Elevation="0" Style="width:100vw; height:100vh;">
-    <MudCardContent Style="padding:0;">
-        <div id="@_id" style="height:100%; width:100%;"></div>
-    </MudCardContent>
-</MudCard>
+<!-- Interactive Job Site Map -->
+<div id="@_id" style="height: 100%; width: 100%; min-height: 300px; border-radius: 4px; overflow: hidden;"></div>
 
 
 @code {
     [Parameter] public Guid currentSiteId { get; set; } = Guid.Empty;
     [Parameter] public IEnumerable<SiteDto>? Sites { get; set; }
-    [Parameter] public EventCallback<SiteDto> OnChanged { get; set; }
-
-    bool initialized = false;
+    [Parameter] public EventCallback<SiteDto> OnChanged { get; set; }    bool initialized = false;
     private Guid previousSiteId = Guid.Empty;
     string _id = $"map_{Guid.NewGuid():N}";
     DotNetObjectReference<JobSiteMap>? _ref;
 
     private async Task FocusOnJobSite(Guid siteId)
     {
-        // Logic to focus on the job site on the map
-        // This would typically involve calling a JS function to update the map view
-        Logger.Log(this,$"Focusing on job site: {siteId}");
-        if(siteId == Guid.Empty) return;
-        await JS.InvokeVoidAsync("capstoneMap.focusOnLocation", siteId);
+        try
+        {
+            Logger.Log(this,$"Focusing on job site: {siteId}");
+            if(siteId == Guid.Empty || !initialized) return;
+            await JS.InvokeVoidAsync("capstoneMap.focusOnLocation", siteId);
+        }
+        catch (Exception ex)
+        {
+            Logger.Log(this, $"Error focusing on job site: {ex.Message}", "error");
+        }
+    }    private async Task InitializeMap()
+    {
+        try
+        {
+            Logger.Log(this,$"Initializing JobSiteMap with ID: {_id}");
+            
+            // Small delay to ensure DOM is ready
+            await Task.Delay(100);
+            
+            _ref = DotNetObjectReference.Create(this);
+            await JS.InvokeVoidAsync("capstoneMap.init", $"#{_id}", _ref, Sites ?? Array.Empty<SiteDto>());
+            initialized = true;
+
+            if(currentSiteId != Guid.Empty)
+            {
+                await FocusOnJobSite(currentSiteId);
+            }
+        }
+        catch (Exception ex)
+        {
+            Logger.Log(this, $"Error initializing map: {ex.Message}", "error");
+            initialized = false;
+        }
     }
+
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
-        Logger.Log(this,$"JobSiteMap OnAfterRenderAsync firstRender={firstRender}");
-        if (!firstRender) return;
-        _ref = DotNetObjectReference.Create(this);
-        await JS.InvokeVoidAsync("capstoneMap.init", $"#{_id}", _ref, Sites ?? Array.Empty<SiteDto>());
-
-        if(currentSiteId != Guid.Empty)
+        Logger.Log(this,$"JobSiteMap OnAfterRenderAsync firstRender={firstRender}, initialized={initialized}");
+        
+        // Always try to initialize if not already initialized
+        if (!initialized)
+        {
+            await InitializeMap();
+        }
+        else if (firstRender && currentSiteId != Guid.Empty)
         {
             await FocusOnJobSite(currentSiteId);
         }
@@ -48,17 +74,16 @@
 
     protected override async Task OnParametersSetAsync()
     {
+        Logger.Log(this,$"JobSiteMap OnParametersSetAsync previousSiteId={previousSiteId} currentSiteId={currentSiteId} initialized={initialized}");
+        
         if (initialized && previousSiteId != currentSiteId)
         {
-            Logger.Log(this,$"JobSiteMap OnParametersSetAsync previousSiteId={previousSiteId} currentSiteId={currentSiteId}");
             await FocusOnJobSite(currentSiteId);
             previousSiteId = currentSiteId;
         }
-        else if (!initialized)
+        else if (!initialized && currentSiteId != Guid.Empty)
         {
-            await FocusOnJobSite(currentSiteId);
             previousSiteId = currentSiteId;
-            initialized = true;
         }
     }
 
@@ -69,13 +94,28 @@
        {
            await OnChanged.InvokeAsync(site);
        }
-   }
-    public async ValueTask DisposeAsync()
+   }    public async ValueTask DisposeAsync()
     {
-        Logger.Log(this,$"Disposing JobSiteMap");
-        if (_ref is not null) _ref.Dispose();
-        if(initialized)
-            await JS.InvokeVoidAsync("capstoneMap.dispose");
+        try
+        {
+            Logger.Log(this,$"Disposing JobSiteMap initialized={initialized}");
+            
+            if(initialized)
+            {
+                await JS.InvokeVoidAsync("capstoneMap.dispose");
+                initialized = false;
+            }
+            
+            if (_ref is not null) 
+            {
+                _ref.Dispose();
+                _ref = null;
+            }
+        }
+        catch (Exception ex)
+        {
+            Logger.Log(this, $"Error during JobSiteMap disposal: {ex.Message}", "error");
+        }
     }
 
 }

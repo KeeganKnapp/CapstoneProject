@@ -3,81 +3,62 @@
 @using System.Runtime.CompilerServices
 @using CapstoneBlazorApp.Services.Abstractions
 @using CapstoneBlazorApp.Services
+@using CapstoneBlazorApp.Components.Layout
 @inherits LayoutComponentBase
 @inject AbstractLoggerService LoggerService  
 @inject NavigationManager Nav
 @inject NavigationTracker NavigationTracker
 @namespace CapstoneBlazorApp.Components.Layout
 
-    <MudThemeProvider @bind-IsDarkMode="@_isDarkMode" Theme="_theme"/>
-    <MudDialogProvider />
-    <MudSnackbarProvider/>
-    <MudPopoverProvider /> 
-    <MudLayout>
-            @if (_isDebug) {
-            <MudExpansionPanels>
-                <MudExpansionPanel Text="Debug Logs" Color="Color.Primary">
-                    <MudList T="string" Items="_logMessages">
-                        @foreach (var log in _logMessages.AsEnumerable().Reverse())
-                        {
-                            <MudListItem Text="@log" />
-                        }
-                    </MudList>
-                </MudExpansionPanel>
-            </MudExpansionPanels>
-            }
-            else {
+<MudThemeProvider @bind-IsDarkMode="@_isDarkMode" Theme="_theme"/>
+<MudDialogProvider />
+<MudSnackbarProvider/>
+<MudPopoverProvider /> 
+
+<MudLayout>
+    @if (!_isDebug) {
         <MudAppBar Color="Color.Primary" Elevation="0">
-            <MudIconButton Color="Color.Secondary" OnClick="GoBack" Icon="@Icons.Material.Filled.ArrowBack"/>
-            <MudText Typo="Typo.h6" Class="ml-2">CapstoneMaui</MudText>
+            <MudIconButton Color="Color.Inherit" OnClick="GoBack" Icon="@Icons.Material.Filled.ArrowBack"/>
+            <MudText Typo="Typo.h6" Class="ml-3">CapstoneMaui</MudText>
+            <MudSpacer />
+            <MudIconButton Color="Color.Inherit" Icon="@Icons.Material.Filled.DarkMode" OnClick="ToggleDarkMode" />
         </MudAppBar>
-            }   
+    }   
 
-
-        <MudMainContent Style="overflow: hidden; margin: 16px; display: flex; flex-direction: column; height: 100%">
-                @Body
-        </MudMainContent>
-    </MudLayout>
+    <MudMainContent Style="height: 100vh; overflow: hidden;">
+        @Body
+    </MudMainContent>
+</MudLayout>
 
 @code {
     private bool _isDarkMode = false;
-    private bool _isDebug = false;
-    private List<string> _logMessages = new List<string>();
+    private bool _isDebug = false; // Set to false to show the app bar
+    
     private readonly MudTheme _theme = new()
     {
         PaletteLight = new PaletteLight
         {
-            //construction company colors
             Primary = "#1976D2",
             Secondary = "#303F9F",
-            Background = "#FFFFFF",
+            Background = "#FAFAFA",
             Surface = "#FFFFFF",
             AppbarBackground = "#1976D2",
-            DrawerBackground = "#F5F5F5",
-            DrawerText = "#212121",
             TextPrimary = "#212121",
             TextSecondary = "#757575"
-
         },
         PaletteDark = new PaletteDark
         {
-            //same thing just darker mode
             Primary = "#BB86FC",
             Secondary = "#03DAC6",
             Background = "#121212",
             Surface = "#1E1E1E",
             AppbarBackground = "#1E1E1E",
-            DrawerBackground = "#1A1A1A",
-            DrawerText = "#B0BEC5",
             TextPrimary = "#FFFFFF",
             TextSecondary = "#ECEFF1"
         }
-        // You can add Typography/Layout later; keep defaults while stabilizing
     };
 
-
     protected override async Task OnInitializedAsync() {
-        LoggerService.OnLogMessage += OnLog;
         LoggerService.Log(this, "MainLayout initialized", "info");
         await base.OnInitializedAsync();
     }
@@ -89,12 +70,10 @@
         }
         Nav.NavigateTo(NavigationTracker.Pop());
     }
-
-    private void OnLog(object? sender, string message) {
-        _logMessages.Add(message);
-        if (_logMessages.Count > 20) {
-            _logMessages.RemoveAt(0);
-        }
+    
+    private void ToggleDarkMode()
+    {
+        _isDarkMode = !_isDarkMode;
         StateHasChanged();
     }
 }
