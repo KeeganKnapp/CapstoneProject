@@ -8,6 +8,7 @@
 @inject NavigationManager Nav
 @inject NavigationTracker NavTracker
 @inject JobsiteApiService JobsiteApi
+@inject AssignmentApiService AssignmentApi
 
 @namespace CapstoneBlazorApp.Components.Pages
 
@@ -211,7 +212,7 @@
         </MudContainer>
 
         <!-- assignment details / edit -->
-        <MudDialog @bind-IsVisible="showAssignmentDialog" Options="dialogOptions">
+        <MudDialog @bind-Visible="showAssignmentDialog" Options="dialogOptions">
             <DialogContent>
                 <MudText Typo="Typo.h6" GutterBottom="true">
                     @(editingAssignment != null ? "Edit Assignment" : selectedAssignment != null ? "Assignment Details" : "Create Assignment")
@@ -383,8 +384,29 @@
         {
             isLoading = true;
             
-            // Generate sample data since we don't have Assignment API endpoints yet
-            assignments = GenerateSampleAssignments();
+            // Get all jobsite IDs to load assignments for each
+            var jobsiteIds = jobsites.Select(j => j.JobsiteId).ToList();
+            
+            if (jobsiteIds.Any())
+            {
+                var allAssignments = await AssignmentApi.GetAllAssignmentsAsync(jobsiteIds);
+                assignments = allAssignments?.Select(a => new AssignmentDto
+                {
+                    AssignmentId = a.AssignmentId,
+                    Title = a.Title,
+                    Description = a.Description,
+                    JobsiteId = a.JobsiteId,
+                    AssignedUserId = a.AssignedUserIds?.FirstOrDefault(),
+                    Priority = "Medium", // Default since API doesn't have priority
+                    DueDate = null, // API doesn't have due date
+                    CreatedAt = a.CreatedAt,
+                    UpdatedAt = a.UpdatedAt
+                }).ToList() ?? new List<AssignmentDto>();
+            }
+            else
+            {
+                assignments = new List<AssignmentDto>();
+            }
             
             ApplyFilters();
             CalculateStatistics();
@@ -394,6 +416,7 @@
         catch (Exception ex)
         {
             Logger.Log(this, $"Error loading assignments: {ex.Message}", "error");
+            assignments = new List<AssignmentDto>();
         }
         finally
         {
@@ -402,48 +425,7 @@
         }
     }
 
-    private List<AssignmentDto> GenerateSampleAssignments()
-    {
-        var sampleAssignments = new List<AssignmentDto>();
-        
-        if (jobsites.Any())
-        {
-            var random = new Random();
-            var priorities = new[] { "Low", "Medium", "High" };
-            var statuses = new[] { "Active", "Completed", "Overdue" };
-            var titles = new[] 
-            { 
-                "Install electrical wiring", 
-                "Pour foundation concrete", 
-                "Frame exterior walls", 
-                "Install plumbing", 
-                "Drywall installation",
-                "Roof installation",
-                "HVAC system setup",
-                "Final cleanup"
-            };
 
-            for (int i = 1; i <= 20; i++)
-            {
-                var jobsite = jobsites[random.Next(jobsites.Count)];
-                var dueDate = DateTime.Now.AddDays(random.Next(-30, 60));
-                
-                sampleAssignments.Add(new AssignmentDto
-                {
-                    AssignmentId = i,
-                    Title = titles[random.Next(titles.Length)],
-                    Description = $"Sample assignment description for task {i}",
-                    JobsiteId = jobsite.JobsiteId,
-                    AssignedUserId = random.Next(1, 5),
-                    Priority = priorities[random.Next(priorities.Length)],
-                    DueDate = dueDate,
-                    CreatedAt = DateTime.Now.AddDays(-random.Next(1, 30))
-                });
-            }
-        }
-
-        return sampleAssignments;
-    }
 
     private void ApplyFilters()
     {
@@ -512,11 +494,14 @@
 
     private void OpenCreateAssignmentDialog()
     {
+        Logger.Log(this, "OpenCreateAssignmentDialog called", "info");
         selectedAssignment = null;
         editingAssignment = null;
         ClearFormFields();
         errorMessage = "";
         showAssignmentDialog = true;
+        Logger.Log(this, $"showAssignmentDialog set to: {showAssignmentDialog}", "info");
+        StateHasChanged();
     }
 
     private void ViewAssignmentDetails(AssignmentDto assignment)
@@ -587,17 +572,48 @@
             isSaving = true;
             errorMessage = "";
 
-            // TODO: Implement actual API calls
-            // For now, just simulate saving
-            await Task.Delay(1000);
-
             if (editingAssignment != null)
             {
-                Logger.Log(this, $"Updated assignment: {assignmentTitle}", "info");
+                // Update existing assignment
+                var updateRequest = new AssignmentUpdateRequest
+                {
+                    Title = assignmentTitle,
+                    Description = assignmentDescription,
+                    AssignedUserIds = assignmentUserId.HasValue ? new List<int> { assignmentUserId.Value } : null
+                };
+
+                var success = await AssignmentApi.UpdateAssignmentAsync(editingAssignment.AssignmentId, updateRequest);
+                if (success)
+                {
+                    Logger.Log(this, $"Updated assignment: {assignmentTitle}", "info");
+                }
+                else
+                {
+                    errorMessage = "Failed to update assignment";
+                    return;
+                }
             }
             else
             {
-                Logger.Log(this, $"Created assignment: {assignmentTitle}", "info");
+                // Create new assignment
+                var createRequest = new AssignmentCreateRequest
+                {
+                    Title = assignmentTitle,
+                    Description = assignmentDescription,
+                    JobsiteId = assignmentJobsiteId,
+                    AssignedUserIds = assignmentUserId.HasValue ? new List<int> { assignmentUserId.Value } : null
+                };
+
+                var success = await AssignmentApi.CreateAssignmentAsync(createRequest);
+                if (success)
+                {
+                    Logger.Log(this, $"Created assignment: {assignmentTitle}", "info");
+                }
+                else
+                {
+                    errorMessage = "Failed to create assignment";
+                    return;
+                }
             }
 
             showAssignmentDialog = false;
@@ -619,9 +635,16 @@
     {
         try
         {
-            // TODO: Add confirmation dialog and implement actual API call
-            Logger.Log(this, $"Deleted assignment: {assignment.Title}", "info");
-            await LoadAssignments(); // Refresh the list
+            var success = await AssignmentApi.DeleteAssignmentAsync(assignment.AssignmentId);
+            if (success)
+            {
+                Logger.Log(this, $"Deleted assignment: {assignment.Title}", "info");
+                await LoadAssignments(); // Refresh the list
+            }
+            else
+            {
+                Logger.Log(this, $"Failed to delete assignment: {assignment.Title}", "error");
+            }
         }
         catch (Exception ex)
         {

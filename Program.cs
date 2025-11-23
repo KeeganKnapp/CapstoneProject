@@ -35,6 +35,7 @@ builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<JobsiteApiService>();
 builder.Services.AddScoped<RequestOffApiService>();
 builder.Services.AddScoped<TimeEntryApiService>();
+builder.Services.AddScoped<AssignmentApiService>();
 builder.Services.AddScoped<LocationManager>();
 builder.Services.AddScoped<NavigationTracker>();
 builder.Services.AddScoped<AbstractLoggerService, LoggerService>();
