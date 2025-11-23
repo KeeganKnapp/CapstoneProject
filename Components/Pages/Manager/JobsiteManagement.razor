@@ -339,7 +339,7 @@
             if (success)
             {
                 showJobsiteDialog = false;
-                await LoadJobsites(); // refresh the main map
+                await LoadJobsites(); // This will also refresh the main map
             }
             else
             {
@@ -366,7 +366,7 @@
             if (success)
             {
                 Logger.Log(this, $"Deleted jobsite: {jobsite.Name}", "info");
-                await LoadJobsites(); // refresh the main map
+                await LoadJobsites(); // This will also refresh the main map
                 if (selectedJobsite?.JobsiteId == jobsite.JobsiteId)
                 {
                     selectedJobsite = null;

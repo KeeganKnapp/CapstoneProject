@@ -233,8 +233,8 @@
 
             // Load time entries
             isLoadingTimeEntries = true;
-
-            // kor now, using the user-specific endpoint
+            // Note: We'd need a manager endpoint to get all time entries
+            // For now, using the user-specific endpoint
             recentTimeEntries = await TimeEntryApi.GetMyTimeEntriesAsync();
             activeClockIns = recentTimeEntries.Count(te => !te.EndTime.HasValue);
             isLoadingTimeEntries = false;
