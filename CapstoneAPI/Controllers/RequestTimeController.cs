@@ -116,7 +116,7 @@ namespace CapstoneAPI.Controllers
         }
 
         // PUT /api/requestoff/approve/{id}
-        [HttpPut("/approve/{RequestOffId:int}")]
+        [HttpPut("approve/{RequestOffId:int}")]
         [Authorize]
         public async Task<IActionResult> Approve(int RequestOffId, [FromBody] CancellationToken ct)
         {
@@ -136,7 +136,7 @@ namespace CapstoneAPI.Controllers
         } 
 
         // PUT /api/requestoff/deny/{id}
-        [HttpPut("/deny/{RequestOffId:int}")]
+        [HttpPut("deny/{RequestOffId:int}")]
         [Authorize]
         public async Task<IActionResult> Deny(int RequestOffId, [FromBody] CancellationToken ct)
         {
