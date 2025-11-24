@@ -46,7 +46,9 @@ namespace CapstoneAPI.Controllers
 
             var result = new RequestOffDto(entity.RequestOffId, entity.UserId, entity.StartDate, entity.EndDate, entity.Note, entity.Status);
             return CreatedAtAction(nameof(GetMineById), new { id = entity.RequestOffId }, result);
-        }        // GET /api/requestoff/{id}   (self-only)
+        }        
+        
+        // GET /api/requestoff/{id}   (self-only)
         [HttpGet("{id:long}")]
         [Authorize]
         public async Task<ActionResult<RequestOffDto>> GetMineById(long id)
@@ -112,5 +114,45 @@ namespace CapstoneAPI.Controllers
 
             return Ok(items);
         }
+
+        // PUT /api/requestoff/approve/{id}
+        [HttpPut("/approve/{RequestOffId:int}")]
+        [Authorize]
+        public async Task<IActionResult> Approve(int RequestOffId, [FromBody] CancellationToken ct)
+        {
+            if (!ModelState.IsValid) return ValidationProblem(ModelState);
+
+            var request = await _db.RequestOffs.FirstOrDefaultAsync(j => j.RequestOffId == RequestOffId, ct);
+
+            if (request == null)
+                throw new KeyNotFoundException($"Request {RequestOffId} not found.");
+
+            request.Status = "Approved";
+
+            request.UpdatedAt = DateTime.UtcNow;
+            await _db.SaveChangesAsync(ct);
+
+            return Ok(request);
+        } 
+
+        // PUT /api/requestoff/deny/{id}
+        [HttpPut("/deny/{RequestOffId:int}")]
+        [Authorize]
+        public async Task<IActionResult> Deny(int RequestOffId, [FromBody] CancellationToken ct)
+        {
+            if (!ModelState.IsValid) return ValidationProblem(ModelState);
+
+            var request = await _db.RequestOffs.FirstOrDefaultAsync(j => j.RequestOffId == RequestOffId, ct);
+
+            if (request == null)
+                throw new KeyNotFoundException($"Request {RequestOffId} not found.");
+
+            request.Status = "Denied";
+
+            request.UpdatedAt = DateTime.UtcNow;
+            await _db.SaveChangesAsync(ct);
+
+            return Ok(request);
+        } 
     }
 }
