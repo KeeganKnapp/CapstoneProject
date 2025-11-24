@@ -86,12 +86,18 @@
             <MudTh>End Date</MudTh>
             <MudTh>Days</MudTh>
             <MudTh>Reason</MudTh>
+            <MudTh>Status</MudTh>
             <MudTh>Actions</MudTh>
         </HeaderContent>        <RowTemplate Context="request">
             <MudTd DataLabel="Start">@request.StartDate.ToString("MMM dd, yyyy")</MudTd>
             <MudTd DataLabel="End">@request.EndDate.ToString("MMM dd, yyyy")</MudTd>
             <MudTd DataLabel="Days">@((request.EndDate.ToDateTime(TimeOnly.MinValue) - request.StartDate.ToDateTime(TimeOnly.MinValue)).Days + 1)</MudTd>
             <MudTd DataLabel="Reason">@request.Note</MudTd>
+            <MudTd DataLabel="Status">
+                <MudChip T="string" Color="@GetStatusColor(request)" Size="Size.Small">
+                    @GetStatusText(request)
+                </MudChip>
+            </MudTd>
             <MudTd DataLabel="Actions">
                 <MudButton Size="Size.Small" 
                            Color="Color.Error" 
@@ -306,6 +312,27 @@
         {
             Logger.Log(this, $"Error deleting request: {ex.Message}", "error");
         }
+    }
+
+    private string GetStatusText(RequestOffDto request)
+    {
+        if (request.Status != null){
+            return request.Status;
+        }else{
+            return "Pending";
+        }
+        
+    }
+
+    private Color GetStatusColor(RequestOffDto request)
+    {
+        return GetStatusText(request) switch
+        {
+            "Pending" => Color.Warning,
+            "Approved" => Color.Success,
+            "Denied" => Color.Error,
+            _ => Color.Default
+        };
     }
 
 }

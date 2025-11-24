@@ -165,6 +165,10 @@
                                                          OnClick="@(() => DenyRequest(request))"
                                                          Title="Deny" />
                                         }
+                                        <MudIconButton Icon="@Icons.Material.Filled.DeleteForever" 
+                                                         Color="Color.Error" Size="Size.Small"
+                                                         OnClick="@(() => DeleteRequest(request))"
+                                                         Title="Delete" />
                                     </MudTd>
                                 </RowTemplate>
                                 <PagerContent>
@@ -231,6 +235,11 @@
                                       StartIcon="@Icons.Material.Filled.Close"
                                       OnClick="@(() => DenyRequest(selectedRequest))">
                                 Deny Request
+                            </MudButton>
+                            <MudButton Variant="Variant.Filled" Color="Color.Error" 
+                                      StartIcon="@Icons.Material.Filled.DeleteForever"
+                                      OnClick="@(() => DeleteRequest(selectedRequest))">
+                                Delete Request
                             </MudButton>
                         </div>
                     }
@@ -333,7 +342,13 @@
     {
         // For now, all requests are pending since we don't have status field in DTO
         // In a real implementation, you'd have a Status field
-        return "Pending";
+        // return "Pending";
+        if (request.Status != null){
+            return request.Status;
+        }else{
+            return "Pending";
+        }
+        
     }
 
     private Color GetStatusColor(RequestOffDto request)
@@ -363,19 +378,24 @@
     {
         try
         {
-            // TODO: Implement approval API call
-            // For now, just log the action
             Logger.Log(this, $"Approved request {request.RequestOffId} for user {request.UserId}", "info");
             
-            // In a real implementation, you'd call something like:
-            // await RequestApi.ApproveRequestAsync(request.RequestOffId);
+            var success = await RequestApi.ApproveRequestAsync(request.RequestOffId);
+            if (success)
+            {
+                Logger.Log(this, "Request approved successfully", "success");
+                
+                await LoadRequests(); // Reload the list
+            }
+            else
+            {
+                Logger.Log(this, "Failed to approve request", "error");
+            }
             
             if (showDetailsDialog && selectedRequest?.RequestOffId == request.RequestOffId)
             {
                 CloseDetailsDialog();
             }
-            
-            await LoadRequests(); // Refresh data
         }
         catch (Exception ex)
         {
@@ -387,12 +407,47 @@
     {
         try
         {
-            // TODO: Implement denial API call
-            // For now, just log the action
             Logger.Log(this, $"Denied request {request.RequestOffId} for user {request.UserId}", "info");
             
-            // In a real implementation, you'd call something like:
-            // await RequestApi.DenyRequestAsync(request.RequestOffId);
+            var success = await RequestApi.DenyRequestAsync(request.RequestOffId);
+            if (success)
+            {
+                Logger.Log(this, "Request denied successfully", "success");
+                
+                await LoadRequests(); // Reload the list
+            }
+            else
+            {
+                Logger.Log(this, "Failed to deny request", "error");
+            }
+            
+            if (showDetailsDialog && selectedRequest?.RequestOffId == request.RequestOffId)
+            {
+                CloseDetailsDialog();
+            }
+        }
+        catch (Exception ex)
+        {
+            Logger.Log(this, $"Error denying request: {ex.Message}", "error");
+        }
+    }
+
+    private async Task DeleteRequest(RequestOffDto request)
+    {
+        try
+        {
+            Logger.Log(this, $"Deleted request {request.RequestOffId} for user {request.UserId}", "info");
+            
+            var success = await RequestApi.DeleteRequestAsync(request.RequestOffId);
+            if (success)
+            {
+                Logger.Log(this, "Request deleted successfully", "success");
+                await LoadRequests(); // Reload the list
+            }
+            else
+            {
+                Logger.Log(this, "Failed to delete request", "error");
+            }
             
             if (showDetailsDialog && selectedRequest?.RequestOffId == request.RequestOffId)
             {
@@ -403,7 +458,7 @@
         }
         catch (Exception ex)
         {
-            Logger.Log(this, $"Error denying request: {ex.Message}", "error");
+            Logger.Log(this, $"Error deleting request: {ex.Message}", "error");
         }
     }
 

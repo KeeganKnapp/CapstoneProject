@@ -7,6 +7,7 @@ namespace CapstoneBlazorApp.Services.Auth
     public class AuthService : IAuthService
     {
         private string? _authToken;
+        private string? _role;
         private readonly HttpClient _httpClient;
 
         public string? AuthToken => _authToken;
@@ -36,7 +37,7 @@ namespace CapstoneBlazorApp.Services.Auth
                     var authResponse = await response.Content.ReadFromJsonAsync<AuthResponse>(cancellationToken);                    if (authResponse?.AccessToken != null)
                     {
                         _authToken = authResponse.AccessToken;
-                        
+                        _role = authResponse.Role;
                         // Update HTTP client with new token
                         _httpClient.DefaultRequestHeaders.Authorization = 
                             new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", _authToken);
@@ -62,11 +63,9 @@ namespace CapstoneBlazorApp.Services.Auth
         public async Task<bool> IsUserManagerAsync(CancellationToken cancellationToken = default)
         {
             await Task.Delay(500, cancellationToken);
-            //for demo purposes, if the auth token is "manager-token", return true
-            return _authToken == "manager-token";
-        }        
-        
-        public async Task LogoutAsync(CancellationToken cancellationToken = default)
+            //return true if user's role is manager
+            return _role == "Manager";
+        }        public async Task LogoutAsync(CancellationToken cancellationToken = default)
         {
             try
             {

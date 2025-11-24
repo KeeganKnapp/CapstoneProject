@@ -1,4 +1,4 @@
-﻿@using CapstoneBlazorApp.Services
+@using CapstoneBlazorApp.Services
 @using MudBlazor
 @using CapstoneBlazorApp.Services.Auth
 @using CapstoneBlazorApp.Services.Abstractions
@@ -96,7 +96,17 @@
                 
                 await Task.Delay(500);
                 
-                var targetUrl = !string.IsNullOrEmpty(returnUrl) ? returnUrl : "/employee-dashboard";
+                var targetUrl = returnUrl;
+                // Redirect to return URL manager dashboard
+                if (await AuthService.IsUserManagerAsync()){
+                    targetUrl = !string.IsNullOrEmpty(returnUrl) ? returnUrl : "/manager-dashboard";
+                } else {
+                    targetUrl = !string.IsNullOrEmpty(returnUrl) ? returnUrl : "/employee-dashboard";
+                }
+               
+                
+
+
                 Logger.Log(this, $"Navigating to: {targetUrl}", "info");
                 Nav.NavigateTo(targetUrl, false); 
             }

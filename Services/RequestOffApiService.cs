@@ -148,5 +148,70 @@ namespace CapstoneBlazorApp.Services
                 return false;
             }
         }
+
+        public async Task<bool> ApproveRequestAsync(long requestId, CancellationToken cancellationToken = default)
+        {
+            try
+            {
+                // Get JWT token
+                var loginResponse = await LoginAndGetTokenAsync();
+                if (!string.IsNullOrEmpty(loginResponse?.AccessToken))
+                {
+                    _httpClient.DefaultRequestHeaders.Authorization = 
+                        new AuthenticationHeaderValue("Bearer", loginResponse.AccessToken);
+                }
+
+                // Bodge fix sine
+                var loginRequest = new
+                {
+                    email = "test",
+                    password = "test"
+                };
+
+                var loginJson = JsonSerializer.Serialize(loginRequest);
+                var loginContent = new StringContent(loginJson, System.Text.Encoding.UTF8, "application/json");
+
+                var response = await _httpClient.PutAsync($"/api/requestoff/approve/{requestId}", loginContent, cancellationToken);
+
+                return response.IsSuccessStatusCode;
+            }
+            catch (Exception)
+            {
+                return false;
+            }
+        }
+
+        public async Task<bool> DenyRequestAsync(long requestId, CancellationToken cancellationToken = default)
+        {
+            try
+            {
+                // Get JWT token
+                var loginResponse = await LoginAndGetTokenAsync();
+                if (!string.IsNullOrEmpty(loginResponse?.AccessToken))
+                {
+                    _httpClient.DefaultRequestHeaders.Authorization = 
+                        new AuthenticationHeaderValue("Bearer", loginResponse.AccessToken);
+                }
+
+                // Bodge fix sine
+                var loginRequest = new
+                {
+                    email = "test",
+                    password = "test"
+                };
+
+                var loginJson = JsonSerializer.Serialize(loginRequest);
+                var loginContent = new StringContent(loginJson, System.Text.Encoding.UTF8, "application/json");
+
+                var response = await _httpClient.PutAsync($"/api/requestoff/deny/{requestId}", loginContent, cancellationToken);
+
+                return response.IsSuccessStatusCode;
+            }
+            catch (Exception)
+            {
+                return false;
+            }
+        }
+        }
     }
-}
+
