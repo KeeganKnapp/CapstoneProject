@@ -164,11 +164,11 @@
                                                          Color="Color.Error" Size="Size.Small"
                                                          OnClick="@(() => DenyRequest(request))"
                                                          Title="Deny" />
-                                            <MudIconButton Icon="@Icons.Material.Filled.DeleteForever" 
+                                        }
+                                        <MudIconButton Icon="@Icons.Material.Filled.DeleteForever" 
                                                          Color="Color.Error" Size="Size.Small"
                                                          OnClick="@(() => DeleteRequest(request))"
                                                          Title="Delete" />
-                                        }
                                     </MudTd>
                                 </RowTemplate>
                                 <PagerContent>
@@ -378,19 +378,24 @@
     {
         try
         {
-            // TODO: Implement approval API call
-            // For now, just log the action
             Logger.Log(this, $"Approved request {request.RequestOffId} for user {request.UserId}", "info");
             
-            // In a real implementation, you'd call something like:
-            // await RequestApi.ApproveRequestAsync(request.RequestOffId);
+            var success = await RequestApi.ApproveRequestAsync(request.RequestOffId);
+            if (success)
+            {
+                Logger.Log(this, "Request approved successfully", "success");
+                
+                await LoadRequests(); // Reload the list
+            }
+            else
+            {
+                Logger.Log(this, "Failed to approve request", "error");
+            }
             
             if (showDetailsDialog && selectedRequest?.RequestOffId == request.RequestOffId)
             {
                 CloseDetailsDialog();
             }
-            
-            await LoadRequests(); // Refresh data
         }
         catch (Exception ex)
         {
@@ -402,19 +407,24 @@
     {
         try
         {
-            // TODO: Implement denial API call
-            // For now, just log the action
             Logger.Log(this, $"Denied request {request.RequestOffId} for user {request.UserId}", "info");
             
-            // In a real implementation, you'd call something like:
-            // await RequestApi.DenyRequestAsync(request.RequestOffId);
+            var success = await RequestApi.DenyRequestAsync(request.RequestOffId);
+            if (success)
+            {
+                Logger.Log(this, "Request denied successfully", "success");
+                
+                await LoadRequests(); // Reload the list
+            }
+            else
+            {
+                Logger.Log(this, "Failed to deny request", "error");
+            }
             
             if (showDetailsDialog && selectedRequest?.RequestOffId == request.RequestOffId)
             {
                 CloseDetailsDialog();
             }
-            
-            await LoadRequests(); // Refresh data
         }
         catch (Exception ex)
         {
