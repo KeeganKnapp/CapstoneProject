@@ -13,6 +13,7 @@ namespace CapstoneAPI.DTOs
         int UserId,
         DateOnly StartDate,
         DateOnly EndDate,
-        string? Note
+        string? Note,
+        string? Status
     );
 }

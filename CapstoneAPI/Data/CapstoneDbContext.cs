@@ -103,6 +103,7 @@ namespace CapstoneAPI.Data
                 e.Property(x => x.StartDate).HasColumnName("StartDate");
                 e.Property(x => x.EndDate).HasColumnName("EndDate");
                 e.Property(x => x.Note).HasColumnName("Note");
+                e.Property(x => x.Status).HasColumnName("Status");
                 e.Property(x => x.CreatedAt).HasColumnName("CreatedAt");
                 e.Property(x => x.UpdatedAt).HasColumnName("UpdatedAt");
             });

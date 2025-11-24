@@ -119,6 +119,7 @@ CREATE TABLE IF NOT EXISTS "RequestOff" (
   "StartDate"    DATE NOT NULL,
   "EndDate"      DATE NOT NULL,
   "Note"         VARCHAR,
+  "Status"       VARCHAR,
   "CreatedAt"    TIMESTAMPTZ NOT NULL DEFAULT now(),
   "UpdatedAt"    TIMESTAMPTZ NOT NULL DEFAULT now(),
 

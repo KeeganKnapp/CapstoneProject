@@ -37,13 +37,14 @@ namespace CapstoneAPI.Controllers
                 UserId = GetUserId(),
                 StartDate = dto.StartDate,
                 EndDate = dto.EndDate,
-                Note = dto.Note
+                Note = dto.Note,
+                Status = "Pending"
             };
 
             _db.RequestOffs.Add(entity);
             await _db.SaveChangesAsync();
 
-            var result = new RequestOffDto(entity.RequestOffId, entity.UserId, entity.StartDate, entity.EndDate, entity.Note);
+            var result = new RequestOffDto(entity.RequestOffId, entity.UserId, entity.StartDate, entity.EndDate, entity.Note, entity.Status);
             return CreatedAtAction(nameof(GetMineById), new { id = entity.RequestOffId }, result);
         }        // GET /api/requestoff/{id}   (self-only)
         [HttpGet("{id:long}")]
@@ -56,7 +57,7 @@ namespace CapstoneAPI.Controllers
 
             if (entity is null) return NotFound();
 
-            return new RequestOffDto(entity.RequestOffId, entity.UserId, entity.StartDate, entity.EndDate, entity.Note);
+            return new RequestOffDto(entity.RequestOffId, entity.UserId, entity.StartDate, entity.EndDate, entity.Note, entity.Status);
         }
 
         // GET /api/requestoff/mine   (get own requests)
@@ -68,7 +69,7 @@ namespace CapstoneAPI.Controllers
             var requests = await _db.RequestOffs.AsNoTracking()
                 .Where(r => r.UserId == me)
                 .OrderByDescending(r => r.CreatedAt)
-                .Select(r => new RequestOffDto(r.RequestOffId, r.UserId, r.StartDate, r.EndDate, r.Note))
+                .Select(r => new RequestOffDto(r.RequestOffId, r.UserId, r.StartDate, r.EndDate, r.Note, r.Status))
                 .ToListAsync();
 
             return Ok(requests);
@@ -106,7 +107,7 @@ namespace CapstoneAPI.Controllers
 
             var items = await q
                 .OrderByDescending(x => x.StartDate)
-                .Select(x => new RequestOffDto(x.RequestOffId, x.UserId, x.StartDate, x.EndDate, x.Note))
+                .Select(x => new RequestOffDto(x.RequestOffId, x.UserId, x.StartDate, x.EndDate, x.Note, x.Status))
                 .ToListAsync();
 
             return Ok(items);
