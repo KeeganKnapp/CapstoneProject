@@ -186,7 +186,12 @@
                                                     <MudText Typo="Typo.caption">@request.Note</MudText>
                                                 }
                                             </div>
+                                            <MudChip T="string" Color="@GetStatusColor(request)" Size="Size.Small">
+                                                @GetStatusText(request)
+                                            </MudChip>
+                                            <!--
                                             <MudChip Size="Size.Small" Color="Color.Warning">Pending</MudChip>
+                                            -->
                                         </div>
                                     </MudListItem>
                                 }
@@ -260,5 +265,26 @@
         NavTracker.Push("/manager-dashboard");
         NavTracker.ButtonLabel = "Back to Dashboard";
         Nav.NavigateTo(url);
+    }
+
+    private string GetStatusText(RequestOffDto request)
+    {
+        if (request.Status != null){
+            return request.Status;
+        }else{
+            return "Pending";
+        }
+        
+    }
+
+    private Color GetStatusColor(RequestOffDto request)
+    {
+        return GetStatusText(request) switch
+        {
+            "Pending" => Color.Warning,
+            "Approved" => Color.Success,
+            "Denied" => Color.Error,
+            _ => Color.Default
+        };
     }
 }

@@ -342,7 +342,13 @@
     {
         // For now, all requests are pending since we don't have status field in DTO
         // In a real implementation, you'd have a Status field
-        return "Pending";
+        // return "Pending";
+        if (request.Status != null){
+            return request.Status;
+        }else{
+            return "Pending";
+        }
+        
     }
 
     private Color GetStatusColor(RequestOffDto request)
