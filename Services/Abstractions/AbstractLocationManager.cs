@@ -12,8 +12,8 @@ public abstract class AbstractLocationManager
     }
 
     public double GetDistance(double lat1, double lon1, double lat2, double lon2) {
-        var R = 6371e3; // metres
-        var φ1 = lat1 * Math.PI / 180; // φ, λ in radians
+        var R = 6371e3; 
+        var φ1 = lat1 * Math.PI / 180; 
         var φ2 = lat2 * Math.PI / 180;
         var Δφ = (lat2 - lat1) * Math.PI / 180;
         var Δλ = (lon2 - lon1) * Math.PI / 180;
@@ -23,7 +23,7 @@ public abstract class AbstractLocationManager
                 Math.Sin(Δλ / 2) * Math.Sin(Δλ / 2);
         var c = 2 * Math.Atan2(Math.Sqrt(a), Math.Sqrt(1 - a));
 
-        var d = R * c; // in metres
+        var d = R * c; 
         return d;
     }
 

@@ -52,7 +52,6 @@ namespace CapstoneBlazorApp.Services
             {
                 Console.WriteLine("GetMyRequestsAsync called - attempting API call");
                 
-                // Get JWT token
                 var loginResponse = await LoginAndGetTokenAsync();
                 if (!string.IsNullOrEmpty(loginResponse?.AccessToken))
                 {
@@ -88,7 +87,6 @@ namespace CapstoneBlazorApp.Services
                 Console.WriteLine($"Exception in GetMyRequestsAsync: {ex.Message}, falling back to mock data");
             }
             
-            // Fallback to mock data
             var mockData = new List<RequestOffDto>
             {
                 new RequestOffDto(100, 1, DateOnly.FromDateTime(DateTime.Now.AddDays(7)), DateOnly.FromDateTime(DateTime.Now.AddDays(14)), "Holiday Vacation (Mock)"),
@@ -104,7 +102,6 @@ namespace CapstoneBlazorApp.Services
         {
             try
             {
-                // Get JWT token
                 var loginResponse = await LoginAndGetTokenAsync();
                 if (!string.IsNullOrEmpty(loginResponse?.AccessToken))
                 {
@@ -136,7 +133,6 @@ namespace CapstoneBlazorApp.Services
         {
             try
             {
-                // Get JWT token
                 var loginResponse = await LoginAndGetTokenAsync();
                 if (!string.IsNullOrEmpty(loginResponse?.AccessToken))
                 {

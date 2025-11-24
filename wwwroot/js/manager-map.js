@@ -132,12 +132,12 @@ console.log("[manager-map.js] loaded");
         const bounds = new google.maps.LatLngBounds();
         let anything = false;
 
-        // Include circles
+        // circles
         for (const c of instance.circles) {
             try {
                 const b = c.getBounds();
                 if (b) { bounds.union(b); anything = true; }
-            } catch { /* fallback below */ }
+            } catch { }
         }
 
         // Include markers if no circles

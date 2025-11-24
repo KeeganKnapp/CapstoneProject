@@ -1,0 +1,89 @@
+## --- .NET / ASP.NET / Blazor ---
+bin/
+obj/
+**/bin/
+**/obj/
+
+# Razor / Blazor compilation artifacts
+*.blat
+*.dll
+*.pdb
+*.cache/
+*.nuget.props
+*.nuget.targets
+
+# Static web assets
+wwwroot/*-scoped.css
+wwwroot/_framework/
+wwwroot/_content/
+
+# Build artifacts for WebAssembly
+**/wwwroot/_framework/*
+*.wasm
+*.js.map
+*.gz
+*.br
+
+# .NET user-specific files
+*.user
+*.rsuser
+*.suo
+*.userosscache
+*.userprefs
+
+# Logs
+logs/
+*.log
+*.svclog
+*.scc
+
+# Visual Studio files
+.vs/
+*.dbmdl
+*.jfm
+*.VC.db
+
+# JetBrains Rider
+.idea/
+*.sln.iml
+
+# VS Code
+.vscode/
+.history/
+*.code-workspace
+
+# NPM / front-end dependencies (if using JS interop)
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Dotnet tools
+.dotnet/
+tools/
+
+# Secrets / config (ONLY ignore **local** dev versions)
+appsettings.Development.json
+appsettings.Local.json
+appsettings.*.local.json
+
+# Certificate files
+*.pfx
+*.p12
+
+# Backup / temp files
+*.tmp
+*.temp
+*.bak
+*.backup
+*.orig
+
+# Publish output
+publish/
+dist/
+artifacts/
+
+# OS files
+.DS_Store
+Thumbs.db
+

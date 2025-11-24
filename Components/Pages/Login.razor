@@ -94,13 +94,11 @@
                 Logger.Log(this, "Login successful", "info");
                 NavigationTracker.Push("/login");
                 
-                // Wait longer for authentication state to update
                 await Task.Delay(500);
                 
-                // Redirect to return URL or dashboard
                 var targetUrl = !string.IsNullOrEmpty(returnUrl) ? returnUrl : "/employee-dashboard";
                 Logger.Log(this, $"Navigating to: {targetUrl}", "info");
-                Nav.NavigateTo(targetUrl, false); // Don't force reload
+                Nav.NavigateTo(targetUrl, false); 
             }
             else
             {

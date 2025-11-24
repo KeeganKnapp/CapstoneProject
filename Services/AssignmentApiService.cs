@@ -40,7 +40,7 @@ namespace CapstoneBlazorApp.Services
             }
             catch (Exception)
             {
-                // Login failed, will continue without auth
+                // login failed
             }
             return null;
         }
@@ -151,6 +151,33 @@ namespace CapstoneBlazorApp.Services
             {
                 Console.WriteLine($"Exception in CreateAssignmentAsync: {ex.Message}");
                 return false;
+            }
+        }
+
+        public async Task<IEnumerable<UserResponse>?> GetAllUsersAsync(CancellationToken cancellationToken = default)
+        {
+            try
+            {
+                await SetAuthorizationHeaderAsync();
+
+                var response = await _httpClient.GetAsync("/api/Assignment/allusers", cancellationToken);
+
+                if (response.IsSuccessStatusCode)
+                {
+                    var jsonString = await response.Content.ReadAsStringAsync();
+                    var options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
+                    return JsonSerializer.Deserialize<List<UserResponse>>(jsonString, options);
+                }
+                else
+                {
+                    Console.WriteLine($"Failed to get all users: {response.StatusCode}");
+                    return null;
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Exception in GetAllUsersAsync: {ex.Message}");
+                return null;
             }
         }
 

@@ -1,5 +1,14 @@
 ﻿@using MudBlazor
+@using CapstoneBlazorApp.Dtos
+@using CapstoneBlazorApp.Services
+@using CapstoneBlazorApp.Services.Abstractions
+@using CapstoneBlazorApp.Services.Auth
 @namespace CapstoneBlazorApp.Components.Pages
+
+@inject CustomAuthenticationStateProvider CustomAuthProvider
+@inject AssignmentApiService AssignmentApiService
+
+@inject AbstractLoggerService Logger
 
 <MudStack Style="height: 100%;" Justify="Justify.FlexStart" AlignItems="AlignItems.Stretch">
     <MudText Typo="Typo.h4" Color="Color.Primary" Class="mb-4">
@@ -8,27 +17,80 @@
     </MudText>
     
     <MudDivider Class="mb-4"/>
-    
-    <MudStack Spacing="3" Style="flex-grow: 1;">        <MudPaper Class="pa-4" Elevation="1">
-            <MudText Typo="Typo.h6" Color="Color.Secondary">Morning Safety Check</MudText>
-            <MudText Typo="Typo.body2" Class="mt-2">Complete safety inspection before starting work</MudText>
-            <MudChip T="string" Color="Color.Warning" Size="Size.Small" Class="mt-2">Pending</MudChip>
-        </MudPaper>
-        
-        <MudPaper Class="pa-4" Elevation="1">
-            <MudText Typo="Typo.h6" Color="Color.Secondary">Equipment Maintenance</MudText>
-            <MudText Typo="Typo.body2" Class="mt-2">Check and maintain assigned equipment</MudText>
-            <MudChip T="string" Color="Color.Info" Size="Size.Small" Class="mt-2">In Progress</MudChip>
-        </MudPaper>
-        
-        <MudPaper Class="pa-4" Elevation="1">
-            <MudText Typo="Typo.h6" Color="Color.Secondary">Daily Report</MudText>
-            <MudText Typo="Typo.body2" Class="mt-2">Submit end-of-day progress report</MudText>
-            <MudChip T="string" Color="Color.Success" Size="Size.Small" Class="mt-2">Completed</MudChip>
-        </MudPaper>
+
+    <MudStack Spacing="3" Style="flex-grow: 1;">
+        @foreach (var assignment in userAssignments)
+        {
+            <MudPaper Class="pa-4" Elevation="1">
+                <MudText Typo="Typo.h6" Color="Color.Secondary">@assignment.Title</MudText>
+                <MudText Typo="Typo.body2" Class="mt-2">@assignment.Description</MudText>
+                <MudChip T="string" Color="Color.Info" Size="Size.Small" Class="mt-2">@assignment.Status</MudChip>
+            </MudPaper>
+        }
     </MudStack>
 </MudStack>
 
 @code {
+    [Parameter] public int UserId { get; set; }
+    [Parameter] public int JobsiteId { get; set; }
+    private List<AssignmentResponse> userAssignments = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        await RetrieveUserIdAsync();
+        await LoadAssignmentsForUserAsync();
+    }
+
+    private async Task RetrieveUserIdAsync()
+    {
+        try {
+            var authState = await CustomAuthProvider.GetAuthenticationStateAsync();
+            var user = authState.User;
+
+            if (user.Identity != null && user.Identity.IsAuthenticated)
+            {
+                var userIdClaim = user.Claims.FirstOrDefault(c => c.Type == "userId");
+                if (userIdClaim != null && int.TryParse(userIdClaim.Value, out int userId))
+                {
+                    UserId = userId;
+                    Logger.Log(this, $"Retrieved UserId: {UserId}", "info");
+                }
+                else
+                {
+                    Logger.Log(this, "User ID claim not found or invalid.", "warning");
+                }
+            }
+            else
+            {
+                Logger.Log(this, "User is not authenticated.", "warning");
+            }
+        }
+        catch (Exception ex)
+        {
+            Logger.Log(this, $"Error retrieving user ID: {ex.Message}", "error");
+            UserId = -1;
+        }
+    }
+
+    private async Task LoadAssignmentsForUserAsync()
+    {
+        Logger.Log(this, $"Loading assignments for user ID: {UserId} at jobsite ID: {JobsiteId}", "info");
+        try 
+        {
+
+            var allUserAssignments = await AssignmentApiService.GetAssignmentsByJobsiteAsync(JobsiteId) ?? new List<AssignmentResponse>();
+
+            // Filter to only this user's assignments
+            userAssignments = allUserAssignments.Where(a => a.AssignedUserIds.Contains(UserId)).ToList();
+            
+            StateHasChanged();
+        }
+        catch (Exception ex)
+        {
+            // Handle error
+            Logger.Log(this, $"Error loading assignments: {ex.Message}", "error");
+        }
+    }
+
 
 }

@@ -2,20 +2,22 @@ using Microsoft.AspNetCore.Components.Authorization;
 using System.Security.Claims;
 using CapstoneBlazorApp.Services.Abstractions;
 using System.IdentityModel.Tokens.Jwt;
+using CapstoneBlazorApp.Services;
 
 namespace CapstoneBlazorApp.Services.Auth
 {
     public class CustomAuthenticationStateProvider : AuthenticationStateProvider
     {
         private readonly IAuthService _authService;
-        private readonly ILogger<CustomAuthenticationStateProvider> _logger;
+
+        private readonly LoggerService logger;
         private ClaimsPrincipal? _currentUser;
 
-        public CustomAuthenticationStateProvider(IAuthService authService, ILogger<CustomAuthenticationStateProvider> logger)
+        public CustomAuthenticationStateProvider(IAuthService authService, AbstractLoggerService logger)
         {
             _authService = authService;
-            _logger = logger;
-            
+            this.logger = logger as LoggerService ?? throw new ArgumentException("Logger must be of type LoggerService", nameof(logger));
+
             // Subscribe to authentication state changes if the service is AuthService
             if (_authService is AuthService authServiceImpl)
             {
@@ -27,7 +29,7 @@ namespace CapstoneBlazorApp.Services.Auth
         {
             try
             {
-                _logger.LogInformation($"Authentication state change event received. Token: {(string.IsNullOrEmpty(token) ? "null/empty" : "provided")}");
+                logger.Log(this, $"Authentication state change event received. Token: {(string.IsNullOrEmpty(token) ? "null/empty" : "provided")}");
                 
                 if (!string.IsNullOrEmpty(token))
                 {
@@ -40,7 +42,7 @@ namespace CapstoneBlazorApp.Services.Auth
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error handling authentication state change");
+                logger.Log(this, $"Error handling authentication state change: {ex.Message}", "error");
             }
         }
 
@@ -64,7 +66,7 @@ namespace CapstoneBlazorApp.Services.Auth
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error getting authentication state");
+                logger.Log(this, $"Error getting authentication state: {ex.Message}", "error");
                 return new AuthenticationState(new ClaimsPrincipal(new ClaimsIdentity()));
             }
         }
@@ -73,26 +75,26 @@ namespace CapstoneBlazorApp.Services.Auth
         {
             try
             {
-                _logger.LogInformation($"Marking user as authenticated with token: {token?.Substring(0, Math.Min(token?.Length ?? 0, 20))}...");
-                
+                logger.Log(this, $"Marking user as authenticated with token: {token?.Substring(0, Math.Min(token?.Length ?? 0, 20))}...", "info");
+
                 var claims = ParseClaimsFromJwt(token);
                 var identity = new ClaimsIdentity(claims, "jwt");
                 var user = new ClaimsPrincipal(identity);
                 _currentUser = user;
 
-                _logger.LogInformation($"User authenticated successfully: {user.Identity?.Name} ({user.Identity?.AuthenticationType})");
-                
+                logger.Log(this, $"User authenticated successfully: {user.Identity?.Name} ({user.Identity?.AuthenticationType})", "info");
+
                 NotifyAuthenticationStateChanged(Task.FromResult(new AuthenticationState(user)));
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error marking user as authenticated");
+                logger.Log(this, $"Error marking user as authenticated: {ex.Message}", "error");
             }
         }
 
         public async Task MarkUserAsLoggedOut()
         {
-            _logger.LogInformation("Marking user as logged out");
+            logger.Log(this, "Marking user as logged out", "info");
             _currentUser = null;
             var anonymousUser = new ClaimsPrincipal(new ClaimsIdentity());
             NotifyAuthenticationStateChanged(Task.FromResult(new AuthenticationState(anonymousUser)));
@@ -109,7 +111,7 @@ namespace CapstoneBlazorApp.Services.Auth
                 claims.Add(new Claim(ClaimTypes.Email, "test@example.com"));
                 claims.Add(new Claim(ClaimTypes.Role, "Employee"));
                 claims.Add(new Claim("userId", "1"));
-                _logger.LogInformation("Using demo employee token claims");
+                logger.Log(this, "Using demo employee token claims", "info");
                 return claims;
             }
             
@@ -119,7 +121,7 @@ namespace CapstoneBlazorApp.Services.Auth
                 claims.Add(new Claim(ClaimTypes.Email, "manager@example.com"));
                 claims.Add(new Claim(ClaimTypes.Role, "Manager"));
                 claims.Add(new Claim("userId", "2"));
-                _logger.LogInformation("Using demo manager token claims");
+                logger.Log(this, "Using demo manager token claims", "info");
                 return claims;
             }
             
@@ -149,12 +151,12 @@ namespace CapstoneBlazorApp.Services.Auth
                         claims.Add(new Claim(ClaimTypes.Role, roleClaim.Value));
                     }
                 }
-                
-                _logger.LogInformation("Successfully parsed JWT token claims");
+
+                logger.Log(this, "Successfully parsed JWT token claims", "info");
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error parsing JWT token, using fallback claims");
+                logger.Log(this, $"Error parsing JWT token, using fallback claims: {ex.Message}", "error");
                 // For demo purposes, add basic claims if JWT parsing fails
                 claims.Add(new Claim(ClaimTypes.Name, "TestUser"));
                 claims.Add(new Claim(ClaimTypes.Role, "Employee"));

@@ -19,8 +19,6 @@ namespace CapstoneBlazorApp.Services
 
         private async Task SetAuthorizationHeaderAsync()
         {
-            // For now, we'll skip authentication headers since the demo auth doesn't provide JWT tokens
-            // This can be updated when proper JWT authentication is implemented
             return;
         }
 
@@ -49,13 +47,11 @@ namespace CapstoneBlazorApp.Services
                 }
                 else
                 {
-                    // If unauthorized, return null to trigger fallback
                     return null;
                 }
             }
             catch (Exception)
             {
-                // Return null to trigger fallback data
                 return null;
             }
         }
@@ -120,7 +116,6 @@ namespace CapstoneBlazorApp.Services
         {
             try
             {
-                // Get authorization token
                 var loginResponse = await LoginAndGetTokenAsync();
                 if (!string.IsNullOrEmpty(loginResponse?.AccessToken))
                 {
@@ -153,7 +148,6 @@ namespace CapstoneBlazorApp.Services
         {
             try
             {
-                // Get authorization token
                 var loginResponse = await LoginAndGetTokenAsync();
                 if (!string.IsNullOrEmpty(loginResponse?.AccessToken))
                 {
@@ -186,7 +180,6 @@ namespace CapstoneBlazorApp.Services
         {
             try
             {
-                // Get authorization token
                 var loginResponse = await LoginAndGetTokenAsync();
                 if (!string.IsNullOrEmpty(loginResponse?.AccessToken))
                 {

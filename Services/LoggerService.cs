@@ -7,7 +7,6 @@ namespace CapstoneBlazorApp.Services
 	{
 		public override void Log(object? sender, string message, string level = "info")
 		{
-			//add emojis to final string for level
 			string emoji = level switch
 			{
 				"error" => "❌",

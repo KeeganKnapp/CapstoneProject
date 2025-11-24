@@ -8,6 +8,8 @@ namespace CapstoneBlazorApp.Services.Auth
     {
         private string? _authToken;
         private readonly HttpClient _httpClient;
+
+        public string? AuthToken => _authToken;
         
         // Event to notify when authentication state changes
         public event EventHandler<string?>? AuthenticationStateChanged;
@@ -55,28 +57,46 @@ namespace CapstoneBlazorApp.Services.Auth
                 Console.WriteLine($"Login error: {ex.Message}");
                 return false;
             }
-        }        //check if user is manager for navigation purposes
+        }        
+
         public async Task<bool> IsUserManagerAsync(CancellationToken cancellationToken = default)
         {
             await Task.Delay(500, cancellationToken);
             //for demo purposes, if the auth token is "manager-token", return true
             return _authToken == "manager-token";
-        }        public async Task LogoutAsync(CancellationToken cancellationToken = default)
+        }        
+        
+        public async Task LogoutAsync(CancellationToken cancellationToken = default)
         {
             try
             {
                 _authToken = null;
                 
-                // Clear authorization header
                 _httpClient.DefaultRequestHeaders.Authorization = null;
                 
-                // Notify authentication state change
                 AuthenticationStateChanged?.Invoke(this, null);
             }
             catch (Exception ex)
             {
                 Console.WriteLine($"Logout error: {ex.Message}");
             }
+        }
+
+        public async Task<UserResponse?> GetCurrentUserAsync(CancellationToken cancellationToken = default)
+        {
+            try
+            {
+                var response = await _httpClient.GetAsync("auth/me", cancellationToken);
+                if (response.IsSuccessStatusCode)
+                {
+                    return await response.Content.ReadFromJsonAsync<UserResponse>(cancellationToken);
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error retrieving current user: {ex.Message}");
+            }
+            return null;
         }
 
         public async Task<bool> IsUserLoggedInAsync(CancellationToken cancellationToken = default)

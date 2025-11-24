@@ -165,7 +165,7 @@
                                         }
                                         @(jobsite?.Name ?? "Unknown")
                                     </MudTd>
-                                    <MudTd DataLabel="Assigned User">@(assignment.AssignedUserId?.ToString() ?? "Unassigned")</MudTd>
+                                    <MudTd DataLabel="Assigned User">@(allUsers.FirstOrDefault(u => u.UserId == assignment.AssignedUserId)?.DisplayName ?? "Unassigned")</MudTd>
                                     <MudTd DataLabel="Due Date">
                                         @if (assignment.DueDate.HasValue)
                                         {
@@ -267,7 +267,13 @@
                             </MudSelect>
                         </MudItem>
                         <MudItem xs="6">
-                            <MudNumericField @bind-Value="assignmentUserId" Label="Assigned User ID" />
+                            <MudSelect T="int?" @bind-Value="assignmentUserId" Label="Assign To">
+                                <MudSelectItem Value="@((int?)null)">Unassigned</MudSelectItem>
+                                @foreach (var user in allUsers)
+                                {
+                                    <MudSelectItem Value="@((int?)user.UserId)">@user.DisplayName (@user.Email)</MudSelectItem>
+                                }
+                            </MudSelect> 
                         </MudItem>
                         <MudItem xs="6">
                             <MudSelect T="string" @bind-Value="assignmentPriority" Label="Priority">
@@ -317,10 +323,11 @@
 </AuthorizeView>
 
 @code {
-    // Sample data since we don't have Assignment API endpoints yet
     private List<AssignmentDto> assignments = new();
     private List<AssignmentDto> filteredAssignments = new();
     private List<JobsiteDto> jobsites = new();
+
+    private List<UserResponse> allUsers = new();
     
     private AssignmentDto? selectedAssignment;
     private AssignmentDto? editingAssignment;
@@ -329,18 +336,15 @@
     private bool isSaving = false;
     private string errorMessage = "";
 
-    // Statistics
     private int totalAssignments = 0;
     private int activeAssignments = 0;
     private int completedAssignments = 0;
     private int overdueAssignments = 0;
 
-    // Filters
     private int? jobsiteFilter;
     private string statusFilter = "All";
     private string priorityFilter = "All";
 
-    // Form fields
     private string assignmentTitle = "";
     private string assignmentDescription = "";
     private int assignmentJobsiteId = 0;
@@ -354,6 +358,7 @@
     {
         await LoadJobsites();
         await LoadAssignments();
+        await LoadAllUsers();
     }
 
     private async Task LoadJobsites()
@@ -455,6 +460,21 @@
         activeAssignments = assignments.Count(a => GetAssignmentStatus(a) == "Active");
         completedAssignments = assignments.Count(a => GetAssignmentStatus(a) == "Completed");
         overdueAssignments = assignments.Count(a => GetAssignmentStatus(a) == "Overdue");
+    }
+
+    private async Task LoadAllUsers()
+    {
+        try
+        {
+            var users = await AssignmentApi.GetAllUsersAsync();
+            allUsers = users?.ToList() ?? new List<UserResponse>();
+            Logger.Log(this, $"Loaded {allUsers.Count}users", "info");
+        }
+        catch (Exception ex)
+        {
+            Logger.Log(this, $"Error loading users: {ex.Message}", "error");
+            return;
+        }
     }
 
     private string GetAssignmentStatus(AssignmentDto assignment)

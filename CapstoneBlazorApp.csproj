@@ -12,7 +12,6 @@
     <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="8.15.0" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\API\CapstoneAPI\CapstoneAPI.csproj" />
   </ItemGroup>
 
 </Project>

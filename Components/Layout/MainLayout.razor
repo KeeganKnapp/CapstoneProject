@@ -18,7 +18,7 @@
 <MudSnackbarProvider/>
 <MudPopoverProvider /> 
 
-<MudLayout>    @if (!_isDebug) {
+<MudLayout>    
         <MudAppBar Color="Color.Primary" Elevation="0">
             @if(NavigationTracker.Count > 0) {
                 <MudIconButton Icon="@Icons.Material.Filled.ArrowBack" 
@@ -49,11 +49,15 @@
             </AuthorizeView>
             
             <MudIconButton Color="Color.Inherit" Icon="@Icons.Material.Filled.DarkMode" OnClick="ToggleDarkMode" />
+
         </MudAppBar>
-    }
-    else {
+
+
+    <MudMainContent Style="height: 100vh; overflow: hidden;">
+    @if (_isDebug) {
         <MudExpansionPanels>
             <MudExpansionPanel Text="Debug Log">
+            <div style="max-height: 300px; overflow-y: auto;">
                 <MudList T="string" Dense="true">
                     @foreach (var log in logMessages)
                     {
@@ -62,18 +66,17 @@
                         </MudListItem>
                     }
                 </MudList>
+            </div>
             </MudExpansionPanel>
         </MudExpansionPanels>
     }
-
-    <MudMainContent Style="height: 100vh; overflow: hidden;">
         @Body
     </MudMainContent>
 </MudLayout>
 
 @code {
     private bool _isDarkMode = false;
-    private bool _isDebug = false; // Set to false to show the app bar
+    private bool _isDebug = true; // Set to false to show the app bar
     
     private List<string> logMessages = new List<string>();
     private readonly MudTheme _theme = new()

@@ -12,6 +12,8 @@
 @inject JobsiteApiService JobsiteApi
 @inject TimeEntryApiService TimeEntryApi
 
+@inject IAuthService AuthService
+
 @namespace CapstoneBlazorApp.Components.Pages
 
 @page "/employee-dashboard"
@@ -51,7 +53,7 @@
             else {
                 <MudCard Elevation="2" Style="height: 100%; width: 100%;">
                     <MudCardContent Style="height: 100%;">
-                        <ToDo/>
+                        <ToDo JobsiteId="@selectedSite" UserId="@UserId"/>
                     </MudCardContent>
                 </MudCard>
             }
@@ -138,11 +140,14 @@
     private double currentLatitude = 47.6062;
     private double currentLongitude = -122.3321;    private int selectedSite = 0;
     public List<SiteDto> sites = new();
+    private int UserId = -1;
     private bool isLoadingSites = true;    protected override async Task OnInitializedAsync()
     {
         await LoadJobsites();
         await CheckCurrentClockStatus();
     }
+
+
 
     private async Task CheckCurrentClockStatus()
     {
