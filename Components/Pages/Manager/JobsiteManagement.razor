@@ -181,11 +181,9 @@
     private bool isSaving = false;
     private string errorMessage = "";
     
-    // Map references
     private JobsiteMapManager? mainMapRef;
     private JobsiteMapManager? dialogMapRef;
 
-    // Form fields
     private string jobsiteName = "";
     private double jobsiteLatitude = 40.7128;
     private double jobsiteLongitude = -74.0060;
@@ -215,14 +213,11 @@
             jobsites = result?.Select(j => j.ToJobsiteDto()).ToList() ?? new List<JobsiteDto>();
             Logger.Log(this, $"Loaded {jobsites.Count} jobsites", "info");
             
-            // Update the UI first
             isLoading = false;
             StateHasChanged();
             
-            // Give the component time to update with new jobsites data
             await Task.Delay(200);
             
-            // Refresh the main map with new jobsites
             if (mainMapRef != null)
             {
                 Logger.Log(this, "Refreshing main map with jobsites", "info");
@@ -242,7 +237,6 @@
         selectedJobsite = jobsite;
         Logger.Log(this, $"Selected jobsite: {jobsite.Name}", "info");
         
-        // Focus the map on the selected jobsite
         if (mainMapRef != null)
         {
             await mainMapRef.FocusOnLocation(jobsite.JobsiteId);
@@ -262,7 +256,6 @@
         showJobsiteDialog = true;
         StateHasChanged();
 
-        // Give the dialog time to render before initializing the map
         await Task.Delay(200);
         StateHasChanged();
     }
@@ -278,7 +271,6 @@
         showJobsiteDialog = true;
         StateHasChanged();
 
-        // Give the dialog time to render before initializing the map
         await Task.Delay(200);
         StateHasChanged();
     }
@@ -338,7 +330,7 @@
             if (success)
             {
                 showJobsiteDialog = false;
-                await LoadJobsites(); // This will also refresh the main map
+                await LoadJobsites(); 
             }
             else
             {
@@ -365,7 +357,7 @@
             if (success)
             {
                 Logger.Log(this, $"Deleted jobsite: {jobsite.Name}", "info");
-                await LoadJobsites(); // This will also refresh the main map
+                await LoadJobsites(); 
                 if (selectedJobsite?.JobsiteId == jobsite.JobsiteId)
                 {
                     selectedJobsite = null;

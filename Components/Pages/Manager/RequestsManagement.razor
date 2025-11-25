@@ -285,8 +285,6 @@
         {
             isLoading = true;
             
-            // Note: This uses the user-specific endpoint since we don't have a manager endpoint yet
-            // In a real implementation, you'd have an endpoint like /api/requestoff/all
             requests = await RequestApi.GetAllRequestsAsync() ?? new List<RequestOffDto>();
             
             ApplyFilters();
@@ -309,11 +307,9 @@
     {
         filteredRequests = requests.Where(request =>
         {
-            // Status filter
             if (statusFilter != "All" && GetStatusText(request) != statusFilter)
                 return false;
 
-            // Date range filter
             if (filterStartDate.HasValue && request.StartDate.ToDateTime(TimeOnly.MinValue) < filterStartDate.Value.Date)
                 return false;
             
@@ -331,7 +327,6 @@
         totalRequests = requests.Count;
         pendingCount = requests.Count(r => GetStatusText(r) == "Pending");
         
-        // Approved this month
         var thisMonth = DateTime.Now.Date.AddDays(-DateTime.Now.Day + 1);
         approvedCount = requests.Count(r => GetStatusText(r) == "Approved" && 
                                            r.CreatedAt.HasValue && 
@@ -340,9 +335,6 @@
 
     private string GetStatusText(RequestOffDto request)
     {
-        // For now, all requests are pending since we don't have status field in DTO
-        // In a real implementation, you'd have a Status field
-        // return "Pending";
         if (request.Status != null){
             return request.Status;
         }else{

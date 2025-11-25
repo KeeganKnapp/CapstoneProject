@@ -177,7 +177,6 @@ namespace CapstoneBlazorApp.Services
                         new AuthenticationHeaderValue("Bearer", loginResponse.AccessToken);
                 }
 
-                // Bodge fix sine
                 var loginRequest = new
                 {
                     email = "test",
@@ -209,7 +208,6 @@ namespace CapstoneBlazorApp.Services
                         new AuthenticationHeaderValue("Bearer", loginResponse.AccessToken);
                 }
 
-                // Bodge fix sine
                 var loginRequest = new
                 {
                     email = "test",

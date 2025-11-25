@@ -123,7 +123,6 @@
                     </MudPaper>
                 </MudItem>
 
-                <!-- Recent Activity -->
                 <MudItem xs="12" md="6">
                     <MudPaper Class="p-4" Style="min-height: 400px;">
                         <MudText Typo="Typo.h5" GutterBottom="true">Recent Time Entries</MudText>
@@ -239,19 +238,14 @@
     {
         try
         {
-            // Load jobsites
             var jobsites = await JobsiteApi.GetAllJobsitesAsync();
             totalJobsites = jobsites?.Count ?? 0;
 
-            // Load time entries
             isLoadingTimeEntries = true;
-            // Note: We'd need a manager endpoint to get all time entries
-            // For now, using the user-specific endpoint
             recentTimeEntries = await TimeEntryApi.GetMyTimeEntriesAsync();
             activeClockIns = recentTimeEntries.Count(te => !te.EndTime.HasValue);
             isLoadingTimeEntries = false;
 
-            // Load requests
             isLoadingRequests = true;
             recentRequests = await RequestApi.GetAllRequestsAsync() ?? new List<RequestOffDto>();
             pendingRequests = recentRequests.Count;
@@ -268,7 +262,6 @@
 
     private void NavigateToPage(string url)
     {
-        // Push current dashboard page to navigation tracker for back button functionality
         NavTracker.Push("/manager-dashboard");
         NavTracker.ButtonLabel = "Back to Dashboard";
         Nav.NavigateTo(url);

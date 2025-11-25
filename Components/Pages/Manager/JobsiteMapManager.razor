@@ -8,7 +8,6 @@
 
 @namespace CapstoneBlazorApp.Components.Pages.Manager
 
-<!-- Interactive Manager Job Site Map with Add Capability -->
 <div id="@_id" style="height: 400px; width: 100%; border-radius: 4px; overflow: hidden; border: 1px solid #e0e0e0;"></div>
 
 @if (IsAddMode)
@@ -55,7 +54,6 @@
         }
         else if (!firstRender && !initialized)
         {
-            // Re-initialize if needed (e.g., dialog reopened)
             await Task.Delay(300);
             await InitializeMap();
         }
@@ -67,12 +65,10 @@
         {
             Logger.Log(this, $"Initializing Manager JobSite Map with ID: {_id}, AddMode: {IsAddMode}");
             
-            // Wait for DOM element to be fully rendered
             await Task.Delay(IsAddMode ? 300 : 100);
             
             _ref = DotNetObjectReference.Create(this);
             
-            // Convert JobsiteDto to SiteDto for the map
             var sites = Jobsites?.Select(j => new SiteDto(
                 j.JobsiteId,
                 j.Name,
@@ -93,7 +89,6 @@
             Logger.Log(this, $"Error initializing manager map: {ex.Message}", "error");
             initialized = false;
             
-            // Retry once after a longer delay
             await Task.Delay(500);
             try
             {
