@@ -35,7 +35,8 @@ namespace CapstoneAPI.Services
                 new(JwtRegisteredClaimNames.Sub, user.UserId.ToString()),   // subject = user id, identifies user
                 new(JwtRegisteredClaimNames.Email, user.Email),             // provides user email
                 new("displayName", user.DisplayName ?? string.Empty),        // custom claim
-                new(ClaimTypes.Role, user.Role)
+                new(ClaimTypes.Role, user.Role),
+                new("userId", user.UserId.ToString())
             };
 
             // creating signing credentials

@@ -11,6 +11,7 @@ namespace CapstoneAPI.Services
         Task<AssignmentResponse> GetByIdAsync(int assignmentId, int requesterUserId);
         Task<IEnumerable<AssignmentResponse>> GetForJobsiteAsync(int jobsiteId, int requesterUserId);
         Task<IEnumerable<AssignmentResponse>> GetForUserAsync(int userId, string? status);
+
         Task<AssignmentResponse> UpdateAsync(int assignmentId, int requesterUserId, AssignmentUpdateRequest request);
         Task<AssignmentResponse> UpdateStatusAsync(int assignmentId, int requesterUserId, string status);
         Task DeleteAsync(int assignmentId, int requesterUserId);

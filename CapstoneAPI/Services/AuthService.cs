@@ -48,8 +48,8 @@ namespace CapstoneAPI.Services
             if (exists) throw new InvalidOperationException("Email already registered.");
 
             
-            var role = _managerEmails.Contains(emailRaw, StringComparer.OrdinalIgnoreCase) ? "Manager" : "Employee";
-
+            //var role = _managerEmails.Contains(emailRaw, StringComparer.OrdinalIgnoreCase) ? "Manager" : "Employee";
+            var role = req.Role == "Manager" ? "Manager" : "Employee";
             // creates a new user
             var user = new User
             {
@@ -102,6 +102,60 @@ namespace CapstoneAPI.Services
                 Role = user.Role
             };
         }
+        public async Task DeleteUserAsync(int userId, CancellationToken ct) 
+        {
+            var user = await _db.Users.FirstOrDefaultAsync(u => u.UserId == userId, ct);
+
+            if (user == null)
+                throw new KeyNotFoundException($"User {userId} not found.");
+
+            _db.Users.Remove(user);
+            await _db.SaveChangesAsync(ct);
+        } 
+
+
+        public async Task<IEnumerable<UserResponse>> GetAllUsersAsync(CancellationToken ct)
+        {
+            return await _db.Users.Select(u => new UserResponse
+            {
+                UserId = u.UserId,
+                Email = u.Email,
+                DisplayName = u.DisplayName,
+                Role = u.Role,
+                IsActive = u.IsActive,
+                CreatedAt = u.CreatedAt,
+                UpdatedAt = u.UpdatedAt
+            }).ToListAsync(ct);
+        }
+
+        public async Task UpdateUserAsync(int userId, UserChangeRequest req, CancellationToken ct)
+        {
+            var user = await _db.Users.FirstOrDefaultAsync(u => u.UserId == userId, ct);
+
+            if (user == null)
+                throw new KeyNotFoundException($"User {userId} not found.");
+
+            if (!string.IsNullOrWhiteSpace(req.Name))
+                user.DisplayName = req.Name.Trim();
+
+            if (!string.IsNullOrWhiteSpace(req.Email))
+            {
+                var emailNorm = req.Email.Trim().ToLowerInvariant();
+                var exists = await _db.Users.AnyAsync(u => u.Email.ToLower() == emailNorm && u.UserId != userId, ct);
+                if (exists)
+                    throw new InvalidOperationException("Email already registered.");
+
+                user.Email = req.Email.Trim();
+            }
+
+            if (!string.IsNullOrWhiteSpace(req.Password))
+                user.PasswordHash = PasswordHasher.Hash(req.Password);
+
+            user.UpdatedAt = DateTimeOffset.UtcNow;
+
+            await _db.SaveChangesAsync(ct);
+        }
+
 
         // authenticate credentials and issue tokens
         public async Task<AuthResponse> LoginAsync(LoginRequest req, CancellationToken ct)
@@ -149,6 +203,7 @@ namespace CapstoneAPI.Services
                 Role = user.Role
             };
         }
+
 
         // handles refreshing an expired acces token using a valid refresh token
         // verifies the refresh token, rotates it, and issues a new pair

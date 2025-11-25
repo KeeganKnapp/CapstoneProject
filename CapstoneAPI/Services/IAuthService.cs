@@ -18,6 +18,11 @@ namespace CapstoneAPI.Services
         Task<AuthResponse> RefreshAsync(string refreshToken, CancellationToken ct);  // handles access token renewal, takes a string refresh token, verifies it, rotates it, and returns new tokens
         Task LogoutAsync(string refreshToken, CancellationToken ct); // revoke a single refresh token
         Task LogoutAllAsync(int userId, CancellationToken ct);      // revoke all refresh tokens for a user
+        Task<IEnumerable<UserResponse>> GetAllUsersAsync(CancellationToken ct); // retrieves all users in the system
+
+        Task DeleteUserAsync(int userId, CancellationToken ct);     // deletes a user by their userId
+
+        Task UpdateUserAsync(int userId, UserChangeRequest req, CancellationToken ct); // updates a user's information
     }
 }
 

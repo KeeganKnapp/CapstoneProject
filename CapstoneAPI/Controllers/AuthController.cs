@@ -42,6 +42,46 @@ namespace CapstoneAPI.Controllers
             }
         }
 
+        [HttpDelete("users/{userId:int}")]
+        [Authorize(Roles = "Manager")]
+        public async Task<IActionResult> DeleteUser(int userId, CancellationToken ct)
+        {
+            try
+            {
+                await _auth.DeleteUserAsync(userId, ct);
+                return NoContent();
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { error = ex.Message });
+            }
+        }
+
+ 
+        [HttpGet("allusers")]
+        [Authorize(Roles = "Manager")]
+        public async Task<ActionResult<IEnumerable<UserResponse>>> GetAllUsers(CancellationToken ct)
+        {
+
+            var users = await _auth.GetAllUsersAsync(ct);
+            return Ok(users);
+        }
+
+        [HttpPut("users/{userId:int}")]
+        [Authorize(Roles = "Manager")]
+        public async Task<IActionResult> UpdateUser(int userId, [FromBody] UserChangeRequest req, CancellationToken ct)
+        {
+            try
+            {
+                await _auth.UpdateUserAsync(userId, req, ct);
+                return NoContent();
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { error = ex.Message });
+            }
+        }
+
         [HttpPost("login")]
         [ProducesResponseType(typeof(AuthResponse), 200)]
         public async Task<ActionResult<AuthResponse>> Login([FromBody] LoginRequest req, CancellationToken ct)
@@ -77,6 +117,7 @@ namespace CapstoneAPI.Controllers
                 return Unauthorized(new { error = ex.Message });
             }
         }
+
 
 
         // manual logout, API revokes the provided refresh token so it cant be reused

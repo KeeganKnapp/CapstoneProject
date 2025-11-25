@@ -14,5 +14,6 @@ namespace CapstoneAPI.Dtos
         public string Email { get; set; } = null!;     // login name (citext in db => case-insensitive)
         public string Password { get; set; } = null!;  // raw password
         public string? DisplayName { get; set; }       // optional friendly name for UI
+        public string Role { get; set; } = "Employee"; // "Employee" or "Manager"
     }
 }
