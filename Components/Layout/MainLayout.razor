@@ -32,11 +32,8 @@
             
             <AuthorizeView>
                 <Authorized>
-                    <MudText Typo="Typo.body2" Class="mr-3">Welcome, @context.User.Identity?.Name</MudText>                    <MudIconButton Color="Color.Inherit" Icon="@Icons.Material.Filled.Dashboard" 
-                                   OnClick="@(() => Nav.NavigateTo("/employee-dashboard"))" 
-                                   Title="Employee Dashboard" />                    <MudIconButton Color="Color.Inherit" Icon="@Icons.Material.Filled.AdminPanelSettings" 
-                                   OnClick="@(() => NavigateToManager())" 
-                                   Title="Manager Dashboard" />
+                    <MudText Typo="Typo.body2" Class="mr-3">Welcome, @context.User.Identity?.Name</MudText>                   
+
                     <MudIconButton Color="Color.Inherit" Icon="@Icons.Material.Filled.Logout" 
                                    OnClick="HandleLogout" 
                                    Title="Logout" />

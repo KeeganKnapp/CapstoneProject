@@ -46,6 +46,23 @@ namespace CapstoneBlazorApp.Services.Auth
             }
         }
 
+        public async Task<int?> GetCurrentUserIdAsync()
+        {
+            var authState = await GetAuthenticationStateAsync();
+            var user = authState.User;
+
+            if (user.Identity != null && user.Identity.IsAuthenticated)
+            {
+                var userIdClaim = user.Claims.FirstOrDefault(c => c.Type == "userId");
+                if (userIdClaim != null && int.TryParse(userIdClaim.Value, out int userId))
+                {
+                    return userId;
+                }
+            }
+
+            return null;
+        }
+
         public override async Task<AuthenticationState> GetAuthenticationStateAsync()
         {
             try

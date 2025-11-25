@@ -46,56 +46,72 @@ namespace CapstoneBlazorApp.Services
             }
         }
 
-        public async Task<List<RequestOffDto>?> GetMyRequestsAsync(CancellationToken cancellationToken = default)
+        public async Task<List<RequestOffDto>?> GetRequestsByUserIdAsync(int userId, CancellationToken cancellationToken = default)
         {
             try
             {
                 Console.WriteLine("GetMyRequestsAsync called - attempting API call");
-                
+                 
                 var loginResponse = await LoginAndGetTokenAsync();
                 if (!string.IsNullOrEmpty(loginResponse?.AccessToken))
                 {
                     _httpClient.DefaultRequestHeaders.Authorization = 
                         new AuthenticationHeaderValue("Bearer", loginResponse.AccessToken);
-                    Console.WriteLine("JWT token obtained and set in headers");
                 }
 
-                var response = await _httpClient.GetAsync("/api/requestoff/mine", cancellationToken);
-                Console.WriteLine($"API response status: {response.StatusCode}");
+                var response = await _httpClient.GetAsync($"/api/requestoff/{userId}", cancellationToken);
                 
                 if (response.IsSuccessStatusCode)
                 {
                     var jsonString = await response.Content.ReadAsStringAsync();
-                    Console.WriteLine($"API Response: {jsonString}");
-                    
                     var options = new JsonSerializerOptions
                     {
                         PropertyNameCaseInsensitive = true
                     };
-                    var result = JsonSerializer.Deserialize<List<RequestOffDto>>(jsonString, options);
-                    Console.WriteLine($"Deserialized {result?.Count ?? 0} requests from API");
-                    
-                    return result;
+                    return JsonSerializer.Deserialize<List<RequestOffDto>>(jsonString, options);
                 }
                 else
                 {
-                    Console.WriteLine($"API call failed with status: {response.StatusCode}, falling back to mock data");
+                    return null;
                 }
             }
-            catch (Exception ex)
+            catch (Exception)
             {
-                Console.WriteLine($"Exception in GetMyRequestsAsync: {ex.Message}, falling back to mock data");
+                return null;
             }
-            
-            var mockData = new List<RequestOffDto>
+        }
+
+
+        public async Task<List<RequestOffDto>?> GetAllRequestsAsync(CancellationToken cancellationToken = default) {
+            try
             {
-                new RequestOffDto(100, 1, DateOnly.FromDateTime(DateTime.Now.AddDays(7)), DateOnly.FromDateTime(DateTime.Now.AddDays(14)), "Holiday Vacation (Mock)"),
-                new RequestOffDto(101, 1, DateOnly.FromDateTime(DateTime.Now.AddDays(30)), DateOnly.FromDateTime(DateTime.Now.AddDays(32)), "Personal Time Off (Mock)"),
-                new RequestOffDto(102, 1, DateOnly.FromDateTime(DateTime.Now.AddDays(60)), DateOnly.FromDateTime(DateTime.Now.AddDays(63)), "Medical Appointment (Mock)")
-            };
-            
-            Console.WriteLine($"Returning {mockData.Count} mock requests as fallback");
-            return mockData;
+                var loginResponse = await LoginAndGetTokenAsync();
+                if (!string.IsNullOrEmpty(loginResponse?.AccessToken))
+                {
+                    _httpClient.DefaultRequestHeaders.Authorization = 
+                        new AuthenticationHeaderValue("Bearer", loginResponse.AccessToken);
+                }
+
+                var response = await _httpClient.GetAsync("/api/requestoff", cancellationToken);
+                
+                if (response.IsSuccessStatusCode)
+                {
+                    var jsonString = await response.Content.ReadAsStringAsync();
+                    var options = new JsonSerializerOptions
+                    {
+                        PropertyNameCaseInsensitive = true
+                    };
+                    return JsonSerializer.Deserialize<List<RequestOffDto>>(jsonString, options);
+                }
+                else
+                {
+                    return null;
+                }
+            }
+            catch (Exception)
+            {
+                return null;
+            }
         }
 
         public async Task<RequestOffDto?> CreateRequestAsync(RequestOffCreateDto request, CancellationToken cancellationToken = default)

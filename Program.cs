@@ -38,6 +38,7 @@ builder.Services.AddScoped<TimeEntryApiService>();
 builder.Services.AddScoped<AssignmentApiService>();
 builder.Services.AddScoped<LocationManager>();
 builder.Services.AddScoped<NavigationTracker>();
+builder.Services.AddScoped<UserManagementApiService>();
 builder.Services.AddScoped<AbstractLoggerService, LoggerService>();
 
 

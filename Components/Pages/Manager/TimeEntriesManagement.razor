@@ -90,9 +90,8 @@
                     </MudCard>
                 </MudItem>
 
-                <!-- Time Entries Table -->
                 <MudItem xs="12">
-                    <MudPaper Class="p-4">
+                    <MudPaper Class="p-4" Style="max-height: 500px; overflow-y: auto;">
                         <div class="d-flex justify-content-between align-items-center mb-3">
                             <MudText Typo="Typo.h5">Time Entries</MudText>
                             <MudButton Variant="Variant.Outlined" Color="Color.Primary" 
@@ -237,12 +236,10 @@
     private bool isLoading = true;
     private bool showDetailsDialog = false;
 
-    // Statistics
     private int activeEntries = 0;
     private int totalEntries = 0;
     private double totalHours = 0;
 
-    // Filters
     private DateTime? filterStartDate;
     private DateTime? filterEndDate;
     private bool showActiveOnly = false;
@@ -251,7 +248,6 @@
 
     protected override async Task OnInitializedAsync()
     {
-        // Set default filter dates (last 30 days)
         filterEndDate = DateTime.Today;
         filterStartDate = DateTime.Today.AddDays(-30);
         
@@ -264,8 +260,6 @@
         {
             isLoading = true;
             
-            // Note: This uses the user-specific endpoint since we don't have a manager endpoint yet
-            // In a real implementation, you'd have an endpoint like /api/time-entries/all
             timeEntries = await TimeEntryApi.GetMyTimeEntriesAsync();
             
             ApplyFilters();
@@ -288,14 +282,12 @@
     {
         filteredTimeEntries = timeEntries.Where(entry =>
         {
-            // Date range filter
             if (filterStartDate.HasValue && entry.StartTime.Date < filterStartDate.Value.Date)
                 return false;
             
             if (filterEndDate.HasValue && entry.StartTime.Date > filterEndDate.Value.Date)
                 return false;
 
-            // Active only filter
             if (showActiveOnly && !entry.IsActive)
                 return false;
 
@@ -333,11 +325,11 @@
             if (success)
             {
                 Logger.Log(this, $"Forced clock out for entry {entry.TimeEntryId}", "info");
-                await LoadTimeEntries(); // Refresh data
+                await LoadTimeEntries(); 
                 
                 if (showDetailsDialog && selectedEntry?.TimeEntryId == entry.TimeEntryId)
                 {
-                    CloseDetailsDialog(); // Close dialog if it was showing this entry
+                    CloseDetailsDialog(); 
                 }
             }
             else

@@ -200,8 +200,7 @@
     {
         if (firstRender && mainMapRef != null && jobsites.Any())
         {
-            // Ensure the map is refreshed after initial render with jobsites
-            await Task.Delay(500); // Give the map time to fully initialize
+            await Task.Delay(500);
             Logger.Log(this, "Refreshing map after first render", "info");
             await mainMapRef.RefreshMap();
         }

@@ -1,6 +1,7 @@
 using CapstoneBlazorApp.Services.Abstractions;
 using CapstoneBlazorApp.Dtos;
 using System.Net.Http.Json;
+using Microsoft.AspNetCore.Components.Authorization;
 
 namespace CapstoneBlazorApp.Services.Auth
 {
@@ -79,23 +80,6 @@ namespace CapstoneBlazorApp.Services.Auth
             {
                 Console.WriteLine($"Logout error: {ex.Message}");
             }
-        }
-
-        public async Task<UserResponse?> GetCurrentUserAsync(CancellationToken cancellationToken = default)
-        {
-            try
-            {
-                var response = await _httpClient.GetAsync("auth/me", cancellationToken);
-                if (response.IsSuccessStatusCode)
-                {
-                    return await response.Content.ReadFromJsonAsync<UserResponse>(cancellationToken);
-                }
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"Error retrieving current user: {ex.Message}");
-            }
-            return null;
         }
 
         public async Task<bool> IsUserLoggedInAsync(CancellationToken cancellationToken = default)

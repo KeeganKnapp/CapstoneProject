@@ -112,6 +112,13 @@
                                     Manage Assignments
                                 </MudButton>
                             </MudItem>
+                            <MudItem xs="6" md="3">
+                                <MudButton Variant="Variant.Filled" Color="Color.Secondary" FullWidth="true"
+                                          StartIcon="@Icons.Material.Filled.Assignment"
+                                          OnClick="@(() => NavigateToPage("/manager/employees"))">
+                                    Manage Employees
+                                </MudButton>
+                            </MudItem>
                         </MudGrid>
                     </MudPaper>
                 </MudItem>
@@ -246,7 +253,7 @@
 
             // Load requests
             isLoadingRequests = true;
-            recentRequests = await RequestApi.GetMyRequestsAsync();
+            recentRequests = await RequestApi.GetAllRequestsAsync() ?? new List<RequestOffDto>();
             pendingRequests = recentRequests.Count;
             isLoadingRequests = false;
 

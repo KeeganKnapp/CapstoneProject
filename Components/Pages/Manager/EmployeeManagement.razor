@@ -1,0 +1,459 @@
+@page "/manager/employees"
+@rendermode InteractiveServer
+
+@using CapstoneBlazorApp.Services
+@using CapstoneBlazorApp.Services.Abstractions
+@using CapstoneBlazorApp.Models
+@using CapstoneBlazorApp.Dtos
+@using Microsoft.AspNetCore.Components.Authorization
+@using MudBlazor
+
+@inject AbstractLoggerService Logger
+@inject NavigationManager Nav
+@inject NavigationTracker NavTracker
+@inject UserManagementApiService UserManagementApi
+
+<AuthorizeView>
+    <Authorized>
+        <MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="py-4">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div class="d-flex align-items-center">
+                    <MudText Typo="Typo.h4">User Management</MudText>
+                </div>
+                <MudButton Variant="Variant.Filled" Color="Color.Primary"
+                          StartIcon="@Icons.Material.Filled.PersonAdd"
+                          OnClick="OpenCreateUserDialog">
+                    Add New User
+                </MudButton>
+            </div>
+
+            <MudGrid Spacing="4">
+                <!-- sumary -->
+                <MudItem xs="12" md="3">
+                    <MudCard>
+                        <MudCardContent>
+                            <div class="d-flex align-items-center">
+                                <MudIcon Icon="@Icons.Material.Filled.People" Size="Size.Large" Color="Color.Primary" Class="mr-3" />
+                                <div>
+                                    <MudText Typo="Typo.h5">@totalUsers</MudText>
+                                    <MudText Typo="Typo.body2" Color="Color.Secondary">Total Users</MudText>
+                                </div>
+                            </div>
+                        </MudCardContent>
+                    </MudCard>
+                </MudItem>
+
+                <MudItem xs="12" md="3">
+                    <MudCard>
+                        <MudCardContent>
+                            <div class="d-flex align-items-center">
+                                <MudIcon Icon="@Icons.Material.Filled.Work" Size="Size.Large" Color="Color.Info" Class="mr-3" />
+                                <div>
+                                    <MudText Typo="Typo.h5">@employeeCount</MudText>
+                                    <MudText Typo="Typo.body2" Color="Color.Secondary">Employees</MudText>
+                                </div>
+                            </div>
+                        </MudCardContent>
+                    </MudCard>
+                </MudItem>
+
+                <MudItem xs="12" md="3">
+                    <MudCard>
+                        <MudCardContent>
+                            <div class="d-flex align-items-center">
+                                <MudIcon Icon="@Icons.Material.Filled.AdminPanelSettings" Size="Size.Large" Color="Color.Warning" Class="mr-3" />
+                                <div>
+                                    <MudText Typo="Typo.h5">@managerCount</MudText>
+                                    <MudText Typo="Typo.body2" Color="Color.Secondary">Managers</MudText>
+                                </div>
+                            </div>
+                        </MudCardContent>
+                    </MudCard>
+                </MudItem>
+
+                <MudItem xs="12" md="3">
+                    <MudCard>
+                        <MudCardContent>
+                            <div class="d-flex align-items-center">
+                                <MudIcon Icon="@Icons.Material.Filled.CheckCircle" Size="Size.Large" Color="Color.Success" Class="mr-3" />
+                                <div>
+                                    <MudText Typo="Typo.h5">@activeUsers</MudText>
+                                    <MudText Typo="Typo.body2" Color="Color.Secondary">Active Users</MudText>
+                                </div>
+                            </div>
+                        </MudCardContent>
+                    </MudCard>
+                </MudItem>
+
+                <MudItem xs="12">
+                    <MudPaper Class="p-4">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <MudText Typo="Typo.h5">Users</MudText>
+                            <MudButton Variant="Variant.Outlined" Color="Color.Primary" 
+                                      StartIcon="@Icons.Material.Filled.Refresh"
+                                      OnClick="LoadUsers">
+                                Refresh
+                            </MudButton>
+                        </div>
+
+                        @if (isLoading)
+                        {
+                            <MudProgressCircular Indeterminate="true" />
+                        }
+                        else
+                        {
+                            <MudTable Items="@users" Hover="true" Dense="true" Striped="true">
+                                <HeaderContent>
+                                    <MudTh>ID</MudTh>
+                                    <MudTh>Name</MudTh>
+                                    <MudTh>Email</MudTh>
+                                    <MudTh>Role</MudTh>
+                                    <MudTh>Status</MudTh>
+                                    <MudTh>Created</MudTh>
+                                    <MudTh>Actions</MudTh>
+                                </HeaderContent>
+                                <RowTemplate Context="user">
+                                    <MudTd DataLabel="ID">@user.UserId</MudTd>
+                                    <MudTd DataLabel="Name">@(user.DisplayName ?? "No Name")</MudTd>
+                                    <MudTd DataLabel="Email">@user.Email</MudTd>
+                                    <MudTd DataLabel="Role">
+                                        <MudChip T="string" Color="@GetRoleColor(user.Role)" Size="Size.Small">
+                                            @user.Role
+                                        </MudChip>
+                                    </MudTd>
+                                    <MudTd DataLabel="Status">
+                                        <MudChip T="string" Color="@(user.IsActive ? Color.Success : Color.Error)" Size="Size.Small">
+                                            @(user.IsActive ? "Active" : "Inactive")
+                                        </MudChip>
+                                    </MudTd>
+                                    <MudTd DataLabel="Created">@user.CreatedAt.ToString("MMM dd, yyyy")</MudTd>
+                                    <MudTd DataLabel="Actions">
+                                        <MudIconButton Icon="@Icons.Material.Filled.Visibility" 
+                                                     Color="Color.Primary" Size="Size.Small"
+                                                     OnClick="@(() => ViewUserDetails(user))"
+                                                     Title="View Details" />
+                                    </MudTd>
+                                </RowTemplate>
+                                <PagerContent>
+                                    <MudTablePager PageSizeOptions="new int[]{10, 25, 50}" />
+                                </PagerContent>
+                            </MudTable>
+                        }
+                    </MudPaper>
+                </MudItem>
+            </MudGrid>
+        </MudContainer>
+
+        <MudDialog @bind-Visible="showUserDialog" Options="dialogOptions">
+            <DialogContent>
+                <MudText Typo="Typo.h6" GutterBottom="true">
+                    @(editingUser != null ? "Edit User" : selectedUser != null ? "User Details" : "Create New User")
+                </MudText>
+                
+                @if (selectedUser != null && editingUser == null)
+                {
+                    <MudGrid Spacing="3">
+                        <MudItem xs="12" md="6">
+                            <MudTextField Label="User ID" Value="@selectedUser.UserId.ToString()" ReadOnly="true" />
+                        </MudItem>
+                        <MudItem xs="12" md="6">
+                            <MudTextField Label="Status" Value="@(selectedUser.IsActive ? "Active" : "Inactive")" ReadOnly="true" />
+                        </MudItem>
+                        <MudItem xs="12">
+                            <MudTextField Label="Display Name" Value="@selectedUser.DisplayName" ReadOnly="true" />
+                        </MudItem>
+                        <MudItem xs="12">
+                            <MudTextField Label="Email" Value="@selectedUser.Email" ReadOnly="true" />
+                        </MudItem>
+                        <MudItem xs="12" md="6">
+                            <MudTextField Label="Role" Value="@selectedUser.Role" ReadOnly="true" />
+                        </MudItem>
+                        <MudItem xs="12" md="6">
+                            <MudTextField Label="Created" Value="@selectedUser.CreatedAt.ToString("yyyy-MM-dd HH:mm")" ReadOnly="true" />
+                        </MudItem>
+                    </MudGrid>
+                }
+                else
+                {
+                    <!-- Edit/Create Mode -->
+                    <MudGrid Spacing="3">
+                        <MudItem xs="12">
+                            <MudTextField @bind-Value="userDisplayName" Label="Display Name" Required="true" />
+                        </MudItem>
+                        <MudItem xs="12">
+                            <MudTextField @bind-Value="userEmail" Label="Email" Required="true" InputType="InputType.Email" />
+                        </MudItem>
+                        @if (editingUser == null)
+                        {
+                            <MudItem xs="12">
+                                <MudTextField @bind-Value="userPassword" Label="Password" Required="true" InputType="InputType.Password" />
+                            </MudItem>
+                        }
+                        <MudItem xs="12" md="6">
+                            <MudSelect T="string" @bind-Value="userRole" Label="Role" Required="true">
+                                <MudSelectItem Value="@("Employee")">Employee</MudSelectItem>
+                                <MudSelectItem Value="@("Manager")">Manager</MudSelectItem>
+                            </MudSelect>
+                        </MudItem>
+                    </MudGrid>
+
+                    @if (!string.IsNullOrEmpty(errorMessage))
+                    {
+                        <MudAlert Severity="Severity.Error" Class="mt-3">@errorMessage</MudAlert>
+                    }
+                }
+            </DialogContent>
+            <DialogActions>
+                <MudButton OnClick="CloseUserDialog">
+                    @(selectedUser != null && editingUser == null ? "Close" : "Cancel")
+                </MudButton>
+                @if (selectedUser != null && editingUser == null)
+                {
+                    <MudButton Color="Color.Primary" OnClick="@(() => StartEditUser(selectedUser))">
+                        Edit
+                    </MudButton>
+                    <MudButton Color="Color.Error" OnClick="@(() => DeleteUser(selectedUser))">
+                        Delete
+                    </MudButton>
+                }
+                else if (editingUser != null || selectedUser == null)
+                {
+                    <MudButton Color="Color.Primary" Variant="Variant.Filled" 
+                              OnClick="SaveUser" Disabled="isSaving">
+                        @if (isSaving)
+                        {
+                            <MudProgressCircular Size="Size.Small" Indeterminate="true" Class="mr-2"/>
+                        }
+                        @(editingUser != null ? "Update" : "Create")
+                    </MudButton>
+                }
+            </DialogActions>
+        </MudDialog>
+    </Authorized>
+    <NotAuthorized>
+        <RedirectToLogin />
+    </NotAuthorized>
+</AuthorizeView>
+
+@code {
+    private List<UserResponse> users = new();
+    private UserResponse? selectedUser;
+    private UserResponse? editingUser;
+    private bool isLoading = true;
+    private bool showUserDialog = false;
+    private bool isSaving = false;
+    private string errorMessage = "";
+
+    private int totalUsers = 0;
+    private int employeeCount = 0;
+    private int managerCount = 0;
+
+    private int activeUsers = 0;
+    private string userDisplayName = "";
+    private string userEmail = "";
+    private string userRole = "Employee";
+    private string userPassword = "";
+    private bool userIsActive = true;
+
+    private DialogOptions dialogOptions = new() { MaxWidth = MaxWidth.Medium, FullWidth = true };
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadUsers();
+    }
+
+    private async Task LoadUsers()
+    {
+        Logger.Log(this, "LoadUsers method called", "info");
+        isLoading = true;
+        try
+        {
+            Logger.Log(this, "About to call UserManagementApi.GetAllUsersAsync()", "info");
+            users = await UserManagementApi.GetAllUsersAsync() ?? new List<UserResponse>();
+            Logger.Log(this, $"Successfully loaded {users.Count} users", "info");
+            
+            CalculateStatistics();
+        }
+        catch (Exception ex)
+        {
+            Logger.Log(this, $"Error loading users: {ex.Message}", "error");
+            Logger.Log(this, $"Stack trace: {ex.StackTrace}", "error");
+            users = new List<UserResponse>();
+        }
+        finally
+        {
+            isLoading = false;
+            StateHasChanged();
+        }
+    }
+
+
+    private void CalculateStatistics()
+    {
+        totalUsers = users.Count;
+
+        employeeCount = users.Count(u => u.Role == "Employee");
+        managerCount = users.Count(u => u.Role == "Manager");
+        activeUsers = users.Count(u => u.IsActive);
+    }
+
+    private Color GetRoleColor(string role)
+    {
+        if (role == "Manager")
+            return Color.Warning;
+        else if (role == "Employee")
+            return Color.Info;
+        else
+            return Color.Default;
+    }
+
+    private void OpenCreateUserDialog()
+    {
+        selectedUser = null;
+        editingUser = null;
+
+        ClearFormFields();
+
+        errorMessage = "";
+        showUserDialog = true;
+    }
+
+    private void ViewUserDetails(UserResponse user)
+    {
+        selectedUser = user;
+        editingUser = null;
+
+        showUserDialog = true;
+    }
+
+    private void EditUser(UserResponse user)
+    {
+        StartEditUser(user);
+    }
+
+    private void StartEditUser(UserResponse user)
+    {
+        editingUser = user;
+
+        selectedUser = user;
+
+
+
+        LoadFormFields(user);
+        errorMessage = "";
+    }
+
+    private void CloseUserDialog()
+    {
+        showUserDialog = false;
+        selectedUser = null;
+        editingUser = null;
+
+        ClearFormFields();
+
+        errorMessage = "";
+    }
+
+    private void ClearFormFields()
+    {
+        userDisplayName = "";
+        userEmail = "";
+        userRole = "Employee";
+        userPassword = "";
+
+        userIsActive = true;
+    }
+
+    private void LoadFormFields(UserResponse user)
+    {
+        userDisplayName = user.DisplayName ?? "";
+        userEmail = user.Email;
+        userRole = user.Role;
+        userIsActive = user.IsActive;
+        userPassword = "";
+    }
+
+    private async Task SaveUser()
+    {
+        if (string.IsNullOrWhiteSpace(userDisplayName) || string.IsNullOrWhiteSpace(userEmail))
+        {
+            errorMessage = "Display Name and Email are required";
+            return;
+        }
+
+        if (editingUser == null && string.IsNullOrWhiteSpace(userPassword))
+        {
+            errorMessage = "Password is required for new users";
+            return;
+        }
+
+        try
+        {
+            isSaving = true;
+            errorMessage = "";
+
+            if (editingUser != null)
+            {
+                var updateRequest = new UserChangeRequest
+                {
+                    Name = userDisplayName,
+                    Email = userEmail,
+                    Password = string.IsNullOrWhiteSpace(userPassword) ? null : userPassword
+                };
+
+                await UserManagementApi.UpdateUserAsync(editingUser.UserId, updateRequest);
+                Logger.Log(this, $"Updated user: {userDisplayName}", "info");
+            }
+            else
+            {
+                var createRequest = new RegisterRequest
+                {
+                    DisplayName = userDisplayName,
+                    Email = userEmail,
+                    Password = userPassword,
+                    Role = userRole
+                };
+
+                await UserManagementApi.CreateUserAsync(createRequest);
+                Logger.Log(this, $"Created user: {userDisplayName}", "info");
+            }
+
+            showUserDialog = false;
+            await LoadUsers(); // Refresh the list
+        }
+        catch (Exception ex)
+        {
+            Logger.Log(this, $"Error saving user: {ex.Message}", "error");
+            errorMessage = $"Error: {ex.Message}";
+        }
+        finally
+        {
+            isSaving = false;
+            StateHasChanged();
+        }
+    }
+
+    private async Task DeleteUser(UserResponse user)
+    {
+        try
+        {
+            var success = await UserManagementApi.DeleteUserAsync(user.UserId);
+            if (success)
+            {
+                Logger.Log(this, $"Deleted user: {user.DisplayName}", "info");
+                showUserDialog = false; // Close dialog if open
+                await LoadUsers(); // Refresh the list
+            }
+            else
+            {
+                errorMessage = "Failed to delete user";
+                Logger.Log(this, $"Failed to delete user: {user.DisplayName}", "error");
+            }
+        }
+        catch (Exception ex)
+        {
+            Logger.Log(this, $"Error deleting user: {ex.Message}", "error");
+            errorMessage = $"Error: {ex.Message}";
+        }
+    }
+}

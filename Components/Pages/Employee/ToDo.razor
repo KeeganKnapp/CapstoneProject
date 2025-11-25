@@ -5,9 +5,9 @@
 @using CapstoneBlazorApp.Services.Auth
 @namespace CapstoneBlazorApp.Components.Pages
 
-@inject CustomAuthenticationStateProvider CustomAuthProvider
+@inject IAuthService AuthService
 @inject AssignmentApiService AssignmentApiService
-
+@inject CustomAuthenticationStateProvider AuthStateProvider
 @inject AbstractLoggerService Logger
 
 <MudStack Style="height: 100%;" Justify="Justify.FlexStart" AlignItems="AlignItems.Stretch">
@@ -43,32 +43,10 @@
 
     private async Task RetrieveUserIdAsync()
     {
-        try {
-            var authState = await CustomAuthProvider.GetAuthenticationStateAsync();
-            var user = authState.User;
-
-            if (user.Identity != null && user.Identity.IsAuthenticated)
-            {
-                var userIdClaim = user.Claims.FirstOrDefault(c => c.Type == "userId");
-                if (userIdClaim != null && int.TryParse(userIdClaim.Value, out int userId))
-                {
-                    UserId = userId;
-                    Logger.Log(this, $"Retrieved UserId: {UserId}", "info");
-                }
-                else
-                {
-                    Logger.Log(this, "User ID claim not found or invalid.", "warning");
-                }
-            }
-            else
-            {
-                Logger.Log(this, "User is not authenticated.", "warning");
-            }
-        }
-        catch (Exception ex)
+        UserId = await AuthStateProvider.GetCurrentUserIdAsync() ?? -1;
+        if(UserId == -1)
         {
-            Logger.Log(this, $"Error retrieving user ID: {ex.Message}", "error");
-            UserId = -1;
+            Logger.Log(this, "Failed to retrieve User ID.", "error");
         }
     }
 

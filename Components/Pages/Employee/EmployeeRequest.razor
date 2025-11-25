@@ -3,10 +3,13 @@
 @using CapstoneBlazorApp.Services.Abstractions
 @using CapstoneBlazorApp.Models
 @using CapstoneBlazorApp.Services
+@using CapstoneBlazorApp.Services.Auth
 @using Microsoft.AspNetCore.Components.Authorization
 
 @inject AbstractLoggerService Logger
 @inject RequestOffApiService RequestOffApi
+@inject IAuthService AuthService
+@inject CustomAuthenticationStateProvider AuthStateProvider
 @inject NavigationManager Nav
 @namespace CapstoneBlazorApp.Components.Pages
 @page "/employee-request"
@@ -14,108 +17,93 @@
 
 <AuthorizeView>
     <Authorized>
-        <MudStack AlignItems="AlignItems.Center" Justify="Justify.SpaceEvenly" Style="height: 100vh; overflow: hidden;">
-    
-    <MudText Typo="Typo.h5" Color="Color.Primary">Submit Time Off Request</MudText>
-    
-    <!-- Error/Status Messages -->
-    @if (!string.IsNullOrEmpty(statusMessage))
-    {
-        <MudAlert Severity="@statusSeverity" Class="mb-4" Style="max-width: 400px;">
-            @statusMessage
-        </MudAlert>
-    }
+        <MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="py-4">
+        <MudGrid Justify="Justify.Center" >
+            <MudItem xs="3">
+                <MudPaper Class="p-4 justify-center" Elevation="2">
+                    <MudText Typo="Typo.h5" Color="Color.Primary">Submit Time Off Request</MudText>
 
-    <!-- Form Fields -->
-    <MudDatePicker Label="Start Date" 
-                   @bind-Date="_startDate" 
-                   Editable="true" 
-                   ShowToolbar="false"
-                   MinDate="DateTime.Today"
-                   HelperText="Select the first day of your time off"
-                   Style="width: 300px;" 
-                   Error="@startDateError"
-                   ErrorText="@startDateErrorText" />
-                   
-    <MudDatePicker Label="End Date" 
-                   @bind-Date="_endDate" 
-                   Editable="true" 
-                   ShowToolbar="false"
-                   MinDate="DateTime.Today"
-                   HelperText="Select the last day of your time off"
-                   Style="width: 300px;"
-                   Error="@endDateError" 
-                   ErrorText="@endDateErrorText" />
-                   
-    <MudTextField T="string" 
-                  @bind-Value="_details" 
-                  Label="Reason for Time Off" 
-                  Variant="Variant.Outlined" 
-                  Style="width: 300px;"
-                  HelperText="Brief description of your time off request"
-                  Error="@reasonError"
-                  ErrorText="@reasonErrorText" />
+                    <!-- Error/Status Messages -->
+                    @if (!string.IsNullOrEmpty(statusMessage))
+                    {
+                        <MudAlert Severity="@statusSeverity" Class="mb-4" Style="max-width: 400px;">
+                            @statusMessage
+                        </MudAlert>
+                    }
 
-    <MudButton Disabled="@submitting" 
-               OnClick="@SubmitTimeOffRequest" 
-               Variant="Variant.Filled" 
-               Color="Color.Primary" 
-               Style="width: 300px;"
-               StartIcon="@Icons.Material.Filled.Send">
-        @if (submitting)
-        {
-            <MudProgressCircular Size="Size.Small" Indeterminate="true" Class="mr-2"/>
-            <text>Submitting...</text>
-        }
-        else
-        {
-            <text>Submit Time Off Request</text>
-        }
-    </MudButton>
+                    <!-- Form Fields -->
+                    <MudDatePicker Label="Start Date" @bind-Date="_startDate" Editable="true" ShowToolbar="false"
+                        MinDate="DateTime.Today" HelperText="Select the first day of your time off"
+                        Style="width: 300px;" Error="@startDateError" ErrorText="@startDateErrorText" />
 
-<!-- Existing Requests -->
-<MudPaper Style="width: 100%; max-width: 800px; margin-top: 20px;" Elevation="2">
-    <MudTable Items="@requests" Breakpoint="Breakpoint.None" Hover="true" Dense="true">
-        <ToolBarContent>
-            <MudText Typo="Typo.h6">Your Time Off Requests</MudText>
-            <MudSpacer />
-            <MudChip T="string" Color="Color.Info" Size="Size.Small">@requests.Count requests</MudChip>
-        </ToolBarContent>
-        <HeaderContent>
-            <MudTh>Start Date</MudTh>
-            <MudTh>End Date</MudTh>
-            <MudTh>Days</MudTh>
-            <MudTh>Reason</MudTh>
-            <MudTh>Status</MudTh>
-            <MudTh>Actions</MudTh>
-        </HeaderContent>        <RowTemplate Context="request">
-            <MudTd DataLabel="Start">@request.StartDate.ToString("MMM dd, yyyy")</MudTd>
-            <MudTd DataLabel="End">@request.EndDate.ToString("MMM dd, yyyy")</MudTd>
-            <MudTd DataLabel="Days">@((request.EndDate.ToDateTime(TimeOnly.MinValue) - request.StartDate.ToDateTime(TimeOnly.MinValue)).Days + 1)</MudTd>
-            <MudTd DataLabel="Reason">@request.Note</MudTd>
-            <MudTd DataLabel="Status">
-                <MudChip T="string" Color="@GetStatusColor(request)" Size="Size.Small">
-                    @GetStatusText(request)
-                </MudChip>
-            </MudTd>
-            <MudTd DataLabel="Actions">
-                <MudButton Size="Size.Small" 
-                           Color="Color.Error" 
-                           Variant="Variant.Text" 
-                           StartIcon="@Icons.Material.Filled.Delete"
-                           OnClick="@(() => DeleteRequest(request.RequestOffId))">
-                    Delete
-                </MudButton>
-            </MudTd>
-        </RowTemplate>
+                    <MudDatePicker Label="End Date" @bind-Date="_endDate" Editable="true" ShowToolbar="false"
+                        MinDate="DateTime.Today" HelperText="Select the last day of your time off" Style="width: 300px;"
+                        Error="@endDateError" ErrorText="@endDateErrorText" />
 
-        <NoRecordsContent>
-            <MudText Typo="Typo.body1" Color="Color.Secondary">No time off requests found. Submit your first request above!</MudText>
-        </NoRecordsContent>    </MudTable>
-</MudPaper>
+                    <MudTextField T="string" @bind-Value="_details" Label="Reason for Time Off"
+                        Variant="Variant.Outlined" Style="width: 300px;"
+                        HelperText="Brief description of your time off request" Error="@reasonError"
+                        ErrorText="@reasonErrorText" />
 
+                    <MudButton Disabled="@submitting" OnClick="@SubmitTimeOffRequest" Variant="Variant.Filled"
+                        Color="Color.Primary" Style="width: 300px;" StartIcon="@Icons.Material.Filled.Send">
+                        @if (submitting)
+                        {
+                            <MudProgressCircular Size="Size.Small" Indeterminate="true" Class="mr-2" />
+                            <text>Submitting...</text>
+                        }
+                        else
+                        {
+                            <text>Submit Time Off Request</text>
+                        }
+                    </MudButton>
+                </MudPaper>
+            </MudItem>
 
-</MudStack>
+            <MudItem xs="12" Style="overflow-x: auto;">
+                    <MudTable Items="@requests" Breakpoint="Breakpoint.None" Hover="true" Dense="true">
+                        <ToolBarContent>
+                            <MudText Typo="Typo.h6">Your Time Off Requests</MudText>
+                            <MudSpacer />
+                            <MudChip T="string" Color="Color.Info" Size="Size.Small">@requests.Count requests</MudChip>
+                        </ToolBarContent>
+                        <HeaderContent>
+                            <MudTh>Start Date</MudTh>
+                            <MudTh>End Date</MudTh>
+                            <MudTh>Days</MudTh>
+                            <MudTh>Reason</MudTh>
+                            <MudTh>Status</MudTh>
+                            <MudTh>Actions</MudTh>
+                        </HeaderContent>
+                        <RowTemplate Context="request">
+                            <MudTd DataLabel="Start">@request.StartDate.ToString("MMM dd, yyyy")</MudTd>
+                            <MudTd DataLabel="End">@request.EndDate.ToString("MMM dd, yyyy")</MudTd>
+                            <MudTd DataLabel="Days">@((request.EndDate.ToDateTime(TimeOnly.MinValue) -
+                                                                request.StartDate.ToDateTime(TimeOnly.MinValue)).Days + 1)</MudTd>
+                            <MudTd DataLabel="Reason">@request.Note</MudTd>
+                            <MudTd DataLabel="Status">
+                                <MudChip T="string" Color="@GetStatusColor(request)" Size="Size.Small">
+                                    @GetStatusText(request)
+                                </MudChip>
+                            </MudTd>
+                            <MudTd DataLabel="Actions">
+                                <MudButton Size="Size.Small" Color="Color.Error" Variant="Variant.Text"
+                                    StartIcon="@Icons.Material.Filled.Delete"
+                                    OnClick="@(() => DeleteRequest(request.RequestOffId))">
+                                    Delete
+                                </MudButton>
+                            </MudTd>
+                        </RowTemplate>
+
+                        <NoRecordsContent>
+                            <MudText Typo="Typo.body1" Color="Color.Secondary">No time off requests found. Submit your
+                                first request above!</MudText>
+                        </NoRecordsContent>
+                    </MudTable>
+            </MudItem>
+        </MudGrid>
+        </MudContainer>
+
     </Authorized>
     <NotAuthorized>
         <RedirectToLogin />
@@ -139,12 +127,19 @@
     private string reasonErrorText = string.Empty;private List<RequestOffDto> requests = new();    protected override async Task OnInitializedAsync()
     {
         await LoadRequests();
-    }    private async Task LoadRequests()
+    }    
+    private async Task LoadRequests()
     {
         try
         {
             Logger.Log(this, "Starting to load requests...", "info");
-            var data = await RequestOffApi.GetMyRequestsAsync();
+            var userId = await AuthStateProvider.GetCurrentUserIdAsync();
+            if(userId == null){
+                Logger.Log(this, "User ID is null - cannot load requests", "error");
+                requests = new List<RequestOffDto>();
+                return;
+            }
+            var data = await RequestOffApi.GetRequestsByUserIdAsync(userId.Value);
             Logger.Log(this, $"API returned: {data?.Count ?? 0} requests", "info");
             
             if (data != null)

@@ -287,7 +287,7 @@
             
             // Note: This uses the user-specific endpoint since we don't have a manager endpoint yet
             // In a real implementation, you'd have an endpoint like /api/requestoff/all
-            requests = await RequestApi.GetMyRequestsAsync();
+            requests = await RequestApi.GetAllRequestsAsync() ?? new List<RequestOffDto>();
             
             ApplyFilters();
             CalculateStatistics();
