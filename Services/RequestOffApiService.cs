@@ -59,7 +59,7 @@ namespace CapstoneBlazorApp.Services
                         new AuthenticationHeaderValue("Bearer", loginResponse.AccessToken);
                 }
 
-                var response = await _httpClient.GetAsync($"/api/requestoff/{userId}", cancellationToken);
+                var response = await _httpClient.GetAsync($"/api/requestoff/", cancellationToken);
                 
                 if (response.IsSuccessStatusCode)
                 {

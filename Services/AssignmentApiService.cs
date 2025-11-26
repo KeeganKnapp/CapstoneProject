@@ -160,7 +160,7 @@ namespace CapstoneBlazorApp.Services
             {
                 await SetAuthorizationHeaderAsync();
 
-                var response = await _httpClient.GetAsync("/api/Assignment/allusers", cancellationToken);
+                var response = await _httpClient.GetAsync("/auth/allusers", cancellationToken);
 
                 if (response.IsSuccessStatusCode)
                 {

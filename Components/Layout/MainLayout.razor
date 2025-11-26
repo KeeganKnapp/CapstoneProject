@@ -27,7 +27,8 @@
                              OnClick="GoBack"
                              Title="Go Back" />
             }
-            <MudText Typo="Typo.h6" Class="ml-3">Capstone App</MudText>
+
+            <MudText Typo="Typo.h6" Class="ml-3">WorkFlow</MudText>
             <MudSpacer />
             
             <AuthorizeView>
@@ -73,8 +74,8 @@
 
 @code {
     private bool _isDarkMode = false;
-    private bool _isDebug = true; // Set to false to show the app bar
-    
+    private bool _isDebug = false; // Set to false to show the app bar
+
     private List<string> logMessages = new List<string>();
     private readonly MudTheme _theme = new()
     {

@@ -30,35 +30,50 @@
         {
             Logger.Log(this, $"Error focusing on job site: {ex.Message}", "error");
         }
-    }    private async Task InitializeMap()
+    }   
+    private async Task InitializeMap()
     {
-        try
+    const int maxRetries = 5;
+    int retryCount = 0;
+        while (retryCount < maxRetries && !initialized)
         {
-            Logger.Log(this,$"Initializing JobSiteMap with ID: {_id}");
-            
-            // Small delay to ensure DOM is ready
-            await Task.Delay(100);
-            
-            _ref = DotNetObjectReference.Create(this);
-            await JS.InvokeVoidAsync("capstoneMap.init", $"#{_id}", _ref, Sites ?? Array.Empty<SiteDto>());
-            initialized = true;
-
-            if(currentSiteId != 0)
+            try
             {
-                await FocusOnJobSite(currentSiteId);
+                Logger.Log(this, $"Initializing JobSiteMap attempt {retryCount + 1} with ID: {_id}");
+
+                // Longer delay for first attempt
+                await Task.Delay(retryCount == 0 ? 500 : 200);
+
+                _ref = DotNetObjectReference.Create(this);
+                await JS.InvokeVoidAsync("capstoneMap.init", $"#{_id}", _ref, Sites ?? Array.Empty<SiteDto>());
+                initialized = true;
+
+                if (currentSiteId != 0)
+                {
+                    await FocusOnJobSite(currentSiteId);
+                }
+
+                Logger.Log(this, "Map initialized successfully");
+                break;
             }
-        }
-        catch (Exception ex)
-        {
-            Logger.Log(this, $"Error initializing map: {ex.Message}", "error");
-            initialized = false;
+            catch (Exception ex)
+            {
+                retryCount++;
+                Logger.Log(this, $"Error initializing map (attempt {retryCount}): {ex.Message}", "error");
+
+                if (retryCount >= maxRetries)
+                {
+                    Logger.Log(this, "Failed to initialize map after all retries", "error");
+                    initialized = false;
+                }
+            }
         }
     }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
-        Logger.Log(this,$"JobSiteMap OnAfterRenderAsync firstRender={firstRender}, initialized={initialized}");
-        
+        Logger.Log(this, $"JobSiteMap OnAfterRenderAsync firstRender={firstRender}, initialized={initialized}");
+
         // Always try to initialize if not already initialized
         if (!initialized)
         {
@@ -72,8 +87,8 @@
 
     protected override async Task OnParametersSetAsync()
     {
-        Logger.Log(this,$"JobSiteMap OnParametersSetAsync previousSiteId={previousSiteId} currentSiteId={currentSiteId} initialized={initialized}");
-        
+        Logger.Log(this, $"JobSiteMap OnParametersSetAsync previousSiteId={previousSiteId} currentSiteId={currentSiteId} initialized={initialized}");
+
         if (initialized && previousSiteId != currentSiteId)
         {
             await FocusOnJobSite(currentSiteId);
@@ -85,26 +100,27 @@
         }
     }
 
-   [JSInvokable] 
-   public async Task OnSiteChanged(SiteDto site) 
-   {
-       if (OnChanged.HasDelegate)
-       {
-           await OnChanged.InvokeAsync(site);
-       }
-   }    public async ValueTask DisposeAsync()
+    [JSInvokable]
+    public async Task OnSiteChanged(SiteDto site)
+    {
+        if (OnChanged.HasDelegate)
+        {
+            await OnChanged.InvokeAsync(site);
+        }
+    }
+    public async ValueTask DisposeAsync()
     {
         try
         {
-            Logger.Log(this,$"Disposing JobSiteMap initialized={initialized}");
-            
-            if(initialized)
+            Logger.Log(this, $"Disposing JobSiteMap initialized={initialized}");
+
+            if (initialized)
             {
                 await JS.InvokeVoidAsync("capstoneMap.dispose");
                 initialized = false;
             }
-            
-            if (_ref is not null) 
+
+            if (_ref is not null)
             {
                 _ref.Dispose();
                 _ref = null;

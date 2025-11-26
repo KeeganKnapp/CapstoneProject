@@ -1,28 +1,126 @@
 @using MudBlazor
 @using CapstoneBlazorApp.Dtos
+@using CapstoneBlazorApp.Services
+@using CapstoneBlazorApp.Services.Abstractions
 @using Microsoft.AspNetCore.Components.Authorization
 @page "/employee-payroll"
+
+@inject TimeEntryApiService TimeEntryService
+@inject AbstractLoggerService Logger
 @namespace CapstoneBlazorApp.Components.Pages
 
 <AuthorizeView>
     <Authorized>
-        <MudStack AlignItems=AlignItems.Center JustifyContent=Justify.Center Style="height: 100vh;">
-    <MudText Typo="Typo.h6">Hours Worked: @totalHours</MudText>
-    <MudText Typo="Typo.h6">Hourly Rate: @hourlyRate</MudText>
-    <MudText Typo="Typo.h6">Total Pay: @totalPay</MudText>
+        <MudContainer MaxWidth="MaxWidth.Large" Class="py-4">
+            
+            <MudGrid Justify="Justify.Center" Class="mb-4">
+                <MudItem xs="12" sm="4">
+                    <MudCard>
+                        <MudCardContent>
+                            <MudText Typo="Typo.h6" Align="Align.Center">Total Hours</MudText>
+                            <MudText Typo="Typo.h4" Align="Align.Center" Color="Color.Primary">
+                        @totalHours.ToString("F2")
+                            </MudText>
+                        </MudCardContent>
+                    </MudCard>
+                </MudItem>
+                <MudItem xs="12" sm="4">
+                    <MudCard>
+                        <MudCardContent>
+                            <MudText Typo="Typo.h6" Align="Align.Center">Hourly Rate</MudText>
+                            <MudText Typo="Typo.h4" Align="Align.Center" Color="Color.Success">
+                                        $@hourlyRate.ToString("F2")
+                            </MudText>
+                </MudCardContent>
+                    </MudCard>
+                </MudItem>
+                <MudItem xs="12" sm="4">
+                    <MudCard>
+                        <MudCardContent>
+                            <MudText Typo="Typo.h6" Align="Align.Center">Total Pay</MudText>
+                            <MudText Typo="Typo.h4" Align="Align.Center" Color="Color.Warning">
+                                $@totalPay.ToString("F2")
+                            </MudText>
+                        </MudCardContent>
+                    </MudCard>
+                </MudItem>
+            </MudGrid>
 
+            <MudPaper Class="p-4">
+                <MudText Typo="Typo.h5" GutterBottom="true">Time Entries</MudText>
+                
+                @if (timeEntries == null || !timeEntries.Any())
+                {
+                    <MudText>No time entries found.</MudText>
+                }
+                else
+                {
+                    <MudTable Items="@timeEntries" Breakpoint="Breakpoint.None" Elevation="1" Bordered="true" Hover="true">
+                        <HeaderContent>
+                            <MudTh>Start Time</MudTh>
+                            <MudTh>End Time</MudTh>
+                            <MudTh>Calculated Hours</MudTh>
+                            <MudTh>Duration</MudTh>
+                            <MudTh>Status</MudTh>
+                        </HeaderContent>
+                        <RowTemplate Context="timeEntry">
+                            <MudTd>@timeEntry.StartTime.ToString("MMM dd, yyyy HH:mm")</MudTd>
+                            <MudTd>
+                                @if (timeEntry.EndTime.HasValue)
+                                {
+                                    @timeEntry.EndTime.Value.ToString("MMM dd, yyyy HH:mm")
+                                }
+                                else
+                                {
+                                    <MudChip T="string" Color="Color.Success" Size="Size.Small">Active</MudChip>
+                                }
+                            </MudTd>
+                            <MudTd>
+                                @if (timeEntry.EndTime.HasValue)
+                                {
+                                    var calculatedHours = (timeEntry.EndTime.Value - timeEntry.StartTime).TotalHours;
+                                    @($"{calculatedHours:F2} hrs")
+                                }
+                                else
+                                {
+                                    <text>--</text>
+                                }
+                            </MudTd>
+                            <MudTd>
+                                @if (timeEntry.Duration.HasValue)
+                                {
+                                    @($"{timeEntry.Duration.Value.TotalHours:F2} hrs")
+                                }
+                                else
+                                {
+                                    <text>--</text>
+                                }
+                            </MudTd>
+                            <MudTd>
+                                @if (timeEntry.EndTime.HasValue)
+                                {
+                                    <MudChip T="string" Color="Color.Info" Size="Size.Small">Completed</MudChip>
+                                }
+                                else
+                                {
+                                    <MudChip T="string" Color="Color.Success" Size="Size.Small">In Progress</MudChip>
+                                }
+                            </MudTd>
+                        </RowTemplate>
+                        <PagerContent>
+                            <MudTablePager PageSizeOptions="new int[]{10, 25, 50}" />
+                        </PagerContent>
+                    </MudTable>
+                }
+                
+                <MudButton Variant="Variant.Outlined" Color="Color.Primary" 
+                          StartIcon="@Icons.Material.Filled.Refresh"
+                          OnClick="LoadHoursWorked" Class="mt-3">
+                    Refresh Data
+                </MudButton>
+            </MudPaper>
 
-<MudTable Style="width: 100%;" Items="@payStubs" Breakpoint="Breakpoint.None" Elevation="1" Bordered="true" Hover="true">
-    <HeaderContent>
-        <MudTh>Period</MudTh>
-        <MudTh>Gross Pay</MudTh>
-        <MudTh>Net Pay</MudTh>    </HeaderContent>    <RowTemplate Context="payStub">
-        <MudTd>@payStub.Period</MudTd>
-        <MudTd>@payStub.Gross.ToString("C")</MudTd>
-        <MudTd>@payStub.Net.ToString("C")</MudTd>    </RowTemplate>
-</MudTable>
-
-</MudStack>
+        </MudContainer>
     </Authorized>
     <NotAuthorized>
         <RedirectToLogin />
@@ -34,18 +132,74 @@
     double hourlyRate = 20.0;
     double totalPay => totalHours * hourlyRate;
 
-    private List<CapstoneBlazorApp.Dtos.PayStubDto> payStubs = new List<CapstoneBlazorApp.Dtos.PayStubDto>
+    List<TimeEntryDto> timeEntries = new List<TimeEntryDto>();
+ 
+
+    public async Task LoadHoursWorked()
+    {
+        try
         {
-            //random paystubs with random string period, decimal gross, decimal net            new CapstoneBlazorApp.Dtos.PayStubDto ("Jan 2024", 3200.00m, 2560.00m),
-            new CapstoneBlazorApp.Dtos.PayStubDto ("Feb 2024", 3000.00m, 2400.00m),
-            new CapstoneBlazorApp.Dtos.PayStubDto ("Mar 2024", 3400.00m, 2720.00m)
-        };  
+            
+            timeEntries = await TimeEntryService.GetMyTimeEntriesAsync();
+            Logger.Log(this, $"Loaded {timeEntries?.Count ?? 0} time entries from API", "info");
+            
+            if (timeEntries == null)
+            {
+                Logger.Log(this, "Time entries returned null", "error");
+                timeEntries = new List<TimeEntryDto>();
+                totalHours = 0;
+                return;
+            }
+
+            totalHours = 0; 
+            
+            Logger.Log(this, "Processing individual time entries:", "info");
+            
+            for (int i = 0; i < timeEntries.Count; i++)
+            {
+            var entry = timeEntries[i];
+                
+                
+                if (entry.EndTime.HasValue)
+                {
+                    var duration = entry.EndTime.Value - entry.StartTime;
+                    var hours = duration.TotalHours;
+                    
+                    
+                    if (hours > 0)
+                    {
+                        totalHours += hours;
+                    }
+
+                    
+                    Logger.Log(this, $"Entry {i + 1}: Running total = {totalHours:F2} hours", "info");
+                }
+
+                
+                if (entry.Duration.HasValue)
+                {
+                    Logger.Log(this, $"Entry {i + 1}: API Duration = {entry.Duration.Value} ({entry.Duration.Value.TotalHours:F2} hours)", "info");
+                }
+
+            }
+            
+            Logger.Log(this, $"Final calculated total hours: {totalHours:F2}", "info");
+            Logger.Log(this, $"Final calculated total pay: ${totalPay:F2}", "info");
+        }
+        catch (Exception ex)
+        {
+            Logger.Log(this, $"Error loading hours worked: {ex.Message}", "error");
+            Logger.Log(this, $"Stack trace: {ex.StackTrace}", "error");
+            totalHours = 0;
+        }
+        finally
+        {
+            StateHasChanged(); 
+        }
+    }
+    
     protected override async Task OnInitializedAsync()
     {
-        // Simulate fetching hours worked from a service
-        await Task.Delay(500); // Simulate async call
-        totalHours = 160; // Example value
-
+        await LoadHoursWorked();
     }
-
 }

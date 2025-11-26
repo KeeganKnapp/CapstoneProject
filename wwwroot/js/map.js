@@ -6,10 +6,22 @@ console.log("[map.js] loaded");
 
     function waitForGoogle() {
         return new Promise((resolve) => {
-            if (window.google?.maps) { console.log("[map.js] google.maps ready"); return resolve(); }
+            if (window.google?.maps?.Map && window.google?.maps?.Marker) {
+                console.log("[map.js] google.maps ready");
+                return resolve();
+            }
+
+            if (!window.google) {
+                console.log("[map.js] waiting for google namespace...");
+            }
+
             const t = setInterval(() => {
-                if (window.google?.maps) { clearInterval(t); console.log("[map.js] google.maps ready (polled)"); resolve(); }
-            }, 30);
+                if (window.google?.maps?.Map && window.google?.maps?.Marker) {
+                    clearInterval(t);
+                    console.log("[map.js] google.maps ready (polled)");
+                    resolve();
+                }
+            }, 100);
         });
     }
 

@@ -161,7 +161,8 @@
         
         Logger.Log(this, $"Final requests count: {requests.Count}", "info");
         StateHasChanged();
-    }    private void ClearValidationErrors()
+    }    
+    private void ClearValidationErrors()
     {
         startDateError = false;
         startDateErrorText = string.Empty;
