@@ -17,8 +17,7 @@ namespace CapstoneAPI.Controllers
 
         private int GetUserId()
         {
-            // try common claim types in order
-            var id = User.FindFirstValue("UserId") ?? User.FindFirstValue(ClaimTypes.NameIdentifier) ?? User.FindFirstValue("sub");
+            var id = User.FindFirstValue("userId") ?? User.FindFirstValue(ClaimTypes.NameIdentifier) ?? User.FindFirstValue("sub");
 
             if (id is null) throw new UnauthorizedAccessException("UserId claim missing.");
             return int.Parse(id);
