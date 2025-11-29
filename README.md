@@ -113,9 +113,9 @@ Use Case: Employee logs into app. From their dashboard they elect to submit a re
 ```mermaid
 flowchart TD
     A["Employee View of App"] -- Log in --> B("Dashboard")
-    B --> C("Submit Request")
+    B --> C("Requests")
     C -- Submits Request to Manager --> O
-    B --> F("View Requests")
+    B --> F("Requests")
     O -- Employee can see result --> F
 
 
