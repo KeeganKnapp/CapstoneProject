@@ -115,8 +115,8 @@ flowchart TD
     A["Employee View of App"] -- Log in --> B("Dashboard")
     B --> C("Requests")
     C -- Submits Request to Manager --> O
-    B --> F("Requests")
-    O -- Employee can see result --> F
+    B --> C("Requests")
+    O -- Employee can see result --> C
 
 
     E["Manager View of App"] -- Log in --> J("View Dashboard")
