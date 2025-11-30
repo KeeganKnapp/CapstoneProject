@@ -114,7 +114,7 @@ Use Case: Employee logs into app. From their dashboard they elect to submit a re
 flowchart TD
     A["Employee View of App"] -- Log in --> B("Dashboard")
     B --> C("Requests")
-    C -- Submits Request to Manager --> O
+    C -- Sends to Manager --> O
     B --> C("Requests")
     O -- Employee can see result --> C
 
