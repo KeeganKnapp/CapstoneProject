@@ -136,3 +136,15 @@ flowchart TD
     E ~~~ F["Add Notes to a Specific Task"]
 
 ```
+
+Log in system
+```mermaid
+flowchart TD
+    A[Open Site] --> B(Log In)
+    B --> C(Enter Credentials)
+    C --> |Valid| D[JWT & Refresh Token Issued]
+    D --> H[Dashboard]
+
+    C --> |Invalid| G(Log In Failed)
+    G --> U(Show Error Message)
+```
